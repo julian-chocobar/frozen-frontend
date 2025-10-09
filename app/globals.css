@@ -1,0 +1,396 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/**
+ * Sistema de Diseño - Frozen Brewery Management
+ * Estilo minimalista con fondo beige y azul índigo
+ * Inspirado en diseño moderno con tipografía monoespaciada
+ */
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Actualizado a azul clásico (#2563eb) menos violeta */
+  --background: oklch(0.99 0.005 85);
+  --foreground: oklch(0.25 0.02 240);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.25 0.02 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.25 0.02 240);
+  --primary: oklch(0.52 0.22 255);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.005 85);
+  --secondary-foreground: oklch(0.25 0.02 240);
+  --muted: oklch(0.96 0.005 85);
+  --muted-foreground: oklch(0.55 0.02 240);
+  --accent: oklch(0.96 0.005 85);
+  --accent-foreground: oklch(0.25 0.02 240);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.52 0.22 255);
+  --input: oklch(0.93 0.005 85);
+  --ring: oklch(0.52 0.22 255);
+  --chart-1: oklch(0.52 0.22 255);
+  --chart-2: oklch(0.62 0.18 255);
+  --chart-3: oklch(0.72 0.14 255);
+  --chart-4: oklch(0.82 0.1 255);
+  --chart-5: oklch(0.92 0.06 255);
+  --radius: 0.5rem;
+  --sidebar: oklch(0.99 0.005 85);
+  --sidebar-foreground: oklch(0.25 0.02 240);
+  --sidebar-primary: oklch(0.52 0.22 255);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.96 0.005 85);
+  --sidebar-accent-foreground: oklch(0.25 0.02 240);
+  --sidebar-border: oklch(0.93 0.005 85);
+  --sidebar-ring: oklch(0.52 0.22 255);
+}
+
+@theme inline {
+  /* Tipografía monoespaciada */
+  --font-sans: "JetBrains Mono", "Roboto Mono", "Courier New", monospace;
+  --font-mono: "JetBrains Mono", "Roboto Mono", "Courier New", monospace;
+
+  /* Colores Base - Fondo beige claro */
+  --color-background: #faf9f6;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f5f4f1;
+
+  /* Colores de Texto - Azul oscuro */
+  --color-foreground: #1e293b;
+  --color-muted: #64748b;
+  --color-muted-foreground: #94a3b8;
+
+  /* Color Primario - Azul Índigo (#3e43f0 de las imágenes) */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
+
+  /* Color de Alerta - Rojo */
+  --color-alert-50: #fef2f2;
+  --color-alert-100: #fee2e2;
+  --color-alert-200: #fecaca;
+  --color-alert-300: #fca5a5;
+  --color-alert-400: #f87171;
+  --color-alert-500: #ef4444;
+  --color-alert-600: #dc2626;
+  --color-alert-700: #b91c1c;
+  --color-alert-800: #991b1b;
+  --color-alert-900: #7f1d1d;
+
+  /* Color de Estado - Azul claro */
+  --color-status-50: #eff6ff;
+  --color-status-100: #dbeafe;
+  --color-status-200: #bfdbfe;
+  --color-status-300: #93c5fd;
+  --color-status-400: #60a5fa;
+  --color-status-500: #3b82f6;
+  --color-status-600: #2563eb;
+  --color-status-700: #1d4ed8;
+  --color-status-800: #1e40af;
+  --color-status-900: #1e3a8a;
+
+  /* Color de Éxito - Verde */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+
+  /* Color Amarillo - Para badges "Media" */
+  --color-warning-50: #fefce8;
+  --color-warning-100: #fef9c3;
+  --color-warning-200: #fef08a;
+  --color-warning-300: #fde047;
+  --color-warning-400: #facc15;
+  --color-warning-500: #eab308;
+  --color-warning-600: #ca8a04;
+  --color-warning-700: #a16207;
+  --color-warning-800: #854d0e;
+  --color-warning-900: #713f12;
+
+  /* Bordes y Divisores - Azul */
+  --color-border: #2563eb;
+  --color-border-light: #e0e7ff;
+  --color-stroke: #c7d2fe;
+
+  /* Sombras sutiles */
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-card-hover: 0 2px 4px 0 rgb(0 0 0 / 0.08);
+  --shadow-modal: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Radio de Bordes */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Estilos Base */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  /* Ajuste de peso de fuente para tipografía monoespaciada */
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Estilos de tipografía mejorados para monospace */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-primary-700);
+}
+
+/* Utilidades Personalizadas */
+.card {
+  background-color: var(--color-card);
+  /* Borde azul índigo de 2px como en las imágenes */
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Badges actualizados con colores del nuevo sistema */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.badge-success {
+  background-color: var(--color-success-100);
+  color: var(--color-success-700);
+  border-color: var(--color-success-300);
+}
+
+.badge-alert {
+  background-color: var(--color-alert-100);
+  color: var(--color-alert-700);
+  border-color: var(--color-alert-300);
+}
+
+.badge-warning {
+  background-color: var(--color-warning-100);
+  color: var(--color-warning-700);
+  border-color: var(--color-warning-300);
+}
+
+.badge-status {
+  background-color: var(--color-status-100);
+  color: var(--color-status-700);
+  border-color: var(--color-status-300);
+}
+
+.badge-primary {
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
+  border-color: var(--color-primary-300);
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-stroke);
+  border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* Optimizaciones responsive para móvil */
+@media (max-width: 767px) {
+  .card {
+    padding: 1rem;
+  }
+
+  /* Reducción de tamaños de fuente para títulos en móvil */
+  h1 {
+    font-size: 1.125rem;
+    line-height: 1.4;
+  }
+
+  h2 {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  h3 {
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  table {
+    font-size: 0.875rem;
+  }
+
+  .recharts-wrapper {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 374px) {
+  body {
+    font-size: 0.875rem;
+  }
+
+  /* Títulos aún más pequeños en pantallas muy pequeñas */
+  h1 {
+    font-size: 1rem;
+  }
+
+  h2 {
+    font-size: 0.9375rem;
+  }
+
+  h3 {
+    font-size: 0.875rem;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+  }
+
+  .card {
+    padding: 0.75rem;
+  }
+}
+
+/* Custom grid classes removed - using Tailwind's responsive grid utilities instead */
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .card {
+    border-width: 3px;
+  }
+
+  button:focus,
+  a:focus,
+  input:focus,
+  select:focus {
+    outline: 3px solid var(--color-primary-600);
+    outline-offset: 2px;
+  }
+}
+
+@media print {
+  .sidebar,
+  .bottom-bar,
+  header button,
+  .no-print {
+    display: none !important;
+  }
+
+  .card {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  body {
+    background: white;
+  }
+}
+
+/* Animaciones */
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
