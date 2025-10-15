@@ -1,20 +1,29 @@
 /**
  * Utilidad para realizar peticiones HTTP al backend
- * Maneja cookies de sesión de Spring Security
+ * Maneja autenticación básica de Spring Security
  */
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"
 
+// Credenciales por defecto de Spring Security
+// Estas son las credenciales que vienen por defecto con Spring Boot Security
+const DEFAULT_USERNAME = 'user'
+const DEFAULT_PASSWORD = '1234'
+
 interface FetcherOptions extends RequestInit {
   params?: Record<string, string>
+  auth?: {
+    username?: string
+    password?: string
+  }
 }
 
 /**
  * Función principal para hacer peticiones al backend
- * Incluye credentials: 'include' para enviar cookies de sesión
+ * Incluye autenticación básica de Spring Security
  */
 export async function fetcher<T>(endpoint: string, options: FetcherOptions = {}): Promise<T> {
-  const { params, ...fetchOptions } = options
+  const { params, auth, ...fetchOptions } = options
 
   // Construir URL con parámetros de query si existen
   let url = `${BACKEND_URL}${endpoint}`
@@ -23,12 +32,16 @@ export async function fetcher<T>(endpoint: string, options: FetcherOptions = {})
     url += `?${searchParams.toString()}`
   }
 
+  // Usar credenciales proporcionadas o las por defecto
+  const username = auth?.username || DEFAULT_USERNAME
+  const password = auth?.password || DEFAULT_PASSWORD
+  const basicAuth = btoa(`${username}:${password}`)
+
   try {
     const response = await fetch(url, {
       ...fetchOptions,
-      // IMPORTANTE: Incluir credentials para enviar cookies de sesión
-      credentials: "include",
       headers: {
+        'Authorization': `Basic ${basicAuth}`,
         "Content-Type": "application/json",
         ...fetchOptions.headers,
       },
@@ -61,6 +74,12 @@ export async function fetcher<T>(endpoint: string, options: FetcherOptions = {})
     return await response.json()
   } catch (error) {
     console.error(`Error en petición a ${endpoint}:`, error)
+    
+    // Manejar errores de conexión específicamente
+    if (error instanceof TypeError && error.message.includes('fetch failed')) {
+      throw new Error(`No se pudo conectar con el backend. Verifica que esté ejecutándose en ${BACKEND_URL}`)
+    }
+    
     throw error
   }
 }
@@ -68,28 +87,54 @@ export async function fetcher<T>(endpoint: string, options: FetcherOptions = {})
 /**
  * Métodos de conveniencia para diferentes tipos de peticiones
  */
-export const api = {\
-  get: <T>(endpoint: string, params?: Record<string, string>) =>
-    fetcher<T>(endpoint, { method: 'GET\', params }),
+export const api = {
+  get: <T>(endpoint: string, params?: Record<string, string>, auth?: { username?: string; password?: string }) =>
+    fetcher<T>(endpoint, { method: 'GET', params, auth }),
 
-  post: <T>(endpoint: string, data?: unknown) =>
+  post: <T>(endpoint: string, data?: unknown, auth?: { username?: string; password?: string }) =>
     fetcher<T>(endpoint, {
-      method: 'POST\',
+      method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
+      auth,
     }),
 
-  put: <T>(endpoint: string, data?: unknown) =>
+  put: <T>(endpoint: string, data?: unknown, auth?: { username?: string; password?: string }) =>
     fetcher<T>(endpoint, {
-      method: 'PUT\',\
+      method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
+      auth,
     }),
 
-  patch: <T>(endpoint: string, data?: unknown) =>
+  patch: <T>(endpoint: string, data?: unknown, auth?: { username?: string; password?: string }) =>
     fetcher<T>(endpoint, {
-      method: \'PATCH\',
+      method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
+      auth,
     }),
 
-  delete: <T>(endpoint: string) =>
-    fetcher<T>(endpoint, { method: \'DELETE' }),\
+  delete: <T>(endpoint: string, auth?: { username?: string; password?: string }) =>
+    fetcher<T>(endpoint, { method: 'DELETE', auth }),
+}
+
+/**
+ * Función helper para crear un cliente API con credenciales personalizadas
+ * Útil cuando necesites usar diferentes credenciales en el futuro
+ */
+export function createApiClient(username: string, password: string) {
+  return {
+    get: <T>(endpoint: string, params?: Record<string, string>) =>
+      api.get<T>(endpoint, params, { username, password }),
+
+    post: <T>(endpoint: string, data?: unknown) =>
+      api.post<T>(endpoint, data, { username, password }),
+
+    put: <T>(endpoint: string, data?: unknown) =>
+      api.put<T>(endpoint, data, { username, password }),
+
+    patch: <T>(endpoint: string, data?: unknown) =>
+      api.patch<T>(endpoint, data, { username, password }),
+
+    delete: <T>(endpoint: string) =>
+      api.delete<T>(endpoint, { username, password }),
+  }
 }

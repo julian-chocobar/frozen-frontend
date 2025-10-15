@@ -3,12 +3,14 @@
 ## Arquitectura Backend
 
 ### Stack Backend
+
 - **Framework**: Spring Boot 3.x
 - **Seguridad**: Spring Security con Session Cookies
 - **Base de Datos**: PostgreSQL / MySQL
 - **API**: REST (JSON)
 
 ### Autenticación
+
 - **Método**: Session-based (NO JWT)
 - **Cookies**: HttpOnly, Secure, SameSite=Lax
 - **CSRF**: Token en header o cookie
@@ -22,53 +24,53 @@
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
 export async function fetcher<T>(
-  endpoint: string,
-  options?: RequestInit
+endpoint: string,
+options?: RequestInit
 ): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}${endpoint}`
-  
-  const response = await fetch(url, {
-    ...options,
-    credentials: 'include', // ← CRÍTICO: Envía cookies de sesión
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  })
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Error desconocido' }))
-    throw new Error(error.message || `HTTP ${response.status}`)
-  }
-  
-  return response.json()
+const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}${endpoint}`
+
+const response = await fetch(url, {
+...options,
+credentials: 'include', // ← CRÍTICO: Envía cookies de sesión
+headers: {
+'Content-Type': 'application/json',
+...options?.headers,
+},
+})
+
+if (!response.ok) {
+const error = await response.json().catch(() => ({ message: 'Error desconocido' }))
+throw new Error(error.message || `HTTP ${response.status}`)
+}
+
+return response.json()
 }
 
 // Métodos helper
 export const api = {
-  get: <T>(endpoint: string) => 
-    fetcher<T>(endpoint, { method: 'GET' }),
-  
-  post: <T>(endpoint: string, data: any) =>
-    fetcher<T>(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-  
-  put: <T>(endpoint: string, data: any) =>
-    fetcher<T>(endpoint, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-  
-  patch: <T>(endpoint: string, data: any) =>
-    fetcher<T>(endpoint, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
-  
-  delete: <T>(endpoint: string) =>
-    fetcher<T>(endpoint, { method: 'DELETE' }),
+get: <T>(endpoint: string) =>
+fetcher<T>(endpoint, { method: 'GET' }),
+
+post: <T>(endpoint: string, data: any) =>
+fetcher<T>(endpoint, {
+method: 'POST',
+body: JSON.stringify(data),
+}),
+
+put: <T>(endpoint: string, data: any) =>
+fetcher<T>(endpoint, {
+method: 'PUT',
+body: JSON.stringify(data),
+}),
+
+patch: <T>(endpoint: string, data: any) =>
+fetcher<T>(endpoint, {
+method: 'PATCH',
+body: JSON.stringify(data),
+}),
+
+delete: <T>(endpoint: string) =>
+fetcher<T>(endpoint, { method: 'DELETE' }),
 }
 \`\`\`
 
@@ -80,11 +82,12 @@ import { SWRConfig } from 'swr'
 import { fetcher } from '@/lib/fetcher'
 
 export default function RootLayout({ children }) {
-  return (
-    <html>
-      <body>
-        <SWRConfig
-          value={{
+return (
+
+<html>
+<body>
+<SWRConfig
+value={{
             fetcher,
             revalidateOnFocus: false,
             revalidateOnReconnect: true,
@@ -95,13 +98,12 @@ export default function RootLayout({ children }) {
               console.error('[SWR Error]', error)
               // Opcional: Mostrar toast de error
             },
-          }}
-        >
-          {children}
-        </SWRConfig>
-      </body>
-    </html>
-  )
+          }} >
+{children}
+</SWRConfig>
+</body>
+</html>
+)
 }
 \`\`\`
 
@@ -110,6 +112,7 @@ export default function RootLayout({ children }) {
 ### 1. Server Component (SSR)
 
 **Cuándo usar:**
+
 - Datos iniciales de la página
 - Datos que no cambian frecuentemente
 - SEO importante
@@ -120,38 +123,40 @@ import { api } from '@/lib/fetcher'
 import { Material } from '@/types'
 
 export default async function MaterialesPage() {
-  // Fetch en el servidor
-  const materials = await api.get<Material[]>('/api/materiales')
-  
-  return (
-    <div>
-      <h1>Materiales</h1>
-      <MaterialsTable materials={materials} />
-    </div>
-  )
+// Fetch en el servidor
+const materials = await api.get<Material[]>('/api/materiales')
+
+return (
+
+<div>
+<h1>Materiales</h1>
+<MaterialsTable materials={materials} />
+</div>
+)
 }
 \`\`\`
 
 **Manejo de errores:**
 \`\`\`typescript
 export default async function MaterialesPage() {
-  try {
-    const materials = await api.get<Material[]>('/api/materiales')
-    return <MaterialsTable materials={materials} />
-  } catch (error) {
-    return (
-      <ErrorState 
+try {
+const materials = await api.get<Material[]>('/api/materiales')
+return <MaterialsTable materials={materials} />
+} catch (error) {
+return (
+<ErrorState 
         message="No se pudieron cargar los materiales"
         error={error}
       />
-    )
-  }
+)
+}
 }
 \`\`\`
 
 ### 2. Client Component con SWR
 
 **Cuándo usar:**
+
 - Datos que cambian frecuentemente
 - Necesitas revalidación automática
 - Interactividad (filtros, búsqueda)
@@ -163,32 +168,34 @@ import useSWR from 'swr'
 import { Batch } from '@/types'
 
 export function BatchMonitor() {
-  const { data, error, isLoading, mutate } = useSWR<Batch[]>(
-    '/api/batches/active',
-    {
-      refreshInterval: 10000, // Revalidar cada 10s
-      revalidateOnFocus: true,
-    }
-  )
-  
-  if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorState error={error} />
-  if (!data || data.length === 0) return <EmptyState />
-  
-  return (
-    <div>
-      <Button onClick={() => mutate()}>Actualizar</Button>
-      {data.map(batch => (
-        <BatchCard key={batch.id} batch={batch} />
-      ))}
-    </div>
-  )
+const { data, error, isLoading, mutate } = useSWR<Batch[]>(
+'/api/batches/active',
+{
+refreshInterval: 10000, // Revalidar cada 10s
+revalidateOnFocus: true,
+}
+)
+
+if (isLoading) return <LoadingSpinner />
+if (error) return <ErrorState error={error} />
+if (!data || data.length === 0) return <EmptyState />
+
+return (
+
+<div>
+<Button onClick={() => mutate()}>Actualizar</Button>
+{data.map(batch => (
+<BatchCard key={batch.id} batch={batch} />
+))}
+</div>
+)
 }
 \`\`\`
 
 ### 3. Hybrid (Server + Client)
 
 **Mejor de ambos mundos:**
+
 - SSR para datos iniciales (SEO, performance)
 - Client para actualizaciones en tiempo real
 
@@ -197,16 +204,16 @@ export function BatchMonitor() {
 import { api } from '@/lib/fetcher'
 import { BatchDetailClient } from './batch-detail-client'
 
-export default async function BatchDetailPage({ 
-  params 
-}: { 
-  params: { id: string } 
+export default async function BatchDetailPage({
+params
+}: {
+params: { id: string }
 }) {
-  // Fetch inicial en servidor
-  const initialData = await api.get(`/api/batches/${params.id}`)
-  
-  // Pasar a Client Component para interactividad
-  return <BatchDetailClient initialData={initialData} />
+// Fetch inicial en servidor
+const initialData = await api.get(`/api/batches/${params.id}`)
+
+// Pasar a Client Component para interactividad
+return <BatchDetailClient initialData={initialData} />
 }
 
 // batch-detail-client.tsx
@@ -214,18 +221,18 @@ export default async function BatchDetailPage({
 import useSWR from 'swr'
 
 export function BatchDetailClient({ initialData }) {
-  const { data, mutate } = useSWR(
-    `/api/batches/${initialData.id}`,
-    {
-      fallbackData: initialData, // ← Usa datos del servidor
-      refreshInterval: 5000,
-    }
-  )
-  
-  const updateParameter = async (param: string, value: number) => {
-    // Optimistic update
-    mutate({ ...data, parametros: { ...data.parametros, [param]: value } }, false)
-    
+const { data, mutate } = useSWR(
+`/api/batches/${initialData.id}`,
+{
+fallbackData: initialData, // ← Usa datos del servidor
+refreshInterval: 5000,
+}
+)
+
+const updateParameter = async (param: string, value: number) => {
+// Optimistic update
+mutate({ ...data, parametros: { ...data.parametros, [param]: value } }, false)
+
     try {
       await api.patch(`/api/batches/${data.id}/parametros`, { [param]: value })
       mutate() // Revalidar
@@ -233,9 +240,10 @@ export function BatchDetailClient({ initialData }) {
       mutate() // Revertir en caso de error
       throw error
     }
-  }
-  
-  return <BatchDetails batch={data} onUpdateParameter={updateParameter} />
+
+}
+
+return <BatchDetails batch={data} onUpdateParameter={updateParameter} />
 }
 \`\`\`
 
@@ -251,19 +259,19 @@ import { api } from '@/lib/fetcher'
 import { revalidatePath } from 'next/cache'
 
 export async function createMaterial(formData: FormData) {
-  const data = {
-    nombre: formData.get('nombre'),
-    stock: Number(formData.get('stock')),
-    categoria: formData.get('categoria'),
-  }
-  
-  try {
-    await api.post('/api/materiales', data)
-    revalidatePath('/materiales') // Revalidar cache
-    return { success: true }
-  } catch (error) {
-    return { success: false, error: error.message }
-  }
+const data = {
+nombre: formData.get('nombre'),
+stock: Number(formData.get('stock')),
+categoria: formData.get('categoria'),
+}
+
+try {
+await api.post('/api/materiales', data)
+revalidatePath('/materiales') // Revalidar cache
+return { success: true }
+} catch (error) {
+return { success: false, error: error.message }
+}
 }
 
 // Uso en componente
@@ -271,23 +279,24 @@ export async function createMaterial(formData: FormData) {
 import { createMaterial } from '@/app/actions/materials'
 
 export function MaterialForm() {
-  const handleSubmit = async (formData: FormData) => {
-    const result = await createMaterial(formData)
-    if (result.success) {
-      // Mostrar éxito
-    } else {
-      // Mostrar error
-    }
-  }
-  
-  return (
-    <form action={handleSubmit}>
-      <input name="nombre" />
-      <input name="stock" type="number" />
-      <select name="categoria">...</select>
-      <button type="submit">Crear</button>
-    </form>
-  )
+const handleSubmit = async (formData: FormData) => {
+const result = await createMaterial(formData)
+if (result.success) {
+// Mostrar éxito
+} else {
+// Mostrar error
+}
+}
+
+return (
+
+<form action={handleSubmit}>
+<input name="nombre" />
+<input name="stock" type="number" />
+<select name="categoria">...</select>
+<button type="submit">Crear</button>
+</form>
+)
 }
 \`\`\`
 
@@ -298,12 +307,12 @@ import { api } from '@/lib/fetcher'
 import { mutate } from 'swr'
 
 export function MaterialForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    
+const [isSubmitting, setIsSubmitting] = useState(false)
+
+const handleSubmit = async (e: React.FormEvent) => {
+e.preventDefault()
+setIsSubmitting(true)
+
     try {
       await api.post('/api/materiales', formData)
       mutate('/api/materiales') // Revalidar lista
@@ -313,9 +322,10 @@ export function MaterialForm() {
     } finally {
       setIsSubmitting(false)
     }
-  }
-  
-  return <form onSubmit={handleSubmit}>...</form>
+
+}
+
+return <form onSubmit={handleSubmit}>...</form>
 }
 \`\`\`
 
@@ -324,25 +334,25 @@ export function MaterialForm() {
 \`\`\`typescript
 // Server Component
 export default async function Page() {
-  const data = await api.get('/api/materiales')
-  return <List data={data} />
+const data = await api.get('/api/materiales')
+return <List data={data} />
 }
 
 // Client Component con SWR
 'use client'
 export function MaterialsList() {
-  const { data } = useSWR('/api/materiales')
-  return <List data={data} />
+const { data } = useSWR('/api/materiales')
+return <List data={data} />
 }
 
 // Con filtros
 const { data } = useSWR(
-  `/api/materiales?categoria=${category}&search=${search}`
+`/api/materiales?categoria=${category}&search=${search}`
 )
 
 // Con paginación
 const { data } = useSWR(
-  `/api/materiales?page=${page}&limit=${limit}`
+`/api/materiales?page=${page}&limit=${limit}`
 )
 \`\`\`
 
@@ -354,16 +364,16 @@ import { api } from '@/lib/fetcher'
 import useSWR, { mutate } from 'swr'
 
 export function MaterialEditor({ materialId }: { materialId: string }) {
-  const { data: material } = useSWR(`/api/materiales/${materialId}`)
-  
-  const updateMaterial = async (updates: Partial<Material>) => {
-    // Optimistic update
-    mutate(
-      `/api/materiales/${materialId}`,
-      { ...material, ...updates },
-      false
-    )
-    
+const { data: material } = useSWR(`/api/materiales/${materialId}`)
+
+const updateMaterial = async (updates: Partial<Material>) => {
+// Optimistic update
+mutate(
+`/api/materiales/${materialId}`,
+{ ...material, ...updates },
+false
+)
+
     try {
       await api.patch(`/api/materiales/${materialId}`, updates)
       mutate(`/api/materiales/${materialId}`) // Revalidar
@@ -372,17 +382,19 @@ export function MaterialEditor({ materialId }: { materialId: string }) {
       mutate(`/api/materiales/${materialId}`) // Revertir
       throw error
     }
-  }
-  
-  return (
-    <form onSubmit={(e) => {
-      e.preventDefault()
-      updateMaterial({ nombre: e.target.nombre.value })
-    }}>
-      <input name="nombre" defaultValue={material?.nombre} />
-      <button type="submit">Actualizar</button>
-    </form>
-  )
+
+}
+
+return (
+
+<form onSubmit={(e) => {
+e.preventDefault()
+updateMaterial({ nombre: e.target.nombre.value })
+}}>
+<input name="nombre" defaultValue={material?.nombre} />
+<button type="submit">Actualizar</button>
+</form>
+)
 }
 \`\`\`
 
@@ -394,13 +406,13 @@ import { api } from '@/lib/fetcher'
 import { mutate } from 'swr'
 
 export function MaterialCard({ material }: { material: Material }) {
-  const [isDeleting, setIsDeleting] = useState(false)
-  
-  const handleDelete = async () => {
-    if (!confirm('¿Estás seguro?')) return
-    
+const [isDeleting, setIsDeleting] = useState(false)
+
+const handleDelete = async () => {
+if (!confirm('¿Estás seguro?')) return
+
     setIsDeleting(true)
-    
+
     try {
       await api.delete(`/api/materiales/${material.id}`)
       mutate('/api/materiales') // Revalidar lista
@@ -410,22 +422,24 @@ export function MaterialCard({ material }: { material: Material }) {
     } finally {
       setIsDeleting(false)
     }
-  }
-  
-  return (
-    <Card>
-      <CardContent>
-        <p>{material.nombre}</p>
-        <Button 
+
+}
+
+return (
+<Card>
+<CardContent>
+
+<p>{material.nombre}</p>
+<Button 
           onClick={handleDelete} 
           disabled={isDeleting}
           variant="destructive"
         >
-          {isDeleting ? 'Eliminando...' : 'Eliminar'}
-        </Button>
-      </CardContent>
-    </Card>
-  )
+{isDeleting ? 'Eliminando...' : 'Eliminar'}
+</Button>
+</CardContent>
+</Card>
+)
 }
 \`\`\`
 
@@ -438,21 +452,22 @@ export function MaterialCard({ material }: { material: Material }) {
 'use client'
 
 export default function Error({
-  error,
-  reset,
+error,
+reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+error: Error & { digest?: string }
+reset: () => void
 }) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
-      <h2 className="text-2xl font-bold text-red-600 mb-4">
-        Algo salió mal
-      </h2>
-      <p className="text-gray-600 mb-6">{error.message}</p>
-      <Button onClick={reset}>Intentar de nuevo</Button>
-    </div>
-  )
+return (
+
+<div className="flex flex-col items-center justify-center min-h-[400px] p-8">
+<h2 className="text-2xl font-bold text-red-600 mb-4">
+Algo salió mal
+</h2>
+<p className="text-gray-600 mb-6">{error.message}</p>
+<Button onClick={reset}>Intentar de nuevo</Button>
+</div>
+)
 }
 \`\`\`
 
@@ -461,49 +476,50 @@ export default function Error({
 \`\`\`typescript
 // lib/fetcher.ts
 export class APIError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public code?: string
-  ) {
-    super(message)
-    this.name = 'APIError'
-  }
+constructor(
+message: string,
+public status: number,
+public code?: string
+) {
+super(message)
+this.name = 'APIError'
+}
 }
 
 export async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, { ...options, credentials: 'include' })
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}))
-    
+const response = await fetch(url, { ...options, credentials: 'include' })
+
+if (!response.ok) {
+const error = await response.json().catch(() => ({}))
+
     // Manejar errores específicos
     if (response.status === 401) {
       // Redirigir a login
       window.location.href = '/login'
       throw new APIError('No autenticado', 401, 'UNAUTHORIZED')
     }
-    
+
     if (response.status === 403) {
       throw new APIError('No tienes permisos', 403, 'FORBIDDEN')
     }
-    
+
     if (response.status === 404) {
       throw new APIError('Recurso no encontrado', 404, 'NOT_FOUND')
     }
-    
+
     if (response.status >= 500) {
       throw new APIError('Error del servidor', response.status, 'SERVER_ERROR')
     }
-    
+
     throw new APIError(
       error.message || 'Error desconocido',
       response.status,
       error.code
     )
-  }
-  
-  return response.json()
+
+}
+
+return response.json()
 }
 \`\`\`
 
@@ -514,27 +530,28 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
 import useSWR from 'swr'
 
 export function DataComponent() {
-  const { data, error, isLoading } = useSWR('/api/data')
-  
-  if (isLoading) return <LoadingSpinner />
-  
-  if (error) {
-    // Error específico
-    if (error.status === 404) {
-      return <EmptyState message="No se encontraron datos" />
-    }
-    
+const { data, error, isLoading } = useSWR('/api/data')
+
+if (isLoading) return <LoadingSpinner />
+
+if (error) {
+// Error específico
+if (error.status === 404) {
+return <EmptyState message="No se encontraron datos" />
+}
+
     // Error genérico
     return (
-      <ErrorState 
+      <ErrorState
         message="Error al cargar los datos"
         error={error}
         onRetry={() => mutate('/api/data')}
       />
     )
-  }
-  
-  return <DataDisplay data={data} />
+
+}
+
+return <DataDisplay data={data} />
 }
 \`\`\`
 
@@ -549,34 +566,36 @@ import { api } from '@/lib/fetcher'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [error, setError] = useState('')
-  
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    
+const router = useRouter()
+const [error, setError] = useState('')
+
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+e.preventDefault()
+const formData = new FormData(e.currentTarget)
+
     try {
       await api.post('/api/auth/login', {
         username: formData.get('username'),
         password: formData.get('password'),
       })
-      
+
       // Login exitoso - redirigir
       router.push('/dashboard')
     } catch (error) {
       setError('Credenciales inválidas')
     }
-  }
-  
-  return (
-    <form onSubmit={handleSubmit}>
-      <input name="username" type="text" required />
-      <input name="password" type="password" required />
-      {error && <p className="text-red-600">{error}</p>}
-      <button type="submit">Iniciar Sesión</button>
-    </form>
-  )
+
+}
+
+return (
+
+<form onSubmit={handleSubmit}>
+<input name="username" type="text" required />
+<input name="password" type="password" required />
+{error && <p className="text-red-600">{error}</p>}
+<button type="submit">Iniciar Sesión</button>
+</form>
+)
 }
 \`\`\`
 
@@ -588,18 +607,18 @@ import { api } from '@/lib/fetcher'
 import { useRouter } from 'next/navigation'
 
 export function LogoutButton() {
-  const router = useRouter()
-  
-  const handleLogout = async () => {
-    try {
-      await api.post('/api/auth/logout', {})
-      router.push('/login')
-    } catch (error) {
-      console.error('Error al cerrar sesión', error)
-    }
-  }
-  
-  return <Button onClick={handleLogout}>Cerrar Sesión</Button>
+const router = useRouter()
+
+const handleLogout = async () => {
+try {
+await api.post('/api/auth/logout', {})
+router.push('/login')
+} catch (error) {
+console.error('Error al cerrar sesión', error)
+}
+}
+
+return <Button onClick={handleLogout}>Cerrar Sesión</Button>
 }
 \`\`\`
 
@@ -611,18 +630,18 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const sessionCookie = request.cookies.get('JSESSIONID')
-  
-  // Si no hay sesión y está intentando acceder a ruta protegida
-  if (!sessionCookie && !request.nextUrl.pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-  
-  return NextResponse.next()
+const sessionCookie = request.cookies.get('JSESSIONID')
+
+// Si no hay sesión y está intentando acceder a ruta protegida
+if (!sessionCookie && !request.nextUrl.pathname.startsWith('/login')) {
+return NextResponse.redirect(new URL('/login', request.url))
+}
+
+return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }
 \`\`\`
 
@@ -634,25 +653,25 @@ import useSWR, { mutate } from 'swr'
 import { api } from '@/lib/fetcher'
 
 export function BatchParameterEditor({ batchId }: { batchId: string }) {
-  const { data: batch } = useSWR(`/api/batches/${batchId}`)
-  
-  const updateTemperature = async (newTemp: number) => {
-    // 1. Actualizar UI inmediatamente (optimistic)
-    mutate(
-      `/api/batches/${batchId}`,
-      {
-        ...batch,
-        parametros: { ...batch.parametros, temperatura: newTemp }
-      },
-      false // No revalidar todavía
-    )
-    
+const { data: batch } = useSWR(`/api/batches/${batchId}`)
+
+const updateTemperature = async (newTemp: number) => {
+// 1. Actualizar UI inmediatamente (optimistic)
+mutate(
+`/api/batches/${batchId}`,
+{
+...batch,
+parametros: { ...batch.parametros, temperatura: newTemp }
+},
+false // No revalidar todavía
+)
+
     try {
       // 2. Enviar al servidor
       await api.patch(`/api/batches/${batchId}/parametros`, {
         temperatura: newTemp
       })
-      
+
       // 3. Revalidar para confirmar
       mutate(`/api/batches/${batchId}`)
     } catch (error) {
@@ -660,17 +679,19 @@ export function BatchParameterEditor({ batchId }: { batchId: string }) {
       mutate(`/api/batches/${batchId}`)
       alert('Error al actualizar temperatura')
     }
-  }
-  
-  return (
-    <div>
-      <p>Temperatura: {batch?.parametros.temperatura}°C</p>
-      <input
-        type="number"
-        onChange={(e) => updateTemperature(Number(e.target.value))}
-      />
-    </div>
-  )
+
+}
+
+return (
+
+<div>
+<p>Temperatura: {batch?.parametros.temperatura}°C</p>
+<input
+type="number"
+onChange={(e) => updateTemperature(Number(e.target.value))}
+/>
+</div>
+)
 }
 \`\`\`
 
@@ -684,28 +705,29 @@ import { useEffect } from 'react'
 import { mutate } from 'swr'
 
 export function RealtimeBatchMonitor() {
-  const { data } = useSWR('/api/batches/active')
-  
-  useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080/ws/batches')
-    
+const { data } = useSWR('/api/batches/active')
+
+useEffect(() => {
+const ws = new WebSocket('ws://localhost:8080/ws/batches')
+
     ws.onmessage = (event) => {
       const update = JSON.parse(event.data)
-      
+
       // Actualizar cache de SWR
       mutate(
         '/api/batches/active',
-        (current) => current?.map(b => 
+        (current) => current?.map(b =>
           b.id === update.id ? { ...b, ...update } : b
         ),
         false
       )
     }
-    
+
     return () => ws.close()
-  }, [])
-  
-  return <BatchList batches={data} />
+
+}, [])
+
+return <BatchList batches={data} />
 }
 \`\`\`
 

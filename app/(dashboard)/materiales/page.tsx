@@ -4,28 +4,57 @@
  */
 
 import { Header } from "@/components/layout/header"
-import { MaterialsTable } from "@/components/materials/materials-table"
-import { MaterialsCards } from "@/components/materials/materials-cards"
 import { MaterialsFilters } from "@/components/materials/materials-filters"
-import { mockMateriales } from "@/lib/mock-data"
-import { Plus } from "lucide-react"
+import { MaterialsClient } from "./_components/materials-client"
+import { PaginationClient } from "./_components/pagination-client"
+import { ErrorState } from "./_components/error-state"
+import { CreateButton } from "./_components/create-button"
+import { getMaterials } from "@/lib/materials-api"
 
-export default function MaterialesPage() {
+interface MaterialesPageProps {
+  searchParams: Promise<{
+    page?: string
+    type?: string
+    estado?: string
+    name?: string
+    supplier?: string
+  }>
+}
+
+export default async function MaterialesPage({ searchParams }: MaterialesPageProps) {
+  // Obtener parámetros de búsqueda (await searchParams en Next.js 15)
+  const params = await searchParams
+  const page = parseInt(params.page || '0')
+  const type = params.type
+  const estado = params.estado
+  const name = params.name
+  const supplier = params.supplier
+
+  // Obtener datos del backend
+  let materialsData
+  let error: string | null = null
+
+  try {
+        materialsData = await getMaterials({
+          page,
+          type,
+          estado,
+          name,
+          supplier,
+          size: 10
+        })
+  } catch (err) {
+    console.error('Error al cargar materiales:', err)
+    error = 'No se pudieron cargar los materiales'
+  }
+
   return (
     <>
       <Header
         title="Inventario de Materiales"
         subtitle="Administra tu stock de materias primas cerveceras"
         notificationCount={2}
-        actionButton={
-          <button
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
-            aria-label="Agregar nuevo material"
-          >
-            <Plus className="w-5 h-5" />
-            <span className="hidden sm:inline">Nuevo</span>
-          </button>
-        }
+        actionButton={<CreateButton />}
       />
       <div className="p-4 md:p-6 space-y-6">
         {/* Filtros */}
@@ -36,16 +65,36 @@ export default function MaterialesPage() {
             <h2 className="text-xl font-semibold text-primary-900 mb-1">Materias Primas</h2>
             <p className="text-sm text-primary-600">Gestiona maltas, lúpulos, levaduras y otros insumos</p>
           </div>
-          <MaterialsTable materiales={mockMateriales} />
-          <MaterialsCards materiales={mockMateriales} />
+          
+          {error ? (
+            <ErrorState error={error} />
+          ) : materialsData ? (
+            <MaterialsClient 
+              materials={materialsData.materials} 
+              pagination={materialsData.pagination}
+            />
+          ) : (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="mt-4 text-primary-600">Cargando materiales...</p>
+            </div>
+          )}
         </div>
 
-        {/* Contador de resultados */}
-        <div className="text-center">
-          <p className="text-sm text-primary-700">
-            Mostrando {mockMateriales.length} materiales de {mockMateriales.length} totales
-          </p>
-        </div>
+        {/* Contador de resultados y paginación */}
+        {materialsData && (
+          <div className="text-center space-y-4">
+            <p className="text-sm text-primary-700">
+              Mostrando {materialsData.materials.length} materiales de {materialsData.pagination.totalElements} totales
+            </p>
+            
+            {/* Paginación funcional */}
+            <PaginationClient 
+              currentPage={materialsData.pagination.currentPage}
+              totalPages={materialsData.pagination.totalPages}
+            />
+          </div>
+        )}
       </div>
     </>
   )
