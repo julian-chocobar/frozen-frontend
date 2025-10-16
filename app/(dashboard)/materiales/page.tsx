@@ -4,11 +4,11 @@
  */
 
 import { Header } from "@/components/layout/header"
-import { MaterialsFilters } from "@/components/materials/materials-filters"
+import { MaterialsFilters } from "./_components/materials-filters"
 import { MaterialsClient } from "./_components/materials-client"
 import { PaginationClient } from "./_components/pagination-client"
-import { ErrorState } from "./_components/error-state"
-import { CreateButton } from "./_components/create-button"
+import { ErrorState } from "@/components/ui/error-state"
+import { MaterialCreateButton } from "./_components/create-button"
 import { getMaterials } from "@/lib/materials-api"
 
 interface MaterialesPageProps {
@@ -45,7 +45,17 @@ export default async function MaterialesPage({ searchParams }: MaterialesPagePro
         })
   } catch (err) {
     console.error('Error al cargar materiales:', err)
-    error = 'No se pudieron cargar los materiales'
+    
+    // Detectar tipo de error para mostrar mensaje apropiado
+    if (err instanceof Error) {
+      if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
+        error = 'No se pudo conectar con el backend'
+      } else {
+        error = err.message
+      }
+    } else {
+      error = 'No se pudieron cargar los materiales'
+    }
   }
 
   return (
@@ -54,7 +64,7 @@ export default async function MaterialesPage({ searchParams }: MaterialesPagePro
         title="Inventario de Materiales"
         subtitle="Administra tu stock de materias primas cerveceras"
         notificationCount={2}
-        actionButton={<CreateButton />}
+        actionButton={<MaterialCreateButton />}
       />
       <div className="p-4 md:p-6 space-y-6">
         {/* Filtros */}

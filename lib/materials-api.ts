@@ -14,7 +14,6 @@ import type {
   UnitMeasurement 
 } from '@/types'
 
-// Mapeo de tipos para mostrar en español
 const TYPE_LABELS: Record<MaterialType, string> = {
   'MALTA': 'Maltas',
   'LUPULO': 'Lúpulos', 
@@ -179,4 +178,35 @@ export function getTypeLabel(type: MaterialType): string {
  */
 export function getUnitLabel(unit: UnitMeasurement): string {
   return UNIT_LABELS[unit]
+}
+
+/**
+ * Interfaz para la respuesta del endpoint id-name-list
+ */
+export interface MaterialIdName {
+  id: number
+  code: string
+  name: string
+}
+
+/**
+ * Obtiene lista simplificada de materiales (ID, código y nombre)
+ * Para usar en dropdowns y selecciones
+ */
+export async function getMaterialsIdNameList(params?: {
+  name?: string
+  active?: boolean
+}): Promise<MaterialIdName[]> {
+  const urlParams: Record<string, string> = {}
+  
+  if (params?.name) {
+    urlParams.name = params.name
+  }
+  
+  if (params?.active !== undefined) {
+    urlParams.active = params.active.toString()
+  }
+  
+  const materials = await api.get<MaterialIdName[]>('/api/materials/id-name-list', urlParams)
+  return materials
 }

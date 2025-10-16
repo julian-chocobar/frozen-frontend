@@ -7,8 +7,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { MaterialsTable } from "@/components/materials/materials-table"
-import { MaterialsCards } from "@/components/materials/materials-cards"
+import { MaterialsTable } from "./materials-table"
+import { MaterialsCards } from "./materials-cards"
 import { MaterialForm } from "./material-form"
 import { MaterialDetails } from "./material-details"
 import { 
@@ -30,7 +30,7 @@ interface MaterialsClientProps {
   }
 }
 
-export function MaterialsClient({ materials, pagination }: MaterialsClientProps) {
+export function MaterialsClient({ materials }: MaterialsClientProps) {
   const router = useRouter()
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null)
   const [isEditing, setIsEditing] = useState(false)
@@ -47,23 +47,6 @@ export function MaterialsClient({ materials, pagination }: MaterialsClientProps)
     } catch (error) {
       console.error('Error al actualizar material:', error)
       alert('Error al actualizar el material')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleDelete = async (material: Material) => {
-    if (!confirm(`¿Estás seguro de que quieres eliminar "${material.name}"?`)) {
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      await deleteMaterial(material.id)
-      router.refresh()
-    } catch (error) {
-      console.error('Error al eliminar material:', error)
-      alert('Error al eliminar el material')
     } finally {
       setIsLoading(false)
     }
@@ -97,14 +80,12 @@ export function MaterialsClient({ materials, pagination }: MaterialsClientProps)
       <MaterialsTable
         materiales={materials}
         onEdit={handleEditClick}
-        onDelete={handleDelete}
         onToggleActive={handleToggleActive}
         onViewDetails={handleViewDetails}
       />
       <MaterialsCards
         materiales={materials}
         onEdit={handleEditClick}
-        onDelete={handleDelete}
         onToggleActive={handleToggleActive}
         onViewDetails={handleViewDetails}
       />
@@ -158,10 +139,6 @@ export function MaterialsClient({ materials, pagination }: MaterialsClientProps)
                 onEdit={() => {
                   setIsViewing(false)
                   setIsEditing(true)
-                }}
-                onDelete={() => {
-                  setIsViewing(false)
-                  handleDelete(selectedMaterial)
                 }}
                 onToggleActive={() => {
                   setIsViewing(false)

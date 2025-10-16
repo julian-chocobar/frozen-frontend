@@ -12,15 +12,13 @@ interface MaterialDetailsProps {
   material: Material
   onClose: () => void
   onEdit: () => void
-  onDelete: () => void
   onToggleActive: () => void
 }
 
 export function MaterialDetails({ 
   material, 
   onClose, 
-  onEdit, 
-  onDelete, 
+  onEdit,  
   onToggleActive 
 }: MaterialDetailsProps) {
   return (

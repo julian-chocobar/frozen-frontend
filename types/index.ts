@@ -71,16 +71,63 @@ export interface MaterialsFilters {
   isActive?: boolean
 }
 
-export interface MovimientoMaterial {
+
+// ============================================
+// MOVIMIENTOS
+// ============================================
+export type MovementType = "INGRESO" | "EGRESO"
+
+
+export interface MovementResponse {
   id: string
-  materialId: string
-  tipo: "Ingreso" | "Egreso"
-  cantidad: number
-  fecha: string // ISO date
-  motivo: string
-  loteProduccionId?: string // Si es egreso por producción
-  usuario: string
+  type: MovementType
+  materialType: MaterialType
+  stock: number
+  materialName: string
+  realizationDate: string
+  unitMeasurement: UnitMeasurement
 }
+
+export interface MovementDetailResponse {
+  id: string
+  type: MovementType
+  realizationDate: string // ISO date
+  stock: number
+  materialType: MaterialType
+  materialCode: string
+  materialName: string
+  materialId: string
+  reason: string
+}
+
+export interface MovementCreateRequest {
+  type: MovementType
+  materialId: string
+  stock: number
+  reason?: string
+}
+
+export interface MovementsFilters {
+  page?: number
+  size?: number
+  type?: MovementType
+  materialId?: string
+  dateFrom?: string
+  dateTo?: string
+}
+
+export interface MovementsPageResponse {
+  content: MovementResponse[]
+  isFirst: boolean
+  totalItems: number
+  size: number
+  isLast: boolean
+  totalPages: number
+  hasPrevious: boolean
+  hasNext: boolean
+  currentPage: number
+}
+
 
 // ============================================
 // PRODUCCIÓN
@@ -172,7 +219,7 @@ export interface RegistroDesperdicio {
 export interface TrazabilidadLote {
   lote: LoteProduccion
   materiales: Material[]
-  movimientos: MovimientoMaterial[]
+  movimientos: MovementResponse[]
   registrosCalidad: RegistroCalidad[]
   desperdicios: RegistroDesperdicio[]
 }

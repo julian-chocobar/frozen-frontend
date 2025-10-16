@@ -2,6 +2,7 @@
 
 /**
  * Componente para mostrar estados de error con opciones de recuperación
+ * Reutilizable para diferentes páginas (materiales, movimientos, etc.)
  */
 
 import { RefreshCw, AlertCircle, Wifi, WifiOff } from "lucide-react"
@@ -9,9 +10,11 @@ import { RefreshCw, AlertCircle, Wifi, WifiOff } from "lucide-react"
 interface ErrorStateProps {
   error: string
   onRetry?: () => void
+  /** URL para recargar la página (por defecto usa la página actual) */
+  reloadUrl?: string
 }
 
-export function ErrorState({ error, onRetry }: ErrorStateProps) {
+export function ErrorState({ error, onRetry, reloadUrl }: ErrorStateProps) {
   const isConnectionError = error.includes('conectar con el backend') || error.includes('ECONNREFUSED')
   
   return (
@@ -30,19 +33,7 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
           <p className="text-red-600 mb-4 max-w-md">
             {error}
           </p>
-        </div>
-
-        {isConnectionError && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md">
-            <h4 className="font-medium text-yellow-800 mb-2">Pasos para solucionar:</h4>
-            <ul className="text-sm text-yellow-700 text-left space-y-1">
-              <li>1. Verifica que tu backend Spring Boot esté ejecutándose</li>
-              <li>2. Confirma que esté en el puerto 8080</li>
-              <li>3. Revisa la consola del backend por errores</li>
-              <li>4. Verifica la configuración de CORS</li>
-            </ul>
-          </div>
-        )}
+        </div>     
 
         <div className="flex gap-3">
           {onRetry && (
@@ -56,7 +47,7 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
           )}
           
           <a
-            href="/materiales"
+            href={reloadUrl || window.location.pathname}
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
           >
             <Wifi className="w-4 h-4" />

@@ -10,7 +10,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Actualizado a azul clásico (#2563eb) menos violeta */
+  /* Actualizado a azul clásico (#2563eb) */
   --background: oklch(0.99 0.005 85);
   --foreground: oklch(0.25 0.02 240);
   --card: oklch(1 0 0);
@@ -130,7 +130,8 @@
   /* Sombras sutiles */
   --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-card-hover: 0 2px 4px 0 rgb(0 0 0 / 0.08);
-  --shadow-modal: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-modal: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
 
   /* Radio de Bordes */
   --radius-sm: calc(var(--radius) - 4px);

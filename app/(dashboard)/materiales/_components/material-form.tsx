@@ -13,9 +13,11 @@ interface MaterialFormProps {
   onSubmit: (data: MaterialCreateRequest | MaterialUpdateRequest) => void
   onCancel: () => void
   isLoading?: boolean
+  /** Si true, permite editar el stock (solo para casos especiales) */
+  allowStockEdit?: boolean
 }
 
-export function MaterialForm({ material, onSubmit, onCancel, isLoading = false }: MaterialFormProps) {
+export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, allowStockEdit = false }: MaterialFormProps) {
   const isEditing = !!material
   
   const [formData, setFormData] = useState({
@@ -72,6 +74,12 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false }
         if (formData.value !== material?.value && formData.value > 0) updateData.value = formData.value
         if (formData.unitMeasurement !== material?.unitMeasurement) updateData.unitMeasurement = formData.unitMeasurement
         if (formData.threshold !== material?.threshold && formData.threshold > 0) updateData.threshold = formData.threshold
+        
+        // Solo incluir stock si allowStockEdit es true (para casos especiales)
+        if (allowStockEdit && formData.stock !== material?.stock && formData.stock > 0) {
+          // Nota: Esto requeriría extender MaterialUpdateRequest o crear un tipo especial
+          console.warn('Edición de stock no está soportada en MaterialUpdateRequest')
+        }
         
         onSubmit(updateData)
       } else {
@@ -176,6 +184,9 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false }
         <div>
           <label className="block text-sm font-medium text-primary-900 mb-2">
             Stock Actual
+            {isEditing && !allowStockEdit && (
+              <span className="text-xs text-gray-500 ml-2">(Solo lectura - usar movimientos para cambios)</span>
+            )}
           </label>
           <input
             type="number"
@@ -185,10 +196,17 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false }
             onChange={(e) => handleChange("stock", parseFloat(e.target.value) || 0)}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
               errors.stock ? "border-red-500" : "border-stroke"
-            }`}
+            } ${isEditing && !allowStockEdit ? "bg-gray-100 cursor-not-allowed" : ""}`}
             placeholder="0.00 (opcional)"
+            disabled={isEditing && !allowStockEdit}
+            readOnly={isEditing && !allowStockEdit}
           />
           {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
+          {isEditing && !allowStockEdit && (
+            <p className="text-xs text-gray-500 mt-1">
+              Para modificar el stock, usa la sección de movimientos de stock
+            </p>
+          )}
         </div>
 
         {/* Unidad de Medida */}
