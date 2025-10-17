@@ -44,8 +44,8 @@ export const navItems: NavItem[] = [
     icon: BeerIcon,
   },
   {
-    label: "Producción",
-    href: "/produccion",
+    label: "Ordenes",
+    href: "/ordenes",
     icon: ClipboardList,
   },
   {
