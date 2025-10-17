@@ -7,7 +7,7 @@
 
 import type React from "react"
 import { usePathname } from "next/navigation"
-import { Package, ClipboardList, Activity, FileText, Settings, LayoutDashboard, ArrowRightLeft, Package2, BeerIcon } from "lucide-react"
+import { Package, ClipboardList, Activity, FileText, Settings, LayoutDashboard, ArrowRightLeft, Package2, BeerIcon, MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NavLink } from "./nav-link"
 
@@ -65,12 +65,42 @@ export const navItems: NavItem[] = [
   },
 ]
 
+// Elementos prioritarios para mostrar en bottom-bar móvil (máximo 5 para mejor UX)
+export const mobileNavItems: NavItem[] = [
+  {
+    label: "Dashboard",
+    href: "/",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Materias",
+    href: "/materiales?estado=Activo",
+    icon: Package,
+  },
+  {
+    label: "Movimientos",
+    href: "/movimientos",
+    icon: ArrowRightLeft,
+  },
+  {
+    label: "Productos",
+    href: "/productos",
+    icon: BeerIcon,
+  },
+  {
+    label: "Ordenes",
+    href: "/ordenes",
+    icon: ClipboardList,
+  },
+]
+
 // Función helper para determinar si una ruta está activa
 export function isRouteActive(pathname: string, href: string): boolean {
   if (href === "/") {
     // Para el dashboard, solo está activo si estamos exactamente en "/"
     return pathname === "/"
   }
+  
   // Para otras rutas, verificar si el pathname empieza con la ruta
   return pathname.startsWith(href)
 }
@@ -147,7 +177,7 @@ export function Navigation({ variant, className }: NavigationProps) {
       aria-label="Navegación principal móvil"
     >
       <ul className="flex items-center justify-around h-16">
-        {navItems.map((item) => {
+        {mobileNavItems.map((item) => {
           const Icon = item.icon
           const isActive = isRouteActive(pathname, item.href)
 
