@@ -69,7 +69,7 @@ export function CreateButton({
             WebkitBackdropFilter: 'blur(8px)'
           }}
         >
-          <div className={`bg-white rounded-lg ${maxWidthClasses[maxWidth]} w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 ${modalClassName}`}>
+          <div className={`bg-background rounded-lg ${maxWidthClasses[maxWidth]} w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 ${modalClassName}`}>
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">{modalTitle}</h2>
               {children}

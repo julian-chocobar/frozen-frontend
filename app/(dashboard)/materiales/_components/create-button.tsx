@@ -23,7 +23,7 @@ export function MaterialCreateButton() {
   }
 
   return (
-    <CreateButton
+    <CreateButton 
       buttonText="Nuevo"
       modalTitle="Crear Nuevo Material"
       ariaLabel="Agregar nuevo material"

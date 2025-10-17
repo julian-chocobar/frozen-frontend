@@ -19,12 +19,14 @@ const TYPE_LABELS: Record<MaterialType, string> = {
   'LUPULO': 'Lúpulos', 
   'AGUA': 'Agua',
   'LEVADURA': 'Levaduras',
+  'ENVASE': 'Envases',
   'OTROS': 'Otros'
 }
 
 const UNIT_LABELS: Record<UnitMeasurement, string> = {
   'KG': 'kg',
-  'LT': 'L'
+  'LT': 'L',
+  'UNIDAD': 'unidad'
 }
 
 /**
@@ -128,12 +130,6 @@ export async function updateMaterial(id: string, data: MaterialUpdateRequest) {
   return material
 }
 
-/**
- * Elimina un material (borrado lógico)
- */
-export async function deleteMaterial(id: string) {
-  await api.delete(`/api/materials/${id}`)
-}
 
 /**
  * Activa/desactiva un material
@@ -152,6 +148,7 @@ export function getMaterialTypes() {
     { value: 'LUPULO', label: 'Lúpulo' },
     { value: 'AGUA', label: 'Agua' },
     { value: 'LEVADURA', label: 'Levadura' },
+    { value: 'ENVASE', label: 'Envase' },
     { value: 'OTROS', label: 'Otros' }
   ]
 }
@@ -162,7 +159,8 @@ export function getMaterialTypes() {
 export function getUnitMeasurements() {
   return [
     { value: 'KG', label: 'Kilogramos' },
-    { value: 'LT', label: 'Litros' }
+    { value: 'LT', label: 'Litros' },
+    { value: 'UNIDAD', label: 'Unidad' }
   ]
 }
 

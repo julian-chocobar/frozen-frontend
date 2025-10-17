@@ -77,7 +77,7 @@ export async function fetcher<T>(endpoint: string, options: FetcherOptions = {})
     
     // Manejar errores de conexión específicamente
     if (error instanceof TypeError && error.message.includes('fetch failed')) {
-      throw new Error(`No se pudo conectar con el backend. Verifica que esté ejecutándose en ${BACKEND_URL}`)
+      throw new Error(`No se pudo conectar con el servidor`)
     }
     
     throw error

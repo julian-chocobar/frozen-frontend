@@ -4,7 +4,7 @@
  * Formulario para crear y editar materiales
  */
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { getMaterialTypes, getUnitMeasurements } from "@/lib/materials-api"
 import type { Material, MaterialType, UnitMeasurement, MaterialCreateRequest, MaterialUpdateRequest } from "@/types"
 
@@ -110,7 +110,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 bg-background p-4 rounded-lg">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Nombre */}
         <div>

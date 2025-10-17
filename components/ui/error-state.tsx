@@ -15,7 +15,7 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({ error, onRetry, reloadUrl }: ErrorStateProps) {
-  const isConnectionError = error.includes('conectar con el backend') || error.includes('ECONNREFUSED')
+  const isConnectionError = error.includes('conectar con el servidor') || error.includes('ECONNREFUSED')
   
   return (
     <div className="p-8 text-center">

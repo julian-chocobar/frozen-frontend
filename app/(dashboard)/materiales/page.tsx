@@ -69,7 +69,7 @@ export default async function MaterialesPage({ searchParams }: MaterialesPagePro
       <div className="p-4 md:p-6 space-y-6">
         {/* Filtros */}
         <MaterialsFilters />
-
+    
         <div className="card border-2 border-primary-600 overflow-hidden">
           <div className="p-6 border-b border-stroke">
             <h2 className="text-xl font-semibold text-primary-900 mb-1">Materias Primas</h2>

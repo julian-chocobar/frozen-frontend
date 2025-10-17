@@ -7,7 +7,7 @@
 
 import type React from "react"
 import { usePathname } from "next/navigation"
-import { Package, ClipboardList, Activity, FileText, Settings, LayoutDashboard, ArrowRightLeft } from "lucide-react"
+import { Package, ClipboardList, Activity, FileText, Settings, LayoutDashboard, ArrowRightLeft, Package2, BeerIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NavLink } from "./nav-link"
 
@@ -32,6 +32,16 @@ export const navItems: NavItem[] = [
     label: "Movimientos",
     href: "/movimientos",
     icon: ArrowRightLeft,
+  },
+  {
+    label: "Packagings",
+    href: "/packagings",
+    icon: Package2,
+  },
+  {
+    label: "Productos",
+    href: "/productos",
+    icon: BeerIcon,
   },
   {
     label: "Producción",

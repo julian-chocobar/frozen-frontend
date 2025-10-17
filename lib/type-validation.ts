@@ -56,6 +56,7 @@ export const MATERIAL_TYPE_LABELS: Record<MaterialType, string> = {
   'LUPULO': 'Lúpulo',
   'AGUA': 'Agua',
   'LEVADURA': 'Levadura',
+  'ENVASE': 'Envase',
   'OTROS': 'Otros',
 }
 
@@ -64,7 +65,8 @@ export const MATERIAL_TYPE_LABELS: Record<MaterialType, string> = {
  */
 export const UNIT_MEASUREMENT_LABELS: Record<UnitMeasurement, string> = {
   'KG': 'Kilogramos',
-  'LT': 'Litros'
+  'LT': 'Litros',
+  'UNIDAD': 'Unidad'
 }
 
 /**

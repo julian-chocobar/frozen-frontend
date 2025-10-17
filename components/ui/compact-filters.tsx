@@ -72,7 +72,7 @@ export function CompactFilters({
               className={cn(
                 "appearance-none w-full pl-4 pr-8 py-2 border border-stroke rounded-lg",
                 "focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-600",
-                "text-sm text-primary-900 bg-white cursor-pointer",
+                "text-sm text-primary-600 cursor-pointer",
                 "min-w-0"
               )}
             >
@@ -97,7 +97,7 @@ export function CompactFilters({
               className={cn(
                 "w-full px-3 py-2 border border-stroke rounded-lg",
                 "focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-600",
-                "text-sm text-primary-900",
+                "text-sm text-primary-600",
                 "min-w-0"
               )}
             />

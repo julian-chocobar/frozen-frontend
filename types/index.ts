@@ -6,11 +6,12 @@
 // ============================================
 // MATERIAS PRIMAS
 // ============================================
-
-export type MaterialType = "MALTA" | "LUPULO" | "AGUA" | "LEVADURA" | "OTROS"
-export type UnitMeasurement = "KG" | "LT"
+export type MaterialType = "MALTA" | "LUPULO" | "AGUA" | "LEVADURA" | "ENVASE" | "OTROS"
+export type UnitMeasurement = "KG" | "LT" | "UNIDAD"
 
 export type MaterialStatus = "Activo" | "Inactivo"
+
+
 
 // Tipo para la API del backend (coincide exactamente con lo que recibes)
 export interface Material {
@@ -71,12 +72,10 @@ export interface MaterialsFilters {
   isActive?: boolean
 }
 
-
 // ============================================
 // MOVIMIENTOS
 // ============================================
 export type MovementType = "INGRESO" | "EGRESO"
-
 
 export interface MovementResponse {
   id: string
@@ -128,6 +127,88 @@ export interface MovementsPageResponse {
   currentPage: number
 }
 
+// ============================================
+// PACKAGINGS
+// ============================================
+export interface PackagingResponse {
+  id: string
+  name: string
+  unitMeasurement: UnitMeasurement
+  quantity: number
+  isActive: boolean 
+}
+
+export interface PackagingCreateRequest {
+  name: string
+  unitMeasurement: UnitMeasurement
+  quantity: number
+}
+
+export interface PackagingUpdateRequest {
+  name?: string
+  unitMeasurement?: UnitMeasurement
+  quantity?: number
+}
+
+export interface PackagingPageResponse {
+  content: PackagingResponse[]
+  isFirst: boolean
+  totalItems: number
+  size: number
+  isLast: boolean
+  totalPages: number
+  hasPrevious: boolean
+  hasNext: boolean
+  currentPage: number
+}
+
+// ============================================
+// PRODUCTOS
+// ============================================
+
+export type ProductStatus = "Activo" | "Inactivo"
+export type ProductReady = "Listo" | "No Listo"
+export type ProductAlcoholic = "Alcoholico" | "No Alcoholico"
+
+export interface ProductResponse {
+  id: string
+  name: string
+  isAlcoholic: boolean
+  isActive: boolean
+  isReady: boolean
+  creationDate: string
+}
+
+export interface ProductCreateRequest {
+  name: string
+  isAlcoholic: boolean
+}
+
+export interface ProductUpdateRequest {
+  name?: string
+  isAlcoholic?: boolean
+}
+
+export interface ProductPageResponse {
+  content: ProductResponse[]
+  isFirst: boolean
+  totalItems: number
+  size: number
+  isLast: boolean
+  totalPages: number
+  hasPrevious: boolean
+  hasNext: boolean
+  currentPage: number
+}
+
+export interface ProductsFilters {
+  page?: number
+  size?: number
+  name?: string
+  isAlcoholic?: boolean
+  isActive?: boolean
+  isReady?: boolean
+}
 
 // ============================================
 // PRODUCCIÓN

@@ -28,7 +28,7 @@ export function MovementDetails({
         WebkitBackdropFilter: 'blur(8px)'
       }}
     >
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+      <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-start justify-between">
