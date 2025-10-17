@@ -166,13 +166,13 @@ export function CompactFilters({
           onClick={() => setIsExpanded(!isExpanded)}
           className={cn(
             "w-full flex items-center justify-between p-3 border border-stroke rounded-lg",
-            "bg-white hover:bg-gray-50 transition-colors",
+            "bg-background hover:bg-gray-50 transition-colors",
             "focus:outline-none focus:ring-2 focus:ring-primary-300"
           )}
         >
-          <div className="flex items-center gap-2">
+          <div className="bg-background flex items-center gap-2">
             <Search className="w-4 h-4 text-primary-600" />
-            <span className="text-sm font-medium text-primary-900">
+            <span className="text-sm font-medium text-primary-600">
               Filtros
               {hasActiveFilters && (
                 <span className="ml-2 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full">

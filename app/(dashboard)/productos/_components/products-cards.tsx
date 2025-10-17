@@ -35,32 +35,10 @@ export function ProductsCards({
                 label: '',
                 showLabel: false,
                 render: (value) => (
-                    <span className="text-sm text-primary-600">{value ? "Si" : "No"}</span>
+                    <span className="text-sm text-primary-600"> {value ? "Alcoholico" : "No alcoholico"}</span>
                 )
-            },
-            {
-                key: 'isActive',
-                label: '',
-                showLabel: false,
-                render: (value, product) => (
-                    <span className={cn(
-                        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-                        product.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                    )}>
-                        {product.isActive ? (
-                            <>
-                                <Power className="w-3 h-3" />
-                                Activo
-                            </>
-                        ) : (
-                            <>
-                                <PowerOff className="w-3 h-3" />
-                                Inactivo
-                            </>
-                        )} 
-                    </span>
-                )
-            },
+            },     
+
         ],
         footer: [
             {

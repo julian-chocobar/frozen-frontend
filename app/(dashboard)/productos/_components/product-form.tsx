@@ -25,9 +25,6 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
         if (!formData.name.trim()) {
             newErrors.name = "El nombre es requerido"
         }
-        if (!formData.isAlcoholic) {
-            newErrors.isAlcoholic = "El alcohol es requerido"
-        }
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -91,13 +88,23 @@ const handleChange = (field: string, value: string | boolean) => {
                     {errors.isAlcoholic && <p className="text-red-500 text-sm mt-1">{errors.isAlcoholic}</p>}
                 </div>
             </div>
-            <div className="flex justify-end">
-                <Button type="button" onClick={onCancel} className="mr-2">
+            {/* Botones */}
+            <div className="flex justify-end gap-3 pt-6 border-t border-stroke">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="px-4 py-2 text-sm font-medium text-primary-600 bg-white border border-stroke rounded-lg hover:bg-primary-50 transition-colors"
+                    disabled={isLoading}
+                >
                     Cancelar
-                </Button>
-                <Button type="submit" disabled={isLoading}>
-                    {isEditing ? "Guardar" : "Crear"}
-                </Button>
+                </button>
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isLoading ? "Guardando..." : "Crear"}
+                </button>
             </div>
         </form>
     )

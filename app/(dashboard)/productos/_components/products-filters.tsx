@@ -54,7 +54,7 @@ export function ProductsFilters({ onFilterChange }: ProductsFiltersProps) {
             label: 'Alcoholico',
             options: alcoholicos.map(al => ({
                 value: al,
-                label: al === "Todos" ? "Todos los alcoholicos" : al
+                label: al === "Todos" ? "Con y sin alcohol" : al
             })),
         },
         {
@@ -63,7 +63,7 @@ export function ProductsFilters({ onFilterChange }: ProductsFiltersProps) {
             label: 'Listo',
             options: listos.map(li => ({
                 value: li,
-                label: li === "Todos" ? "Todos los listos" : li
+                label: li === "Todos" ? "Listos y no listos" : li
             })),
         }
     ]
