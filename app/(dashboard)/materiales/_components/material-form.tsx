@@ -25,7 +25,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
     type: material?.type || "MALTA" as MaterialType,
     supplier: material?.supplier || "",
     value: material?.value || 0,
-    stock: material?.stock || 0,
+    stock: material?.totalStock || 0,
     unitMeasurement: material?.unitMeasurement || "KG" as UnitMeasurement,
     threshold: material?.threshold || 0,
   })
@@ -76,7 +76,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
         if (formData.threshold !== material?.threshold && formData.threshold > 0) updateData.threshold = formData.threshold
         
         // Solo incluir stock si allowStockEdit es true (para casos especiales)
-        if (allowStockEdit && formData.stock !== material?.stock && formData.stock > 0) {
+        if (allowStockEdit && formData.stock !== material?.totalStock && formData.stock > 0) {
           // Nota: Esto requeriría extender MaterialUpdateRequest o crear un tipo especial
           console.warn('Edición de stock no está soportada en MaterialUpdateRequest')
         }
@@ -202,11 +202,11 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
             readOnly={isEditing && !allowStockEdit}
           />
           {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
-          {isEditing && !allowStockEdit && (
-            <p className="text-xs text-gray-500 mt-1">
-              Para modificar el stock, usa la sección de Movimientos
-            </p>
-          )}
+            {isEditing && !allowStockEdit && (
+              <p className="text-xs text-gray-500 mt-1">
+                Para modificar el stock, usa la sección de Movimientos
+              </p>
+            )}
         </div>
 
         {/* Unidad de Medida */}

@@ -21,7 +21,7 @@ export interface Material {
   type: MaterialType
   supplier: string
   value: number
-  stock: number
+  totalStock: number
   unitMeasurement: UnitMeasurement
   threshold: number
   isBelowThreshold: boolean
@@ -60,6 +60,25 @@ export interface MaterialsPageResponse {
   hasPrevious: boolean
   hasNext: boolean
   currentPage: number
+}
+
+//Detalle para el detalle de materiales 
+export interface MaterialDetailResponse {
+  id: string
+  code: string
+  name: string
+  type: MaterialType
+  supplier: string
+  value: number
+  totalStock: number
+  availableStock: number
+  reservedStock: number
+  unitMeasurement: UnitMeasurement
+  threshold: number
+  isBelowThreshold: boolean
+  isActive: boolean
+  creationDate: string
+  lastUpdateDate: string
 }
 
 // Filtros para la API (coincide con los parámetros del backend)

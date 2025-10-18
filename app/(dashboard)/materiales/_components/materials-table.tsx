@@ -45,7 +45,7 @@ export function MaterialsTable({
       )
     },
     {
-      key: 'stock',
+      key: 'totalStock',
       label: 'Stock',
       render: (value, material) => (
         <div>

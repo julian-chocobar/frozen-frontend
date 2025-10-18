@@ -57,7 +57,7 @@ export function MaterialsCards({
         )
       },
       {
-        key: 'stock',
+        key: 'totalStock',
         label: 'Stock',
         render: (value, material) => (
           <div>
