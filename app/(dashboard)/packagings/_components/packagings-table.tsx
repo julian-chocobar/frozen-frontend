@@ -31,6 +31,13 @@ export function PackagingsTable({
             )
         },
         {
+            key: 'materialName',
+            label: 'Material',
+            render: (value) => (
+                <span className="text-sm text-primary-600">{value || 'Sin material'}</span>
+            )
+        },
+        {
             key: 'unitMeasurement',
             label: 'Unidad de Medida',
             render: (value) => (

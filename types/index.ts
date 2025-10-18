@@ -111,6 +111,7 @@ export interface MovementDetailResponse {
   type: MovementType
   realizationDate: string // ISO date
   stock: number
+  unitMeasurement: UnitMeasurement
   materialType: MaterialType
   materialCode: string
   materialName: string
@@ -152,6 +153,7 @@ export interface MovementsPageResponse {
 export interface PackagingResponse {
   id: string
   name: string
+  materialName: string 
   unitMeasurement: UnitMeasurement
   quantity: number
   isActive: boolean 
@@ -159,12 +161,14 @@ export interface PackagingResponse {
 
 export interface PackagingCreateRequest {
   name: string
+  materialID?: number
   unitMeasurement: UnitMeasurement
   quantity: number
 }
 
 export interface PackagingUpdateRequest {
   name?: string
+  materialID?: number
   unitMeasurement?: UnitMeasurement
   quantity?: number
 }
