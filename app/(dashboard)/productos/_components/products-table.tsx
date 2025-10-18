@@ -36,6 +36,15 @@ export function ProductsTable({
             )
         },
         {
+            key: 'standardQuantity',
+            label: 'Cantidad Estándar',
+            render: (value, product) => (
+                <span className="text-sm font-medium text-primary-900">
+                    {value} {product.unitMeasurement === 'LT' ? 'L' : product.unitMeasurement}
+                </span>
+            )
+        },
+        {
             key: 'isActive',
             label: 'Estado',
             render: (value, product) => (

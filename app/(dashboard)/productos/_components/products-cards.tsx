@@ -37,8 +37,16 @@ export function ProductsCards({
                 render: (value) => (
                     <span className="text-sm text-primary-600"> {value ? "Alcoholico" : "No alcoholico"}</span>
                 )
-            },     
-
+            },
+            {
+                key: 'standardQuantity',
+                label: 'Cantidad Estándar',
+                render: (value, product) => (
+                    <span className="text-sm font-medium text-primary-900">
+                        {value} {product.unitMeasurement === 'LT' ? 'L' : product.unitMeasurement}
+                    </span>
+                )
+            }
         ],
         footer: [
             {

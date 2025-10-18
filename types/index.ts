@@ -200,16 +200,22 @@ export interface ProductResponse {
   isActive: boolean
   isReady: boolean
   creationDate: string
+  standardQuantity: number  
+  unitMeasurement: UnitMeasurement 
 }
 
 export interface ProductCreateRequest {
   name: string
   isAlcoholic: boolean
+  standardQuantity: number
+  unitMeasurement: UnitMeasurement
 }
 
 export interface ProductUpdateRequest {
   name?: string
   isAlcoholic?: boolean
+  standardQuantity?: number
+  unitMeasurement?: UnitMeasurement
 }
 
 export interface ProductPageResponse {
@@ -231,6 +237,8 @@ export interface ProductsFilters {
   isAlcoholic?: boolean
   isActive?: boolean
   isReady?: boolean
+  standardQuantity?: number
+  unitMeasurement?: UnitMeasurement
 }
 
 // ============================================
