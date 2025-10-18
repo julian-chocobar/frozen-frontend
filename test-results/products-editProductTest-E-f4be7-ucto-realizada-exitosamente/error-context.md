@@ -1,0 +1,288 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "F" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e5]: F
+      - navigation [ref=e6]:
+        - list [ref=e7]:
+          - listitem [ref=e8]:
+            - link "Dashboard" [ref=e9] [cursor=pointer]:
+              - /url: /
+              - img [ref=e10]
+          - listitem [ref=e15]:
+            - link "Materias" [ref=e16] [cursor=pointer]:
+              - /url: /materiales?estado=Activo
+              - img [ref=e17]
+          - listitem [ref=e21]:
+            - link "Movimientos" [ref=e22] [cursor=pointer]:
+              - /url: /movimientos
+              - img [ref=e23]
+          - listitem [ref=e26]:
+            - link "Packagings" [ref=e27] [cursor=pointer]:
+              - /url: /packagings
+              - img [ref=e28]
+          - listitem [ref=e31]:
+            - link "Productos" [ref=e32] [cursor=pointer]:
+              - /url: /productos
+              - img [ref=e33]
+          - listitem [ref=e37]:
+            - link "Ordenes" [ref=e38] [cursor=pointer]:
+              - /url: /ordenes
+              - img [ref=e39]
+          - listitem [ref=e42]:
+            - link "Seguimiento" [ref=e43] [cursor=pointer]:
+              - /url: /seguimiento
+              - img [ref=e44]
+          - listitem [ref=e46]:
+            - link "Reportes" [ref=e47] [cursor=pointer]:
+              - /url: /reportes
+              - img [ref=e48]
+          - listitem [ref=e51]:
+            - link "Config" [ref=e52] [cursor=pointer]:
+              - /url: /configuracion
+              - img [ref=e53]
+    - main [ref=e57]:
+      - generic [ref=e59]:
+        - generic [ref=e61]:
+          - heading "Productos" [level=1] [ref=e62]
+          - paragraph [ref=e63]: Gestiona tus productos
+        - generic [ref=e64]:
+          - button "Agregar nuevo producto" [ref=e65]:
+            - img [ref=e66]
+            - generic [ref=e67]: Nuevo
+          - button "Notificaciones (2 nuevas)" [ref=e68]:
+            - img [ref=e69]
+          - button "Menú de usuario" [ref=e73]:
+            - img [ref=e75]
+            - generic [ref=e78]:
+              - paragraph [ref=e79]: Admin Usuario
+              - paragraph [ref=e80]: Maestro Cervecero
+            - img [ref=e81]
+      - generic [ref=e83]:
+        - generic [ref=e86]:
+          - generic [ref=e87]:
+            - generic [ref=e88]:
+              - img [ref=e89]
+              - textbox "Nombre..." [ref=e92]
+            - generic [ref=e93]:
+              - combobox [ref=e94] [cursor=pointer]:
+                - option "Todos los estados" [selected]
+                - option "Activo"
+                - option "Inactivo"
+              - img
+            - generic [ref=e95]:
+              - combobox [ref=e96] [cursor=pointer]:
+                - option "Con y sin alcohol" [selected]
+                - option "Alcoholico"
+                - option "No Alcoholico"
+              - img
+            - generic [ref=e97]:
+              - combobox [ref=e98] [cursor=pointer]:
+                - option "Listos y no listos" [selected]
+                - option "Listo"
+                - option "No Listo"
+              - img
+          - button "Buscar" [ref=e100]:
+            - img [ref=e101]
+            - text: Buscar
+        - generic [ref=e104]:
+          - generic [ref=e105]:
+            - heading "Productos" [level=2] [ref=e106]
+            - paragraph [ref=e107]: Gestiona tus productos
+          - table [ref=e110]:
+            - rowgroup [ref=e111]:
+              - row "Nombre Alcoholico Estado Listo Acciones" [ref=e112]:
+                - cell "Nombre" [ref=e113]
+                - cell "Alcoholico" [ref=e114]
+                - cell "Estado" [ref=e115]
+                - cell "Listo" [ref=e116]
+                - cell "Acciones" [ref=e117]
+            - rowgroup [ref=e118]:
+              - row "IPA Americana Si Activo No listo Ver detalles Editar Cambiar estado Marcar como listo" [ref=e119]:
+                - cell "IPA Americana" [ref=e120]
+                - cell "Si" [ref=e121]
+                - cell "Activo" [ref=e122]:
+                  - generic [ref=e123]:
+                    - img [ref=e124]
+                    - text: Activo
+                - cell "No listo" [ref=e126]:
+                  - generic [ref=e127]:
+                    - img [ref=e128]
+                    - text: No listo
+                - cell "Ver detalles Editar Cambiar estado Marcar como listo" [ref=e132]:
+                  - generic [ref=e133]:
+                    - button "Ver detalles" [ref=e134]:
+                      - img [ref=e135]
+                    - button "Editar" [ref=e138]:
+                      - img [ref=e139]
+                    - button "Cambiar estado" [ref=e141]:
+                      - img [ref=e142]
+                    - button "Marcar como listo" [ref=e146]:
+                      - img [ref=e147]
+              - row "Rubia Golden Si Activo No listo Ver detalles Editar Cambiar estado Marcar como listo" [ref=e151]:
+                - cell "Rubia Golden" [ref=e152]
+                - cell "Si" [ref=e153]
+                - cell "Activo" [ref=e154]:
+                  - generic [ref=e155]:
+                    - img [ref=e156]
+                    - text: Activo
+                - cell "No listo" [ref=e158]:
+                  - generic [ref=e159]:
+                    - img [ref=e160]
+                    - text: No listo
+                - cell "Ver detalles Editar Cambiar estado Marcar como listo" [ref=e164]:
+                  - generic [ref=e165]:
+                    - button "Ver detalles" [ref=e166]:
+                      - img [ref=e167]
+                    - button "Editar" [ref=e170]:
+                      - img [ref=e171]
+                    - button "Cambiar estado" [ref=e173]:
+                      - img [ref=e174]
+                    - button "Marcar como listo" [ref=e178]:
+                      - img [ref=e179]
+              - row "Lager NA No Inactivo No listo Ver detalles Editar Cambiar estado Marcar como listo" [ref=e183]:
+                - cell "Lager NA" [ref=e184]
+                - cell "No" [ref=e185]
+                - cell "Inactivo" [ref=e186]:
+                  - generic [ref=e187]:
+                    - img [ref=e188]
+                    - text: Inactivo
+                - cell "No listo" [ref=e192]:
+                  - generic [ref=e193]:
+                    - img [ref=e194]
+                    - text: No listo
+                - cell "Ver detalles Editar Cambiar estado Marcar como listo" [ref=e198]:
+                  - generic [ref=e199]:
+                    - button "Ver detalles" [ref=e200]:
+                      - img [ref=e201]
+                    - button "Editar" [ref=e204]:
+                      - img [ref=e205]
+                    - button "Cambiar estado" [ref=e207]:
+                      - img [ref=e208]
+                    - button "Marcar como listo" [ref=e210]:
+                      - img [ref=e211]
+              - row "Stout NA No Activo No listo Ver detalles Editar Cambiar estado Marcar como listo" [ref=e215]:
+                - cell "Stout NA" [ref=e216]
+                - cell "No" [ref=e217]
+                - cell "Activo" [ref=e218]:
+                  - generic [ref=e219]:
+                    - img [ref=e220]
+                    - text: Activo
+                - cell "No listo" [ref=e222]:
+                  - generic [ref=e223]:
+                    - img [ref=e224]
+                    - text: No listo
+                - cell "Ver detalles Editar Cambiar estado Marcar como listo" [ref=e228]:
+                  - generic [ref=e229]:
+                    - button "Ver detalles" [ref=e230]:
+                      - img [ref=e231]
+                    - button "Editar" [ref=e234]:
+                      - img [ref=e235]
+                    - button "Cambiar estado" [ref=e237]:
+                      - img [ref=e238]
+                    - button "Marcar como listo" [ref=e242]:
+                      - img [ref=e243]
+              - row "IPA NA No Activo No listo Ver detalles Editar Cambiar estado Marcar como listo" [ref=e247]:
+                - cell "IPA NA" [ref=e248]
+                - cell "No" [ref=e249]
+                - cell "Activo" [ref=e250]:
+                  - generic [ref=e251]:
+                    - img [ref=e252]
+                    - text: Activo
+                - cell "No listo" [ref=e254]:
+                  - generic [ref=e255]:
+                    - img [ref=e256]
+                    - text: No listo
+                - cell "Ver detalles Editar Cambiar estado Marcar como listo" [ref=e260]:
+                  - generic [ref=e261]:
+                    - button "Ver detalles" [ref=e262]:
+                      - img [ref=e263]
+                    - button "Editar" [ref=e266]:
+                      - img [ref=e267]
+                    - button "Cambiar estado" [ref=e269]:
+                      - img [ref=e270]
+                    - button "Marcar como listo" [ref=e274]:
+                      - img [ref=e275]
+              - row "Lager Si Activo No listo Ver detalles Editar Cambiar estado Marcar como listo" [ref=e279]:
+                - cell "Lager" [ref=e280]
+                - cell "Si" [ref=e281]
+                - cell "Activo" [ref=e282]:
+                  - generic [ref=e283]:
+                    - img [ref=e284]
+                    - text: Activo
+                - cell "No listo" [ref=e286]:
+                  - generic [ref=e287]:
+                    - img [ref=e288]
+                    - text: No listo
+                - cell "Ver detalles Editar Cambiar estado Marcar como listo" [ref=e292]:
+                  - generic [ref=e293]:
+                    - button "Ver detalles" [ref=e294]:
+                      - img [ref=e295]
+                    - button "Editar" [ref=e298]:
+                      - img [ref=e299]
+                    - button "Cambiar estado" [ref=e301]:
+                      - img [ref=e302]
+                    - button "Marcar como listo" [ref=e306]:
+                      - img [ref=e307]
+              - row "Stout Si Activo No listo Ver detalles Editar Cambiar estado Marcar como listo" [ref=e311]:
+                - cell "Stout" [ref=e312]
+                - cell "Si" [ref=e313]
+                - cell "Activo" [ref=e314]:
+                  - generic [ref=e315]:
+                    - img [ref=e316]
+                    - text: Activo
+                - cell "No listo" [ref=e318]:
+                  - generic [ref=e319]:
+                    - img [ref=e320]
+                    - text: No listo
+                - cell "Ver detalles Editar Cambiar estado Marcar como listo" [ref=e324]:
+                  - generic [ref=e325]:
+                    - button "Ver detalles" [ref=e326]:
+                      - img [ref=e327]
+                    - button "Editar" [ref=e330]:
+                      - img [ref=e331]
+                    - button "Cambiar estado" [ref=e333]:
+                      - img [ref=e334]
+                    - button "Marcar como listo" [ref=e338]:
+                      - img [ref=e339]
+              - row "IPA Si Activo No listo Ver detalles Editar Cambiar estado Marcar como listo" [ref=e343]:
+                - cell "IPA" [ref=e344]
+                - cell "Si" [ref=e345]
+                - cell "Activo" [ref=e346]:
+                  - generic [ref=e347]:
+                    - img [ref=e348]
+                    - text: Activo
+                - cell "No listo" [ref=e350]:
+                  - generic [ref=e351]:
+                    - img [ref=e352]
+                    - text: No listo
+                - cell "Ver detalles Editar Cambiar estado Marcar como listo" [ref=e356]:
+                  - generic [ref=e357]:
+                    - button "Ver detalles" [ref=e358]:
+                      - img [ref=e359]
+                    - button "Editar" [ref=e362]:
+                      - img [ref=e363]
+                    - button "Cambiar estado" [ref=e365]:
+                      - img [ref=e366]
+                    - button "Marcar como listo" [ref=e370]:
+                      - img [ref=e371]
+          - generic [ref=e377]:
+            - heading "Editar Producto" [level=2] [ref=e378]
+            - generic [ref=e379]:
+              - generic [ref=e380]:
+                - generic [ref=e381]:
+                  - generic [ref=e382]: Nombre *
+                  - 'textbox "Ej: IPA Americana" [ref=e383]': Lager Special
+                - generic [ref=e384]:
+                  - generic [ref=e385]: Alcoholico *
+                  - checkbox [checked] [ref=e386]
+              - generic [ref=e387]:
+                - button "Cancelar" [ref=e388]
+                - button "Crear" [ref=e389]
+      - paragraph [ref=e391]: Mostrando 8 productos de 8 totales
+  - alert [ref=e392]
+```
