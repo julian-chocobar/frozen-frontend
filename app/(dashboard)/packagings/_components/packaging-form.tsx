@@ -135,7 +135,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                     disabled={isLoading}
                     className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isLoading ? "Guardando..." : "Crear"}
+                    {isLoading ? "Guardando..." : packaging? "Actualizar" : "Crear"}
                 </button>
             </div>
         </form>

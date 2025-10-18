@@ -171,7 +171,7 @@ export function MovementDetails({
             <h5 className="font-medium text-blue-800 mb-2">ℹ️ Información Adicional</h5>
             <p className="text-sm text-blue-700">
               Este movimiento {isIngreso ? 'aumentó' : 'disminuyó'} el stock del material 
-              <strong> {movement.materialName}</strong> en <strong>{movement.stock}</strong> unidades.
+              <strong> {movement.materialName}</strong> en <strong>{movement.stock} {getUnitLabel(movement.materialType === 'AGUA' ? 'LT' : 'KG')}</strong>.
               {isIngreso ? ' El stock fue agregado al inventario.' : ' El stock fue retirado del inventario.'}
             </p>
           </div>

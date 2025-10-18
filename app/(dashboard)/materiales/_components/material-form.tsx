@@ -185,7 +185,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
           <label className="block text-sm font-medium text-primary-900 mb-2">
             Stock Actual
             {isEditing && !allowStockEdit && (
-              <span className="text-xs text-gray-500 ml-2">(Solo lectura - usar movimientos para cambios)</span>
+              <span className="text-xs text-gray-500 ml-2">(Solo lectura)</span>
             )}
           </label>
           <input
@@ -204,7 +204,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
           {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
           {isEditing && !allowStockEdit && (
             <p className="text-xs text-gray-500 mt-1">
-              Para modificar el stock, usa la sección de movimientos de stock
+              Para modificar el stock, usa la sección de Movimientos
             </p>
           )}
         </div>

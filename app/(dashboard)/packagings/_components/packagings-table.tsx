@@ -41,7 +41,7 @@ export function PackagingsTable({
             key: 'quantity',
             label: 'Cantidad',
             render: (value) => (
-                <span className="text-sm text-primary-900">${value}</span>
+                <span className="text-sm text-primary-900">{value}</span>
             )
         },
         {
