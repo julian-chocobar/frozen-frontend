@@ -15,10 +15,10 @@ interface PhaseFormProps {
 
 export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
     const [formData, setFormData] = useState({
-        input: phase.input,
-        output: phase.output,
+        input: phase.input || 0,
+        output: phase.output || 0,
         outputUnit: phase.outputUnit || "KG" as UnitMeasurement,
-        estimatedHours: phase.estimatedHours,
+        estimatedHours: phase.estimatedHours || 0,
     })
     const [loading, setLoading] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
