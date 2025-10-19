@@ -4,7 +4,7 @@ import { ProductPhaseResponse, RecipeResponse } from "@/types"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Edit, Plus, Loader2 } from "lucide-react"
+import { CheckCircle, Edit, Plus, Loader2, Trash2 } from "lucide-react"
 
 interface PhasesListProps {
     phases: ProductPhaseResponse[]
@@ -12,6 +12,8 @@ interface PhasesListProps {
     onEditPhase: (phaseId: string) => void
     onCreateRecipe: (phaseId: string) => void
     onMarkPhaseReady: (phaseId: string) => void
+    onEditRecipe: (recipe: RecipeResponse) => void
+    onDeleteRecipe: (recipeId: string) => void
     updatingPhase: string | null
 }
 
@@ -21,6 +23,8 @@ export function PhasesList({
     onEditPhase, 
     onCreateRecipe, 
     onMarkPhaseReady,
+    onEditRecipe,
+    onDeleteRecipe,
     updatingPhase 
 }: PhasesListProps) {
     const getRecipesByPhase = (phaseId: string) => {
@@ -157,22 +161,42 @@ export function PhasesList({
                                         <h4 className="text-sm font-medium text-primary-600 mb-3">
                                             Ingredientes ({phaseRecipes.length})
                                         </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-1 gap-2">
                                             {phaseRecipes.map((recipe) => (
                                                 <div
                                                     key={recipe.id}
                                                     className="flex items-center justify-between p-3 bg-primary-50 border border-primary-200 rounded-lg text-sm"
                                                 >
-                                                    <div>
-                                                        <span className="font-medium text-primary-900">
-                                                            {recipe.materialName}
-                                                        </span>
-                                                        <span className="text-primary-600 ml-1">
-                                                            ({recipe.materialCode})
-                                                        </span>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-medium text-primary-900">
+                                                                {recipe.materialName}
+                                                            </span>
+                                                            <span className="text-primary-600">
+                                                                ({recipe.materialCode})
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-primary-700 font-medium mt-1">
+                                                            {recipe.quantity} {recipe.materialUnit}
+                                                        </div>
                                                     </div>
-                                                    <div className="text-primary-700 font-medium">
-                                                        {recipe.quantity} {recipe.materialUnit}
+                                                    <div className="flex items-center gap-1 ml-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => onEditRecipe(recipe)}
+                                                            className="h-8 w-8 p-0 border-primary-300 text-primary-600 hover:bg-primary-50"
+                                                        >
+                                                            <Edit className="w-3 h-3" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => onDeleteRecipe(recipe.id)}
+                                                            className="h-8 w-8 p-0 border-red-300 text-red-600 hover:bg-red-50"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             ))}

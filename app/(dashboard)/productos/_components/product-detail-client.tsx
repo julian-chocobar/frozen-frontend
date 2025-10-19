@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react"
 import { ProductResponse, ProductPhaseResponse, RecipeResponse, Phase } from "@/types"
 import { getProductPhasesByProductId } from "@/lib/product-phases-api"
-import { getRecipesByProductPhaseId } from "@/lib/recipes-api"
+import { getRecipesByProductPhaseId, updateRecipe, deleteRecipe } from "@/lib/recipes-api"
 import { markProductPhaseAsReady } from "@/lib/product-phases-api"
 import { markProductAsReady } from "@/lib/products-api"
 import { ProductInfoCard } from "@/app/(dashboard)/productos/_components/product-info-card"
 import { PhasesList } from "@/app/(dashboard)/productos/_components/phases-list"
 import { RecipeForm } from "@/app/(dashboard)/productos/_components/recipe-form"
+import { RecipeEditForm } from "@/app/(dashboard)/productos/_components/recipe-edit-form"
 import { PhaseForm } from "@/app/(dashboard)/productos/_components/phase-form"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -27,6 +28,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     const [error, setError] = useState<string | null>(null)
     const [editingPhase, setEditingPhase] = useState<string | null>(null)
     const [creatingRecipe, setCreatingRecipe] = useState<string | null>(null)
+    const [editingRecipe, setEditingRecipe] = useState<RecipeResponse | null>(null)
     const [updatingPhase, setUpdatingPhase] = useState<string | null>(null)
 
     // Cargar fases y recetas del producto
@@ -76,6 +78,22 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             toast.error(err instanceof Error ? err.message : 'Error al marcar fase como lista')
         } finally {
             setUpdatingPhase(null)
+        }
+    }
+
+    // Función para eliminar receta
+    const handleDeleteRecipe = async (recipeId: string) => {
+        if (!confirm('¿Estás seguro de que quieres eliminar este ingrediente?')) {
+            return
+        }
+
+        try {
+            await deleteRecipe(recipeId)
+            toast.success("Ingrediente eliminado correctamente")
+            refreshData()
+        } catch (err) {
+            console.error('Error al eliminar receta:', err)
+            toast.error(err instanceof Error ? err.message : 'Error al eliminar ingrediente')
         }
     }
 
@@ -166,6 +184,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 onEditPhase={setEditingPhase}
                 onCreateRecipe={setCreatingRecipe}
                 onMarkPhaseReady={handleMarkPhaseReady}
+                onEditRecipe={setEditingRecipe}
+                onDeleteRecipe={handleDeleteRecipe}
                 updatingPhase={updatingPhase}
             />
 
@@ -190,6 +210,19 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                         refreshData()
                     }}
                     onCancel={() => setCreatingRecipe(null)}
+                />
+            )}
+
+            {/* Formulario de edición de receta */}
+            {editingRecipe && (
+                <RecipeEditForm
+                    recipe={editingRecipe}
+                    phase={phases.find(p => p.id === editingRecipe.productPhaseId)?.phase as Phase}
+                    onSave={() => {
+                        setEditingRecipe(null)
+                        refreshData()
+                    }}
+                    onCancel={() => setEditingRecipe(null)}
                 />
             )}
         </div>
