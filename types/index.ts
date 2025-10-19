@@ -32,7 +32,7 @@ export interface Material {
 export interface MaterialCreateRequest {
   name: string
   type: MaterialType
-  unitMeasurement: UnitMeasurement
+  unitMeasurement: UnitMeasurement  
   threshold: number
   supplier?: string // Opcional
   value?: number // Opcional, debe ser > 0
@@ -161,9 +161,9 @@ export interface PackagingResponse {
 
 export interface PackagingCreateRequest {
   name: string
-  materialID?: number
+  materialId?: string
   unitMeasurement: UnitMeasurement
-  quantity: number
+  quantity: number  
 }
 
 export interface PackagingUpdateRequest {
@@ -241,6 +241,149 @@ export interface ProductsFilters {
   unitMeasurement?: UnitMeasurement
 }
 
+// ============================================
+// PHASES
+// ============================================
+export type Phase = 
+  | "MOLIENDA"
+  | "MACERACION"
+  | "FILTRACION"
+  | "COCCION"
+  | "FERMENTACION"
+  | "MADURACION"
+  | "GASIFICACION"
+  | "ENVASADO"
+  | "DESALCOHOLIZACION"
+
+export interface ProductPhaseResponse {
+  id: string
+  phase: string
+  input: number
+  output: number
+  outputUnit: UnitMeasurement
+  estimatedHours: number
+  creationDate: string
+  isReady: boolean
+}
+
+export interface ProductPhaseUpdateRequest {
+  input?: number
+  output?: number
+  outputUnit?: UnitMeasurement
+  estimatedHours?: number
+}
+
+// ============================================
+// RECIPES
+// ============================================
+
+export interface RecipeCreateRequest {
+  productPhaseId: string
+  materialId: string
+  quantity: number
+}
+
+export interface RecipeResponse {
+  id: string
+  productPhaseId: string
+  materialName: string
+  materialCode: string
+  materialUnit: UnitMeasurement
+  quantity: number
+}
+
+export interface RecipeUpdateRequest {
+  materialId?: string
+  quantity?: number
+}
+
+// ============================================
+// ORDERS
+// ============================================
+
+export type ProductionOrderStatus = "Pendiente" | "Aprobado" | "Rechazado" | "Cancelada"
+
+export interface ProductionOrderResponse {
+  id: string
+  batchId: string
+  batchCode: string
+  packagingName: string
+  productName: string
+  status: ProductionOrderStatus
+  validationDate: string
+  quantity: number
+  unitMeasurement: UnitMeasurement
+  plannedDate: string
+  startDate: string
+  estimatedCompletedDate: string
+  completedDate: string
+}
+
+export interface ProductionOrderCreateRequest {
+  productId: string
+  packagingId: string
+  quantity: number
+  plannedDate: string
+}
+
+export interface ProductionOrderFilters {
+  page?: number
+  size?: number
+  status?: ProductionOrderStatus
+  productId?: string
+}
+
+export interface ProductionOrderPageResponse {
+  content: ProductionOrderResponse[]
+  isFirst: boolean
+  totalItems: number
+  size: number
+  isLast: boolean
+  totalPages: number
+  hasPrevious: boolean
+  hasNext: boolean
+  currentPage: number
+}
+
+// ============================================
+// BATCHES
+// ============================================
+
+export type BatchStatus = "Pendiente" | "En Producción" | "En Espera" | "Completado" | "Cancelado"
+
+export interface BatchResponse {
+  id: string
+  code: string
+  packagingName: string
+  productName: string
+  orderId: string
+  status: BatchStatus
+  quantity: number
+  creationDate: string
+  plannedDate: string
+  startDate: string
+  estimatedCompletedDate: string
+  completedDate: string
+}
+
+export interface BatchFilters {
+  page?: number
+  size?: number
+  status?: BatchStatus
+  productId?: string
+}
+
+export interface BatchPageResponse {
+  content: BatchResponse[]
+  isFirst: boolean
+  totalItems: number
+  size: number
+  isLast: boolean
+  totalPages: number
+  hasPrevious: boolean
+  hasNext: boolean
+  currentPage: number
+}
 // ============================================
 // PRODUCCIÓN
 // ============================================

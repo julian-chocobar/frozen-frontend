@@ -73,8 +73,7 @@ export function ProductsClient({ productos }: ProductsClientProps) {
     }
 
     const handleViewDetails = (product: ProductResponse) => {
-        setSelectedProduct(product)
-        setIsViewing(true)
+        router.push(`/productos/${product.id}`)
     }
 
     const handleEditClick = (product: ProductResponse) => {

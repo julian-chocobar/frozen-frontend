@@ -9,19 +9,22 @@ import { useState, useEffect } from "react"
 import { Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getMaterialsIdNameList, type MaterialIdName } from "@/lib/materials-api"
+import type { Phase } from "@/types"
 
 interface MaterialSearchFilterProps {
   value: string
   onChange: (materialId: string) => void
   placeholder?: string
   className?: string
+  phase?: Phase
 }
 
 export function MaterialSearchFilter({ 
   value, 
   onChange, 
   placeholder = "Buscar material por nombre...",
-  className 
+  className,
+  phase
 }: MaterialSearchFilterProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [materials, setMaterials] = useState<MaterialIdName[]>([])
@@ -39,10 +42,11 @@ export function MaterialSearchFilter({
 
       setLoading(true)
       try {
-        // Buscar todos los materiales (activos e inactivos) para filtros
+        // Buscar materiales con filtros específicos
         const materialsList = await getMaterialsIdNameList({
           name: searchTerm,
-          // No especificamos active para obtener todos
+          active: true,
+          phase: phase
         })
         setMaterials(materialsList)
       } catch (error) {

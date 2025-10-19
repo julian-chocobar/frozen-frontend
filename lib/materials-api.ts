@@ -11,7 +11,8 @@ import type {
   MaterialsPageResponse, 
   MaterialsFilters,
   MaterialType,
-  UnitMeasurement 
+  UnitMeasurement, 
+  Phase
 } from '@/types'
 
 const TYPE_LABELS: Record<MaterialType, string> = {
@@ -194,6 +195,8 @@ export interface MaterialIdName {
 export async function getMaterialsIdNameList(params?: {
   name?: string
   active?: boolean
+  phase?: Phase
+  type?: MaterialType
 }): Promise<MaterialIdName[]> {
   const urlParams: Record<string, string> = {}
   
@@ -204,7 +207,14 @@ export async function getMaterialsIdNameList(params?: {
   if (params?.active !== undefined) {
     urlParams.active = params.active.toString()
   }
-  
+
+  if (params?.phase) {
+    urlParams.phase = params.phase
+  }
+
+  if (params?.type) {
+    urlParams.type = params.type
+  }
   const materials = await api.get<MaterialIdName[]>('/api/materials/id-name-list', urlParams)
   return materials
 }

@@ -10,9 +10,10 @@ interface ProductFormProps {
     onSubmit: (data: ProductCreateRequest | ProductUpdateRequest) => void
     onCancel: () => void
     isLoading?: boolean
+    onComplete?: (data: ProductCreateRequest | ProductUpdateRequest) => void
 }
 
-export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) {
+export function ProductForm({ product, onSubmit, onCancel, isLoading = false, onComplete }: ProductFormProps) {
     const isEditing = !!product
 
     const [formData, setFormData] = useState({
@@ -60,6 +61,29 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
                     unitMeasurement: formData.unitMeasurement
                 }
                 onSubmit(createData)
+            }
+        }
+    }
+
+    const handleComplete = (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (validateForm() && onComplete) {
+            if (isEditing) {
+                const updateData: ProductUpdateRequest = {}
+                if (formData.name !== product?.name) updateData.name = formData.name
+                if (formData.isAlcoholic !== product?.isAlcoholic) updateData.isAlcoholic = formData.isAlcoholic
+                if (formData.standardQuantity !== product?.standardQuantity) updateData.standardQuantity = formData.standardQuantity
+                if (formData.unitMeasurement !== product?.unitMeasurement) updateData.unitMeasurement = formData.unitMeasurement
+                onComplete(updateData)
+            } else {
+                const createData: ProductCreateRequest = {
+                    name: formData.name,
+                    isAlcoholic: formData.isAlcoholic,
+                    standardQuantity: formData.standardQuantity,
+                    unitMeasurement: formData.unitMeasurement
+                }
+                onComplete(createData)
             }
         }
     }
@@ -158,6 +182,16 @@ const handleChange = (field: string, value: string | boolean | number) => {
                 >
                     {isLoading ? "Guardando..." : product? "Actualizar" : "Crear"}
                 </button>
+                {!isEditing && onComplete && (
+                    <button
+                        type="button"
+                        onClick={handleComplete}
+                        disabled={isLoading}
+                        className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isLoading ? "Completando..." : "Completar Creación"}
+                    </button>
+                )}
             </div>
         </form>
     )

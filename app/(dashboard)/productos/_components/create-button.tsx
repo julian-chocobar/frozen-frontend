@@ -17,6 +17,14 @@ export function ProductCreateButton() {
     })
   }
 
+  const handleComplete = async (data: ProductCreateRequest) => {
+    await handleSubmit(async () => {
+      const product = await createProduct(data)
+      // Redirigir a la página de detalle del producto para completar las recetas
+      router.push(`/productos/${product.id}`)
+    })
+  }
+
   return (
     <CreateButton 
       buttonText="Nuevo"
@@ -25,7 +33,12 @@ export function ProductCreateButton() {
       isOpen={isOpen}
       onOpen={openModal}
     >
-      <ProductForm onSubmit={handleCreate} onCancel={closeModal} isLoading={isLoading} />
+      <ProductForm 
+        onSubmit={handleCreate} 
+        onCancel={closeModal} 
+        isLoading={isLoading}
+        onComplete={handleComplete}
+      />
     </CreateButton>
   )
 }
