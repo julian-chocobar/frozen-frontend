@@ -8,13 +8,10 @@
 import { useState, useEffect } from "react"
 import { Header } from "@/components/layout/header"
 import { StatCard } from "@/components/dashboard/stat-card"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { getProductionOrders, approveProductionOrder, rejectProductionOrder, cancelProductionOrder } from "@/lib/production-orders-api"
-import { OrdersTable } from "./_components/orders-table"
-import { OrdersCards } from "./_components/orders-cards"
+import { getProductionOrders } from "@/lib/production-orders-api"
+import { OrderClient } from "./_components/order-client"
 import { OrdersFilters } from "./_components/orders-filters"
-import { OrderDetails } from "./_components/order-details"
 import { OrderCreateButton } from "./_components/create-button"
 import type { ProductionOrderResponse, ProductionOrderStatus } from "@/types"
 
@@ -22,13 +19,9 @@ export default function ProduccionPage() {
   const isMobile = useIsMobile()
   const [orders, setOrders] = useState<ProductionOrderResponse[]>([])
   const [loading, setLoading] = useState(true)
-  const [showDetails, setShowDetails] = useState(false)
-  const [selectedOrder, setSelectedOrder] = useState<ProductionOrderResponse | null>(null)
   const [filters, setFilters] = useState<{
     status?: ProductionOrderStatus
     productId?: string
-    startDate?: string
-    endDate?: string
   }>({})
   const [pagination, setPagination] = useState({
     currentPage: 0,
@@ -67,8 +60,6 @@ export default function ProduccionPage() {
   const handleFiltersChange = (newFilters: {
     status?: ProductionOrderStatus
     productId?: string
-    startDate?: string
-    endDate?: string
   }) => {
     setFilters(newFilters)
   }
@@ -76,48 +67,6 @@ export default function ProduccionPage() {
   const handleClearFilters = () => {
     setFilters({})
   }
-
-  // Manejar acciones
-  const handleViewOrder = (order: ProductionOrderResponse) => {
-    setSelectedOrder(order)
-    setShowDetails(true)
-  }
-
-  const handleEditOrder = (order: ProductionOrderResponse) => {
-    setSelectedOrder(order)
-    // TODO: Implementar edición de órdenes si es necesario
-  }
-
-  const handleApproveOrder = async (order: ProductionOrderResponse) => {
-    try {
-      await approveProductionOrder(order.id)
-      await loadOrders()
-      setShowDetails(false)
-    } catch (error) {
-      console.error('Error aprobando orden:', error)
-    }
-  }
-
-  const handleRejectOrder = async (order: ProductionOrderResponse) => {
-    try {
-      await rejectProductionOrder(order.id)
-      await loadOrders()
-      setShowDetails(false)
-    } catch (error) {
-      console.error('Error rechazando orden:', error)
-    }
-  }
-
-  const handleCancelOrder = async (order: ProductionOrderResponse) => {
-    try {
-      await cancelProductionOrder(order.id)
-      await loadOrders()
-      setShowDetails(false)
-    } catch (error) {
-      console.error('Error cancelando orden:', error)
-    }
-  }
-
 
   // Calcular estadísticas
   const stats = {
@@ -184,46 +133,12 @@ export default function ProduccionPage() {
             </p>
           </div>
 
-          {isMobile ? (
-            <OrdersCards
-              orders={orders}
-              onView={handleViewOrder}
-              onApprove={handleApproveOrder}
-              onReject={handleRejectOrder}
-              onCancel={handleCancelOrder}
-              isLoading={loading}
-            />
-          ) : (
-            <OrdersTable
-              orders={orders}
-              onView={handleViewOrder}
-              onApprove={handleApproveOrder}
-              onReject={handleRejectOrder}
-              onCancel={handleCancelOrder}
-              isLoading={loading}
-            />
-          )}
+          <OrderClient
+            orders={orders}
+            pagination={pagination}
+          />
         </div>
       </div>
-
-      {/* Modal de detalles */}
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-4xl">
-          <DialogTitle className="text-xl font-semibold text-primary-900 mb-4">
-            Detalles de la Orden
-          </DialogTitle>
-          {selectedOrder && (
-            <OrderDetails
-              order={selectedOrder}
-              onApprove={handleApproveOrder}
-              onReject={handleRejectOrder}
-              onCancel={handleCancelOrder}
-              isLoading={loading}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
     </>
   )
 }

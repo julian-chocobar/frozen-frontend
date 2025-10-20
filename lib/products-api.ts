@@ -88,3 +88,16 @@ export async function markProductAsReady(id: string) {
     const product = await api.patch<ProductResponse>(`/api/products/${id}/mark-ready`)
     return product
 }
+
+export async function getProductsIdNameList( params?: {
+    name?: string
+    active?: boolean
+    ready?: boolean
+}) {
+    const urlParams: Record<string, string> = {}
+    if (params?.name) urlParams.name = params.name
+    if (params?.active !== undefined) urlParams.active = params.active.toString()
+    if (params?.ready !== undefined) urlParams.ready = params.ready.toString()
+    const products = await api.get<{ id: string; name: string }[]>('/api/products/id-name-list', urlParams)
+    return products
+}

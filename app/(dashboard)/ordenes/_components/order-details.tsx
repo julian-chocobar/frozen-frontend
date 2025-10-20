@@ -24,6 +24,7 @@ interface OrderDetailsProps {
   onReject?: (order: ProductionOrderResponse) => void
   onCancel?: (order: ProductionOrderResponse) => void
   onEdit?: (order: ProductionOrderResponse) => void
+  onClose?: () => void
   isLoading?: boolean
 }
 
@@ -33,6 +34,7 @@ export function OrderDetails({
   onReject, 
   onCancel, 
   onEdit, 
+  onClose,
   isLoading = false 
 }: OrderDetailsProps) {
   const getStatusBadge = (status: ProductionOrderStatus) => {
@@ -67,7 +69,7 @@ export function OrderDetails({
       }
     }
     
-    const config = statusConfig[status]
+    const config = statusConfig[status] || { variant: "secondary" as const, label: status, icon: Clock }
     const Icon = config.icon
     
     return (

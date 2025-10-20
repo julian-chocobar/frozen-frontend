@@ -32,7 +32,7 @@ export function OrderCreateButton() {
 
   return (
     <CreateButton
-      buttonText="Nuevo"
+      buttonText="Nueva Orden"
       modalTitle="Crear Nueva Orden de Producción"
       ariaLabel="Agregar nueva orden de producción"
       isOpen={isOpen}

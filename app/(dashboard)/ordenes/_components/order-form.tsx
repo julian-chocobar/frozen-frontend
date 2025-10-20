@@ -5,13 +5,11 @@
  */
 
 import { useState, useEffect } from "react"
-import { getProducts } from "@/lib/products-api"
-import { getPackagings } from "@/lib/packagings-api"
+import { getProductsIdNameList } from "@/lib/products-api"
+import { getPackagingsIdNameList } from "@/lib/packagings-api"
 import type { 
   ProductionOrderResponse, 
-  ProductionOrderCreateRequest, 
-  ProductResponse, 
-  PackagingResponse 
+  ProductionOrderCreateRequest
 } from "@/types"
 
 interface OrderFormProps {
@@ -25,36 +23,79 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
   const isEditing = !!order
   
   const [formData, setFormData] = useState({
-    productId: order?.productName || "",
-    packagingId: order?.packagingName || "",
+    productId: "",
+    packagingId: "",
     quantity: order?.quantity || "",
     plannedDate: order?.plannedDate ? new Date(order.plannedDate).toISOString().split('T')[0] : ""
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [products, setProducts] = useState<ProductResponse[]>([])
-  const [packagings, setPackagings] = useState<PackagingResponse[]>([])
-  const [loadingData, setLoadingData] = useState(true)
+  const [products, setProducts] = useState<{ id: string; name: string }[]>([])
+  const [packagings, setPackagings] = useState<{ id: number; name: string; productId: string }[]>([])
+  const [productSearch, setProductSearch] = useState("")
+  const [packagingSearch, setPackagingSearch] = useState("")
+  const [showProductDropdown, setShowProductDropdown] = useState(false)
+  const [showPackagingDropdown, setShowPackagingDropdown] = useState(false)
+  const [loadingProducts, setLoadingProducts] = useState(false)
+  const [loadingPackagings, setLoadingPackagings] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<{ id: string; name: string } | null>(null)
+  const [selectedPackaging, setSelectedPackaging] = useState<{ id: number; name: string; productId: string } | null>(null)
 
+  // Buscar productos cuando cambie el término de búsqueda
   useEffect(() => {
-    const loadData = async () => {
+    const searchProducts = async () => {
+      if (!productSearch.trim()) {
+        setProducts([])
+        return
+      }
+
+      setLoadingProducts(true)
       try {
-        const [productsData, packagingsData] = await Promise.all([
-          getProducts({ estado: 'Activo', ready: 'Listo' }),
-          getPackagings({ isActive: true })
-        ])
-        
-        setProducts(productsData.products)
-        setPackagings(packagingsData.packagings)
+        const productsData = await getProductsIdNameList({
+          name: productSearch,
+          active: true,
+          ready: true
+        })
+        setProducts(productsData)
       } catch (error) {
-        console.error('Error cargando datos:', error)
+        console.error('Error al buscar productos:', error)
+        setProducts([])
       } finally {
-        setLoadingData(false)
+        setLoadingProducts(false)
       }
     }
 
-    loadData()
-  }, [])
+    const timeoutId = setTimeout(searchProducts, 300)
+    return () => clearTimeout(timeoutId)
+  }, [productSearch])
+
+  // Buscar packagings cuando cambie el término de búsqueda y haya un producto seleccionado
+  useEffect(() => {
+    const searchPackagings = async () => {
+      if (!packagingSearch.trim() || !formData.productId) {
+        setPackagings([])
+        return
+      }
+
+      setLoadingPackagings(true)
+      try {
+        const packagingsData = await getPackagingsIdNameList({
+          name: packagingSearch,
+          productId: formData.productId,
+          active: true
+        })
+        setPackagings(packagingsData)
+      } catch (error) {
+        console.error('Error al buscar packagings:', error)
+        setPackagings([])
+      } finally {
+        setLoadingPackagings(false)
+      }
+    }
+
+    const timeoutId = setTimeout(searchPackagings, 300)
+    return () => clearTimeout(timeoutId)
+  }, [packagingSearch, formData.productId])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -93,7 +134,7 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
     if (validateForm()) {
       const submitData: ProductionOrderCreateRequest = {
         productId: formData.productId,
-        packagingId: formData.packagingId,
+        packagingId: formData.packagingId.toString(),
         quantity: Number(formData.quantity),
         plannedDate: new Date(formData.plannedDate).toISOString()
       }
@@ -110,16 +151,52 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
     }
   }
 
-  if (loadingData) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-primary-600">Cargando datos...</p>
-        </div>
-      </div>
-    )
+  const handleProductSelect = (product: { id: string; name: string }) => {
+    setSelectedProduct(product)
+    setFormData(prev => ({ ...prev, productId: product.id }))
+    setProductSearch(product.name)
+    setShowProductDropdown(false)
+    // Limpiar packaging cuando cambie el producto
+    setFormData(prev => ({ ...prev, packagingId: "" }))
+    setSelectedPackaging(null)
+    setPackagingSearch("")
+    // Limpiar errores
+    if (errors.productId) {
+      setErrors(prev => ({ ...prev, productId: "" }))
+    }
   }
+
+  const handlePackagingSelect = (packaging: { id: number; name: string; productId: string }) => {
+    setSelectedPackaging(packaging)
+    setFormData(prev => ({ ...prev, packagingId: packaging.id.toString() }))
+    setPackagingSearch(packaging.name)
+    setShowPackagingDropdown(false)
+    // Limpiar errores
+    if (errors.packagingId) {
+      setErrors(prev => ({ ...prev, packagingId: "" }))
+    }
+  }
+
+  const handleProductSearchChange = (value: string) => {
+    setProductSearch(value)
+    setShowProductDropdown(true)
+    // Si el usuario está escribiendo, limpiar la selección
+    if (value !== productSearch && formData.productId) {
+      setFormData(prev => ({ ...prev, productId: "" }))
+      setSelectedProduct(null)
+    }
+  }
+
+  const handlePackagingSearchChange = (value: string) => {
+    setPackagingSearch(value)
+    setShowPackagingDropdown(true)
+    // Si el usuario está escribiendo, limpiar la selección
+    if (value !== packagingSearch && formData.packagingId) {
+      setFormData(prev => ({ ...prev, packagingId: "" }))
+      setSelectedPackaging(null)
+    }
+  }
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-background p-6 rounded-lg h-full flex flex-col">
@@ -129,21 +206,72 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
           <label className="block text-sm font-medium text-primary-900 mb-2">
             Producto *
           </label>
-          <select
-            value={formData.productId}
-            onChange={(e) => handleChange("productId", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-              errors.productId ? "border-red-500" : "border-stroke"
-            }`}
-          >
-            <option value="">Seleccionar producto</option>
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
+          
+          {/* Campo de búsqueda */}
+          <div className="relative">
+            <input
+              type="text"
+              value={productSearch}
+              onChange={(e) => handleProductSearchChange(e.target.value)}
+              onFocus={() => setShowProductDropdown(true)}
+              placeholder="Buscar producto por nombre..."
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+                errors.productId ? "border-red-500" : "border-stroke"
+              }`}
+            />
+            {loadingProducts && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-4 h-4 border-2 border-primary-300 border-t-primary-600 rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Dropdown de resultados */}
+          {showProductDropdown && productSearch && (
+            <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
+              {products.length === 0 && !loadingProducts ? (
+                <div className="px-3 py-2 text-sm text-gray-500">
+                  No se encontraron productos
+                </div>
+              ) : (
+                products.map((product) => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => handleProductSelect(product)}
+                    className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="font-medium text-primary-900 text-sm">{product.name}</div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Overlay para cerrar dropdown */}
+          {showProductDropdown && (
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setShowProductDropdown(false)}
+            />
+          )}
+
           {errors.productId && <p className="text-red-500 text-sm mt-1">{errors.productId}</p>}
+          
+          {/* Información del producto seleccionado */}
+          {selectedProduct && (
+            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="text-sm font-medium text-blue-800 mb-1">Producto Seleccionado</h4>
+              <div className="text-sm text-blue-700">
+                <div>
+                  <span className="font-medium">Nombre:</span> {selectedProduct.name}
+                </div>
+                <div>
+                  <span className="font-medium">ID:</span> {selectedProduct.id}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Empaque */}
@@ -151,21 +279,73 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
           <label className="block text-sm font-medium text-primary-900 mb-2">
             Empaque *
           </label>
-          <select
-            value={formData.packagingId}
-            onChange={(e) => handleChange("packagingId", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-              errors.packagingId ? "border-red-500" : "border-stroke"
-            }`}
-          >
-            <option value="">Seleccionar empaque</option>
-            {packagings.map((packaging) => (
-              <option key={packaging.id} value={packaging.id}>
-                {packaging.name}
-              </option>
-            ))}
-          </select>
+          
+          {/* Campo de búsqueda */}
+          <div className="relative">
+            <input
+              type="text"
+              value={packagingSearch}
+              onChange={(e) => handlePackagingSearchChange(e.target.value)}
+              onFocus={() => setShowPackagingDropdown(true)}
+              placeholder={formData.productId ? "Buscar empaque por nombre..." : "Primero selecciona un producto"}
+              disabled={!formData.productId}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+                errors.packagingId ? "border-red-500" : "border-stroke"
+              } ${!formData.productId ? "bg-gray-100 cursor-not-allowed" : ""}`}
+            />
+            {loadingPackagings && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-4 h-4 border-2 border-primary-300 border-t-primary-600 rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Dropdown de resultados */}
+          {showPackagingDropdown && packagingSearch && formData.productId && (
+            <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
+              {packagings.length === 0 && !loadingPackagings ? (
+                <div className="px-3 py-2 text-sm text-gray-500">
+                  No se encontraron empaques
+                </div>
+              ) : (
+                packagings.map((packaging) => (
+                  <button
+                    key={packaging.id}
+                    type="button"
+                    onClick={() => handlePackagingSelect(packaging)}
+                    className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="font-medium text-primary-900 text-sm">{packaging.name}</div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Overlay para cerrar dropdown */}
+          {showPackagingDropdown && (
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setShowPackagingDropdown(false)}
+            />
+          )}
+
           {errors.packagingId && <p className="text-red-500 text-sm mt-1">{errors.packagingId}</p>}
+          
+          {/* Información del empaque seleccionado */}
+          {selectedPackaging && (
+            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="text-sm font-medium text-green-800 mb-1">Empaque Seleccionado</h4>
+              <div className="text-sm text-green-700">
+                <div>
+                  <span className="font-medium">Nombre:</span> {selectedPackaging.name}
+                </div>
+                <div>
+                  <span className="font-medium">ID:</span> {selectedPackaging.id}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Cantidad */}

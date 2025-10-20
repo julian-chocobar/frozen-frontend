@@ -38,8 +38,8 @@ export function OrdersTable({
       Cancelada: { variant: "outline" as const, label: "Cancelada", icon: XCircle }
     }
     
-    const config = statusConfig[status]
-    const Icon = config.icon
+    const config = statusConfig[status] || { variant: "secondary" as const, label: status, icon: Clock }
+    const Icon = config.icon 
     
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">

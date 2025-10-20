@@ -64,7 +64,7 @@ export async function createPackaging(data: PackagingCreateRequest) {
  * Actualiza un packaging
  */
 export async function updatePackaging(id: string, data: PackagingUpdateRequest) {
-    const response = await api.put<PackagingResponse>(`/api/packagings/${id}`, data)
+    const response = await api.patch<PackagingResponse>(`/api/packagings/${id}`, data)
     return response
 }
 
@@ -94,3 +94,15 @@ export function getUnitLabel(unit: UnitMeasurement): string {
     return UNIT_LABELS[unit]
 }
 
+export async function getPackagingsIdNameList(params?: {
+    name?: string
+    active?: boolean
+    productId?: string
+}) {
+    const urlParams: Record<string, string> = {}
+    if (params?.name) urlParams.name = params.name
+    if (params?.active !== undefined) urlParams.active = params.active.toString()
+    if (params?.productId) urlParams.productId = params.productId
+    const packagings = await api.get<{ id: number; name: string; productId: string }[]>('/api/packagings/id-name-list', urlParams)
+    return packagings
+}
