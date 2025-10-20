@@ -24,10 +24,10 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
     name: material?.name || "",
     type: material?.type || "MALTA" as MaterialType,
     supplier: material?.supplier || "",
-    value: material?.value || 0,
-    stock: material?.totalStock || 0,
+    value: material?.value || "",
+    stock: material?.totalStock || "",
     unitMeasurement: material?.unitMeasurement || "KG" as UnitMeasurement,
-    threshold: material?.threshold || 0,
+    threshold: material?.threshold || "",
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -43,16 +43,16 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
       newErrors.name = "El nombre es requerido"
     }
 
-    if (formData.threshold <= 0) {
+    if (!formData.threshold || formData.threshold === "" || Number(formData.threshold) <= 0) {
       newErrors.threshold = "El umbral debe ser mayor a 0"
     }
 
     // Validaciones para campos opcionales (solo si tienen valor)
-    if (formData.value && formData.value <= 0) {
+    if (formData.value && formData.value !== "" && Number(formData.value) <= 0) {
       newErrors.value = "El valor debe ser mayor a 0"
     }
 
-    if (formData.stock && formData.stock <= 0) {
+    if (formData.stock && formData.stock !== "" && Number(formData.stock) <= 0) {
       newErrors.stock = "El stock debe ser mayor a 0"
     }
 
@@ -71,12 +71,12 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
         if (formData.name !== material?.name) updateData.name = formData.name
         if (formData.type !== material?.type) updateData.type = formData.type
         if (formData.supplier !== material?.supplier) updateData.supplier = formData.supplier
-        if (formData.value !== material?.value && formData.value > 0) updateData.value = formData.value
+        if (formData.value !== material?.value && formData.value !== "" && Number(formData.value) > 0) updateData.value = Number(formData.value)
         if (formData.unitMeasurement !== material?.unitMeasurement) updateData.unitMeasurement = formData.unitMeasurement
-        if (formData.threshold !== material?.threshold && formData.threshold > 0) updateData.threshold = formData.threshold
+        if (formData.threshold !== material?.threshold && formData.threshold !== "" && Number(formData.threshold) > 0) updateData.threshold = Number(formData.threshold)
         
         // Solo incluir stock si allowStockEdit es true (para casos especiales)
-        if (allowStockEdit && formData.stock !== material?.totalStock && formData.stock > 0) {
+        if (allowStockEdit && formData.stock !== material?.totalStock && Number(formData.stock) > 0) {
           // Nota: Esto requeriría extender MaterialUpdateRequest o crear un tipo especial
           console.warn('Edición de stock no está soportada en MaterialUpdateRequest')
         }
@@ -88,13 +88,13 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
           name: formData.name,
           type: formData.type,
           unitMeasurement: formData.unitMeasurement,
-          threshold: formData.threshold,
+          threshold: Number(formData.threshold),
         }
         
         // Agregar campos opcionales solo si tienen valor
         if (formData.supplier.trim()) createData.supplier = formData.supplier
-        if (formData.value > 0) createData.value = formData.value
-        if (formData.stock > 0) createData.stock = formData.stock
+        if (formData.value !== "" && Number(formData.value) > 0) createData.value = Number(formData.value)
+        if (formData.stock !== "" && Number(formData.stock) > 0) createData.stock = Number(formData.stock)
         
         onSubmit(createData)
       }
@@ -171,7 +171,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
             step="0.01"
             min="0"
             value={formData.value}
-            onChange={(e) => handleChange("value", parseFloat(e.target.value) || 0)}
+            onChange={(e) => handleChange("value", e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
               errors.value ? "border-red-500" : "border-stroke"
             }`}
@@ -193,7 +193,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
             step="0.01"
             min="0"
             value={formData.stock}
-            onChange={(e) => handleChange("stock", parseFloat(e.target.value) || 0)}
+            onChange={(e) => handleChange("stock", e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
               errors.stock ? "border-red-500" : "border-stroke"
             } ${isEditing && !allowStockEdit ? "bg-gray-100 cursor-not-allowed" : ""}`}
@@ -237,7 +237,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
             step="0.01"
             min="0"
             value={formData.threshold}
-            onChange={(e) => handleChange("threshold", parseFloat(e.target.value) || 0)}
+            onChange={(e) => handleChange("threshold", e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
               errors.threshold ? "border-red-500" : "border-stroke"
             }`}

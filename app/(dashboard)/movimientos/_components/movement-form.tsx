@@ -20,7 +20,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
   const [formData, setFormData] = useState({
     materialId: "",
     type: "INGRESO" as MovementType,
-    stock: 0,
+    stock: "",
     reason: ""
   })
 
@@ -67,7 +67,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
       newErrors.materialId = "Debe seleccionar un material"
     }
 
-    if (formData.stock <= 0) {
+    if (!formData.stock || formData.stock === "" || Number(formData.stock) <= 0) {
       newErrors.stock = "La cantidad debe ser mayor a 0"
     }
 
@@ -84,7 +84,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
       const createData: MovementCreateRequest = {
         materialId: formData.materialId,
         type: formData.type,
-        stock: formData.stock,
+        stock: Number(formData.stock),
         reason: formData.reason.trim() || undefined
       }
       
@@ -244,7 +244,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
             step="0.01"
             min="0"
             value={formData.stock}
-            onChange={(e) => handleChange("stock", parseFloat(e.target.value) || 0)}
+            onChange={(e) => handleChange("stock", e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
               errors.stock ? "border-red-500" : "border-stroke"
             }`}

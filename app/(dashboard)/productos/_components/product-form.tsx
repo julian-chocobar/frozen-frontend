@@ -19,7 +19,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false, on
     const [formData, setFormData] = useState({
         name: product?.name || "",
         isAlcoholic: product?.isAlcoholic || true,
-        standardQuantity: product?.standardQuantity || 0,
+        standardQuantity: product?.standardQuantity || "",
         unitMeasurement: product?.unitMeasurement || "LT" as UnitMeasurement,
     })
 
@@ -31,7 +31,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false, on
         if (!formData.name.trim()) {
             newErrors.name = "El nombre es requerido"
         }
-        if (formData.standardQuantity <= 0) {
+        if (!formData.standardQuantity || formData.standardQuantity === "" || Number(formData.standardQuantity) <= 0) {
             newErrors.standardQuantity = "La cantidad estándar debe ser mayor a 0"
         }
         if (!formData.unitMeasurement) {
@@ -50,14 +50,14 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false, on
                 const updateData: ProductUpdateRequest = {}
                 if (formData.name !== product?.name) updateData.name = formData.name
                 if (formData.isAlcoholic !== product?.isAlcoholic) updateData.isAlcoholic = formData.isAlcoholic
-                if (formData.standardQuantity !== product?.standardQuantity) updateData.standardQuantity = formData.standardQuantity
+                if (formData.standardQuantity !== product?.standardQuantity && formData.standardQuantity !== "" && Number(formData.standardQuantity) > 0) updateData.standardQuantity = Number(formData.standardQuantity)
                 if (formData.unitMeasurement !== product?.unitMeasurement) updateData.unitMeasurement = formData.unitMeasurement
                 onSubmit(updateData)
             } else {
                 const createData: ProductCreateRequest = {
                     name: formData.name,
                     isAlcoholic: formData.isAlcoholic,
-                    standardQuantity: formData.standardQuantity,
+                    standardQuantity: Number(formData.standardQuantity),
                     unitMeasurement: formData.unitMeasurement
                 }
                 onSubmit(createData)
@@ -136,7 +136,7 @@ const handleChange = (field: string, value: string | boolean | number) => {
                         step="0.01"
                         min="0"
                         value={formData.standardQuantity}
-                        onChange={(e) => handleChange("standardQuantity", parseFloat(e.target.value) || 0)}
+                        onChange={(e) => handleChange("standardQuantity", e.target.value)}
                         className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
                             errors.standardQuantity ? "border-red-500" : "border-stroke"
                         }`}

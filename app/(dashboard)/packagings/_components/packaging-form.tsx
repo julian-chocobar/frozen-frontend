@@ -19,7 +19,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
         name: packaging?.name || "",
         materialId: "",
         unitMeasurement: packaging?.unitMeasurement || "UNIDAD" as UnitMeasurement,
-        quantity: packaging?.quantity || 0,
+        quantity: packaging?.quantity || "",
     })
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [materials, setMaterials] = useState<MaterialIdName[]>([])
@@ -72,7 +72,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
             newErrors.unitMeasurement = "La unidad de medida es requerida"
         }
 
-        if (formData.quantity <= 0) {
+        if (!formData.quantity || formData.quantity === "" || Number(formData.quantity) <= 0) {
             newErrors.quantity = "La cantidad debe ser mayor a 0"
         }
 
@@ -88,7 +88,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                 name: formData.name,
                 materialId: formData.materialId,
                 unitMeasurement: formData.unitMeasurement,
-                quantity: formData.quantity,
+                quantity: Number(formData.quantity),
             }
             onSubmit(createData)
         }
@@ -251,7 +251,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                         step="0.01"
                         min="0"
                         value={formData.quantity}
-                        onChange={(e) => handleChange("quantity", parseFloat(e.target.value) || 0)}
+                        onChange={(e) => handleChange("quantity", e.target.value)}
                         className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
                             errors.quantity ? "border-red-500" : "border-stroke"
                         }`}
