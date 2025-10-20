@@ -1,5 +1,3 @@
-"use client"
-
 /**
  * Página de Planificación de Producción
  * Gestiona las órdenes de producción de cerveza
@@ -14,67 +12,54 @@ import { OrderClient } from "./_components/order-client"
 import { OrdersFilters } from "./_components/orders-filters"
 import { OrderCreateButton } from "./_components/create-button"
 import type { ProductionOrderResponse, ProductionOrderStatus } from "@/types"
+import { ErrorState } from "@/components/ui/error-state"
+import { PaginationClient } from "@/components/ui/pagination-client"
 
-export default function ProduccionPage() {
-  const isMobile = useIsMobile()
-  const [orders, setOrders] = useState<ProductionOrderResponse[]>([])
-  const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState<{
+interface OrdenesPageProps {
+  searchParams: Promise<{
+    page?: string
+    size?: string
     status?: ProductionOrderStatus
     productId?: string
-  }>({})
-  const [pagination, setPagination] = useState({
-    currentPage: 0,
-    totalPages: 0,
-    totalElements: 0
-  })
+  }>
+}
 
-  // Cargar órdenes
-  const loadOrders = async () => {
-    try {
-      setLoading(true)
-      const response = await getProductionOrders({
-        page: 0,
-        size: 50,
-        ...filters
-      })
-      
-      setOrders(response.productionOrders)
-      setPagination({
-        currentPage: response.pagination.currentPage,
-        totalPages: response.pagination.totalPages,
-        totalElements: response.pagination.totalElements
-      })
-    } catch (error) {
-      console.error('Error cargando órdenes:', error)
-    } finally {
-      setLoading(false)
+export default async function OrdenesPage({ searchParams }: OrdenesPageProps) {
+  const params = await searchParams
+  const page = parseInt(params.page || '0')
+  const status = params.status
+  const productId = params.productId
+  let ordersData
+  let error: string | null = null
+
+  try {
+    ordersData = await getProductionOrders({
+      page,
+      size: 10,
+      status,
+      productId
+    })
+  } catch (err) {
+    console.error('Error cargando órdenes:', err)
+    if (err instanceof Error) {
+      if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
+        error = 'No se pudo conectar con el backend'
+      } else {
+        error = err.message
+      }
+    } else {
+      error = 'No se pudieron cargar las órdenes'
     }
-  }
-
-  useEffect(() => {
-    loadOrders()
-  }, [filters])
-
-  // Manejar filtros
-  const handleFiltersChange = (newFilters: {
-    status?: ProductionOrderStatus
-    productId?: string
-  }) => {
-    setFilters(newFilters)
-  }
-
-  const handleClearFilters = () => {
-    setFilters({})
   }
 
   // Calcular estadísticas
   const stats = {
-    total: orders.length,
-    pending: orders.filter(o => o.status === 'Pendiente').length,
-    approved: orders.filter(o => o.status === 'Aprobado').length,
-    completed: orders.filter(o => o.status === 'Aprobado').length, // Asumiendo que aprobado = completado
-    totalQuantity: orders.reduce((sum, order) => sum + order.quantity, 0)
+    total: ordersData?.productionOrders?.length || 0,
+    pending: ordersData?.productionOrders?.filter(o => o.status === 'Pendiente').length || 0,
+    approved: ordersData?.productionOrders?.filter(o => o.status === 'Aprobado').length || 0,
+    rejected: ordersData?.productionOrders?.filter(o => o.status === 'Rechazado').length || 0,
+    cancelled: ordersData?.productionOrders?.filter(o => o.status === 'Cancelada').length || 0,
+    totalQuantity: ordersData?.productionOrders?.reduce((sum, order) => sum + order.quantity, 0) || 0
   }
 
   return (
@@ -108,35 +93,64 @@ export default function ProduccionPage() {
             variant="default" 
           />
           <StatCard 
+            title="Rechazadas" 
+            value={stats.rejected.toString()} 
+            subtitle="No listadas para producción" 
+            variant="default" 
+          />
+          <StatCard 
+            title="Canceladas" 
+            value={stats.cancelled.toString()} 
+            subtitle="No listadas para producción" 
+            variant="default" 
+          />
+          <StatCard 
             title="Cantidad Total" 
             value={stats.totalQuantity.toString()} 
             subtitle="Unidades planificadas" 
-            variant="primary" 
+            variant="default" 
           />
         </div>
 
+        <div className="p-4 md:p-6 space-y-6">
         {/* Filtros */}
-        <OrdersFilters
-          onFiltersChange={handleFiltersChange}
-          onClearFilters={handleClearFilters}
-          isLoading={loading}
-        />
-
-        {/* Lista de órdenes */}
-        <div className="card p-6 border-2 border-primary-600">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-primary-900 mb-2">
-              Órdenes de Producción
-            </h2>
-            <p className="text-sm text-primary-600">
-              {stats.total} órdenes encontradas
-            </p>
+        <OrdersFilters />
+  
+        <div className="card border-2 border-primary-600 overflow-hidden">
+          <div className="p-6 border-b border-stroke">
+            <h2 className="text-xl font-semibold text-primary-900 mb-1">Órdenes de Producción</h2>
+            <p className="text-sm text-primary-600">Gestiona las órdenes de producción de cerveza</p>
           </div>
 
+          {error ? (
+            <ErrorState error={error} />
+          ) : ordersData ? (
           <OrderClient
-            orders={orders}
-            pagination={pagination}
+            orders={ordersData.productionOrders}
+            pagination={ordersData.pagination}
           />
+          ) : (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="mt-4 text-primary-600">Cargando órdenes...</p>
+            </div>
+          )}
+          </div>
+
+          {/* Contador de resultados y paginación */}
+          {ordersData && (
+            <div className="text-center space-y-4">
+              <p className="text-sm text-primary-700">
+                Mostrando {ordersData.productionOrders.length} órdenes de {ordersData.pagination.totalElements} totales
+              </p>
+
+              {/* Paginación funcional */}
+              <PaginationClient 
+                currentPage={ordersData.pagination.currentPage}
+                totalPages={ordersData.pagination.totalPages}
+              />
+            </div>
+          )}
         </div>
       </div>
     </>

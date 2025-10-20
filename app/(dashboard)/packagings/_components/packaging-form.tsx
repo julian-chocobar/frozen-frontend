@@ -170,7 +170,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
 
                     {/* Dropdown de resultados */}
                     {showDropdown && searchTerm && (
-                        <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
+                        <div className="absolute z-50 w-76 mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
                             {materials.length === 0 && !loadingMaterials ? (
                                 <div className="px-3 py-2 text-sm text-gray-500">
                                     No se encontraron materiales de envasado

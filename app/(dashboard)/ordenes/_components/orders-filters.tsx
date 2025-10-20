@@ -5,86 +5,113 @@
  */
 
 import { useState } from "react"
-import { CompactFilters } from "@/components/ui/compact-filters"
+import { useRouter, useSearchParams } from "next/navigation"
+import { CompactFilterField, CompactFilters } from "@/components/ui/compact-filters"
 import { ProductSearchFilter } from "./product-search-filter"
 import type { ProductionOrderStatus } from "@/types"
 
 interface OrdersFiltersProps {
-  onFiltersChange: (filters: {
-    status?: ProductionOrderStatus
-    productId?: string
-  }) => void
-  onClearFilters: () => void
-  isLoading?: boolean
+  onFilterChange?: (filters: FilterState) => void
 }
 
-export function OrdersFilters({ onFiltersChange, onClearFilters, isLoading = false }: OrdersFiltersProps) {
-  const [filters, setFilters] = useState({
-    status: "" as ProductionOrderStatus | "",
-    productId: ""
+interface FilterState {
+  status: ProductionOrderStatus | "Todos"
+  productId: string
+}
+
+const statusOptions: (ProductionOrderStatus | "Todos")[] = ["Todos", "Pendiente", "Aprobado", "Rechazado", "Cancelada"]
+
+export function OrdersFilters({ onFilterChange }: OrdersFiltersProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [filters, setFilters] = useState<FilterState>({
+    status: (searchParams.get('status') as ProductionOrderStatus | "Todos") || "Todos",
+    productId: searchParams.get('productId') || ""
   })
 
-  const statusOptions = [
-    { value: "", label: "Todos los estados" },
-    { value: "Pendiente", label: "Pendiente" },
-    { value: "Aprobado", label: "Aprobado" },
-    { value: "Rechazado", label: "Rechazado" },
-    { value: "Cancelada", label: "Cancelada" }
-  ]
+  const updateURL = (newFilters: FilterState) => {
+    const params = new URLSearchParams(searchParams.toString())
+    Object.entries(newFilters).forEach(([key, value]) => {
+      if (value && value !== "") {
+        params.set(key, value)
+      } else {
+        params.delete(key)
+      }
+    })
+    router.push(`?${params.toString()}`)
+  }
 
   const handleFilterChange = (field: string, value: string) => {
     const newFilters = { ...filters, [field]: value }
     setFilters(newFilters)
-    
-    // Aplicar filtros automáticamente
-    const cleanFilters = {
-      status: newFilters.status || undefined,
-      productId: newFilters.productId || undefined
-    }
-    
-    onFiltersChange(cleanFilters)
+    updateURL(newFilters)
+    onFilterChange?.(newFilters)
   }
 
-  const handleClearFilters = () => {
-    setFilters({
-      status: "",
-      productId: ""
-    })
-    onClearFilters()
+  const handleProductChange = (productId: string) => {
+    const newFilters = { ...filters, productId }
+    setFilters(newFilters)
+    updateURL(newFilters)
+    onFilterChange?.(newFilters)
   }
 
   const handleSearch = () => {
-    // Los filtros se aplican automáticamente en handleFilterChange
+    updateURL(filters)
+
+    const filterState: FilterState = {
+      status: filters.status as ProductionOrderStatus | "Todos",
+      productId: filters.productId
+    }
+    onFilterChange?.(filterState)
   }
 
-  const filterFields = [
-    {
-      key: 'status',
-      label: 'Estado',
-      type: 'select' as const,
-      options: statusOptions
-    },
+  const handleClear = () => {
+    const clearedFilters: FilterState = {
+      status: "Todos",
+      productId: ""
+    }
+    setFilters(clearedFilters)
+    router.push(window.location.pathname)
+  }
+
+
+
+  const fields: CompactFilterField[] = [
     {
       key: 'productId',
       label: 'Producto',
       type: 'custom' as const,
+      className: 'min-w-40',
       customComponent: (
         <ProductSearchFilter
           value={filters.productId}
-          onChange={(productId) => handleFilterChange('productId', productId)}
+          onChange={handleProductChange}
           placeholder="Buscar producto por nombre..."
         />
       )
-    }
+    },
+    {
+      key: 'status',
+      label: 'Estado',
+      type: 'select' as const,
+      options: statusOptions.map(status => ({
+        value: status,
+        label: status === "Todos" ? "Todos los estados" : status
+      }))
+    },
   ]
 
   return (
     <CompactFilters
-      fields={filterFields}
-      values={filters}
+      fields={fields}
+      values={{
+        status: filters.status,
+        productId: filters.productId
+      }}
       onChange={handleFilterChange}
       onSearch={handleSearch}
-      onClear={handleClearFilters}
+      onClear={handleClear}
     />
   )
 }
