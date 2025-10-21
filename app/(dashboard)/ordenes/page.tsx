@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react"
 import { Header } from "@/components/layout/header"
 import { StatCard } from "@/components/dashboard/stat-card"
+import { StatsCarousel } from "@/components/ui/stats-carousel"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { getProductionOrders } from "@/lib/production-orders-api"
 import { OrderClient } from "./_components/order-client"
@@ -14,6 +15,7 @@ import { OrderCreateButton } from "./_components/create-button"
 import type { ProductionOrderResponse, ProductionOrderStatus } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
 import { PaginationClient } from "@/components/ui/pagination-client"
+import { ClipboardList, Clock, CheckCircle, XCircle, Ban, Package2 } from "lucide-react"
 
 interface OrdenesPageProps {
   searchParams: Promise<{
@@ -55,10 +57,10 @@ export default async function OrdenesPage({ searchParams }: OrdenesPageProps) {
   // Calcular estadísticas
   const stats = {
     total: ordersData?.productionOrders?.length || 0,
-    pending: ordersData?.productionOrders?.filter(o => o.status === 'Pendiente').length || 0,
-    approved: ordersData?.productionOrders?.filter(o => o.status === 'Aprobado').length || 0,
-    rejected: ordersData?.productionOrders?.filter(o => o.status === 'Rechazado').length || 0,
-    cancelled: ordersData?.productionOrders?.filter(o => o.status === 'Cancelada').length || 0,
+    pending: ordersData?.productionOrders?.filter(o => o.status === 'PENDIENTE').length || 0,
+    approved: ordersData?.productionOrders?.filter(o => o.status === 'APROBADA').length || 0,
+    rejected: ordersData?.productionOrders?.filter(o => o.status === 'RECHAZADA').length || 0,
+    cancelled: ordersData?.productionOrders?.filter(o => o.status === 'CANCELADA').length || 0,
     totalQuantity: ordersData?.productionOrders?.reduce((sum, order) => sum + order.quantity, 0) || 0
   }
 
@@ -72,73 +74,93 @@ export default async function OrdenesPage({ searchParams }: OrdenesPageProps) {
       />
       
       <div className="p-4 md:p-6 space-y-6">
-        {/* Tarjetas de estadísticas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard 
-            title="Total de Órdenes" 
-            value={stats.total.toString()} 
-            subtitle="Todas las órdenes" 
-            variant="primary" 
-          />
-          <StatCard 
-            title="Pendientes" 
-            value={stats.pending.toString()} 
-            subtitle="Esperando aprobación" 
-            variant="default" 
-          />
-          <StatCard 
-            title="Aprobadas" 
-            value={stats.approved.toString()} 
-            subtitle="Listas para producción" 
-            variant="default" 
-          />
-          <StatCard 
-            title="Rechazadas" 
-            value={stats.rejected.toString()} 
-            subtitle="No listadas para producción" 
-            variant="default" 
-          />
-          <StatCard 
-            title="Canceladas" 
-            value={stats.cancelled.toString()} 
-            subtitle="No listadas para producción" 
-            variant="default" 
-          />
-          <StatCard 
-            title="Cantidad Total" 
-            value={stats.totalQuantity.toString()} 
-            subtitle="Unidades planificadas" 
-            variant="default" 
-          />
+        {/* Tarjetas de estadísticas - Carrusel horizontal */}
+        <StatsCarousel>
+        <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+        <StatCard 
+              title="Total de Órdenes" 
+              value={stats.total.toString()} 
+              subtitle="Todas las órdenes" 
+              icon={ClipboardList}
+              variant="primary" 
+            />
+          </div>
+          <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+            <StatCard 
+              title="Pendientes" 
+              value={stats.pending.toString()} 
+              subtitle="Esperando aprobación" 
+              icon={Clock}
+              variant="default" 
+            />
+          </div>
+          <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+            <StatCard 
+              title="Aprobadas" 
+              value={stats.approved.toString()} 
+              subtitle="Listas para producción" 
+              icon={CheckCircle}
+              variant="success" 
+            />
+          </div>
+          <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+            <StatCard 
+              title="Rechazadas" 
+              value={stats.rejected.toString()} 
+              subtitle="No listadas para producción" 
+              icon={XCircle}
+              variant="alert" 
+            />
+          </div>
+          <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+            <StatCard 
+              title="Canceladas" 
+              value={stats.cancelled.toString()} 
+              subtitle="No listadas para producción" 
+              icon={Ban}
+              variant="default" 
+            />
+          </div>
+          <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+            <StatCard 
+              title="Cantidad Total" 
+              value={stats.totalQuantity.toString()} 
+              subtitle="Unidades planificadas" 
+              icon={Package2}
+              variant="default" 
+            />
+          </div>
+        </StatsCarousel>
+
+        {/* Recuadro con título y filtros */}
+        <div className="card border-2 border-primary-600 p-6 overflow-hidden">
+          <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
+            {/* Título y subtítulo */}
+            <div className="flex-shrink-0 min-w-0">
+              <h2 className="text-xl font-semibold text-primary-900 mb-1">Órdenes de Producción</h2>
+              <p className="text-sm text-primary-600">Listado de todas las órdenes planificadas y en proceso</p>
+            </div>
+            
+            {/* Filtros alineados a la derecha */}
+            <div className="flex-shrink-0 w-full xl:w-auto xl:ml-auto">
+              <OrdersFilters />
+            </div>
+          </div>
         </div>
 
-        <div className="p-4 md:p-6 space-y-6">
-        {/* Filtros */}
-        <OrdersFilters />
-  
-        <div className="card border-2 border-primary-600 overflow-hidden">
-          <div className="p-6 border-b border-stroke">
-            <h2 className="text-xl font-semibold text-primary-900 mb-1">Órdenes de Producción</h2>
-            <p className="text-sm text-primary-600">Gestiona las órdenes de producción de cerveza</p>
-          </div>
-
-          {error ? (
+        {/* Tarjetas de órdenes */}
+        {error ? (
+          <div className="card border-2 border-primary-600">
             <ErrorState error={error} />
-          ) : ordersData ? (
-          <OrderClient
-            orders={ordersData.productionOrders}
-            pagination={ordersData.pagination}
-          />
-          ) : (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-4 text-primary-600">Cargando órdenes...</p>
-            </div>
-          )}
           </div>
-
-          {/* Contador de resultados y paginación */}
-          {ordersData && (
+        ) : ordersData ? (
+          <>
+            <OrderClient
+              orders={ordersData.productionOrders}
+              pagination={ordersData.pagination}
+            />
+            
+            {/* Contador de resultados y paginación */}
             <div className="text-center space-y-4">
               <p className="text-sm text-primary-700">
                 Mostrando {ordersData.productionOrders.length} órdenes de {ordersData.pagination.totalElements} totales
@@ -150,8 +172,13 @@ export default async function OrdenesPage({ searchParams }: OrdenesPageProps) {
                 totalPages={ordersData.pagination.totalPages}
               />
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <div className="card border-2 border-primary-600 p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-primary-600">Cargando órdenes...</p>
+          </div>
+        )}
       </div>
     </>
   )

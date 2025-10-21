@@ -26,6 +26,7 @@ export interface CompactFiltersProps {
   onSearch: () => void
   onClear: () => void
   className?: string
+  align?: 'left' | 'right'
 }
 
 export function CompactFilters({ 
@@ -34,7 +35,8 @@ export function CompactFilters({
   onChange, 
   onSearch, 
   onClear, 
-  className 
+  className,
+  align = 'left'
 }: CompactFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -46,7 +48,7 @@ export function CompactFilters({
     switch (field.type) {
       case 'text':
         return (
-          <div key={field.key} className={cn("relative", field.className)}>
+          <div key={field.key} className={cn("relative shrink-0", field.className)}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-600" />
             <input
               type="text"
@@ -56,8 +58,7 @@ export function CompactFilters({
               className={cn(
                 "w-full pl-10 pr-4 py-2 border border-stroke rounded-lg",
                 "focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-600",
-                "text-sm text-primary-900 placeholder:text-primary-600",
-                "min-w-0" // Permite que se reduzca el ancho
+                "text-sm text-primary-900 placeholder:text-primary-600"
               )}
             />
           </div>
@@ -65,15 +66,14 @@ export function CompactFilters({
 
       case 'select':
         return (
-          <div key={field.key} className={cn("relative", field.className)}>
+          <div key={field.key} className={cn("relative shrink-0", field.className)}>
             <select
               value={values[field.key] || ""}
               onChange={(e) => onChange(field.key, e.target.value)}
               className={cn(
                 "appearance-none w-full pl-4 pr-8 py-2 border border-stroke rounded-lg",
                 "focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-600",
-                "text-sm text-primary-600 cursor-pointer",
-                "min-w-0"
+                "text-sm text-primary-600 cursor-pointer"
               )}
             >
               {field.options?.map((option) => (
@@ -88,7 +88,7 @@ export function CompactFilters({
 
       case 'date':
         return (
-          <div key={field.key} className={cn("relative", field.className)}>
+          <div key={field.key} className={cn("relative shrink-0", field.className)}>
             <input
               type="date"
               placeholder={field.placeholder}
@@ -97,8 +97,7 @@ export function CompactFilters({
               className={cn(
                 "w-full px-3 py-2 border border-stroke rounded-lg",
                 "focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-600",
-                "text-sm text-primary-600",
-                "min-w-0"
+                "text-sm text-primary-600"
               )}
             />
           </div>
@@ -106,7 +105,7 @@ export function CompactFilters({
 
       case 'custom':
         return (
-          <div key={field.key} className={cn("relative", field.className)}>
+          <div key={field.key} className={cn("relative shrink-0", field.className)}>
             {field.customComponent}
           </div>
         )
@@ -117,50 +116,49 @@ export function CompactFilters({
   }
 
   return (
-    <div className={cn("space-y-4", className)}>
-      {/* Vista Desktop - Filtros en línea horizontal */}
-      <div className="hidden lg:block">
-        <div className="flex items-end gap-3">
+    <div className={cn(className)}>
+      {/* Vista Desktop - Filtros en línea horizontal (sin wrap) */}
+      <div className="hidden xl:block">
+        <div className={cn(
+          "flex items-end gap-2",
+          align === 'right' ? 'justify-end' : 'justify-start'
+        )}>
           {/* Campos de filtro */}
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {fields.map(renderField)}
-          </div>
+          {fields.map(renderField)}
           
           {/* Botones de acción */}
-          <div className="flex gap-2 shrink-0">
+          <button
+            onClick={onSearch}
+            className={cn(
+              "px-3 py-2 bg-primary-600 text-white rounded-lg shrink-0",
+              "hover:bg-primary-700 transition-colors font-medium text-sm",
+              "focus:outline-none focus:ring-2 focus:ring-primary-300",
+              "flex items-center gap-2 whitespace-nowrap"
+            )}
+          >
+            <Search className="w-4 h-4" />
+            Buscar
+          </button>
+          
+          {hasActiveFilters && (
             <button
-              onClick={onSearch}
+              onClick={onClear}
               className={cn(
-                "px-4 py-2 bg-primary-600 text-white rounded-lg",
-                "hover:bg-primary-700 transition-colors font-medium text-sm",
-                "focus:outline-none focus:ring-2 focus:ring-primary-300",
-                "flex items-center gap-2"
+                "px-3 py-2 bg-gray-500 text-white rounded-lg shrink-0",
+                "hover:bg-gray-600 transition-colors font-medium text-sm",
+                "focus:outline-none focus:ring-2 focus:ring-gray-300",
+                "flex items-center gap-2 whitespace-nowrap"
               )}
             >
-              <Search className="w-4 h-4" />
-              Buscar
+              <X className="w-4 h-4" />
+              Limpiar
             </button>
-            
-            {hasActiveFilters && (
-              <button
-                onClick={onClear}
-                className={cn(
-                  "px-4 py-2 bg-gray-500 text-white rounded-lg",
-                  "hover:bg-gray-600 transition-colors font-medium text-sm",
-                  "focus:outline-none focus:ring-2 focus:ring-gray-300",
-                  "flex items-center gap-2"
-                )}
-              >
-                <X className="w-4 h-4" />
-                Limpiar
-              </button>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
       {/* Vista Mobile/Tablet - Filtros colapsables */}
-      <div className="lg:hidden">
+      <div className="xl:hidden">
         {/* Botón para expandir/colapsar */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}

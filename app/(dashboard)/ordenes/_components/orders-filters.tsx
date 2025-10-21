@@ -84,12 +84,12 @@ export function OrdersFilters({ onFilterChange }: OrdersFiltersProps) {
       key: 'productId',
       label: 'Producto',
       type: 'custom' as const,
-      className: 'min-w-40',
+      className: 'w-56 shrink-0',
       customComponent: (
         <ProductSearchFilter
           value={filters.productId}
           onChange={handleProductChange}
-          placeholder="Buscar producto por nombre..."
+          placeholder="Buscar producto..."
         />
       )
     },
@@ -97,6 +97,7 @@ export function OrdersFilters({ onFilterChange }: OrdersFiltersProps) {
       key: 'status',
       label: 'Estado',
       type: 'select' as const,
+      className: 'w-44 shrink-0',
       options: statusOptions
     },
   ]
@@ -111,6 +112,7 @@ export function OrdersFilters({ onFilterChange }: OrdersFiltersProps) {
       onChange={handleFilterChange}
       onSearch={handleSearch}
       onClear={handleClear}
+      align="right"
     />
   )
 }

@@ -24,13 +24,13 @@ const variantStyles = {
 
 export function StatCard({ title, value, subtitle, icon: Icon, variant = "default", className }: StatCardProps) {
   return (
-    <div className={cn("card p-6 transition-all hover:shadow-md", variantStyles[variant], className)}>
+    <div className={cn("card p-6 transition-all hover:shadow-md h-full min-h-[140px] flex flex-col", variantStyles[variant], className)}>
       <div className="flex items-start justify-between mb-3">
-        <h3 className="text-sm font-medium text-primary-800">{title}</h3>
+        <h3 className="text-sm font-medium text-primary-800 line-clamp-2">{title}</h3>
         {Icon && (
           <Icon
             className={cn(
-              "w-5 h-5",
+              "w-5 h-5 flex-shrink-0 ml-2",
               variant === "primary" && "text-primary-600",
               variant === "alert" && "text-alert-600",
               variant === "success" && "text-success-600",
@@ -39,13 +39,13 @@ export function StatCard({ title, value, subtitle, icon: Icon, variant = "defaul
           />
         )}
       </div>
-      <div className="mb-2">
+      <div className="mb-2 flex-grow flex items-center">
         <p className="text-3xl font-bold text-primary-900 font-mono">{value}</p>
       </div>
       {subtitle && (
         <p
           className={cn(
-            "text-sm font-medium",
+            "text-sm font-medium line-clamp-2",
             variant === "primary" && "text-primary-600",
             variant === "alert" && "text-alert-600",
             variant === "success" && "text-success-600",
