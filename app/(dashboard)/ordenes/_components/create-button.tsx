@@ -13,20 +13,15 @@ import type { ProductionOrderCreateRequest } from "@/types"
 
 export function OrderCreateButton() {
   const router = useRouter()
-  const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal()
+  const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
+    successMessage: 'Orden de producción creada exitosamente',
+    errorTitle: 'Error al crear orden de producción'
+  })
 
   const handleCreate = async (data: ProductionOrderCreateRequest) => {
     await handleSubmit(async () => {
-      try {
-        // Crear la orden usando la API real
-        await createProductionOrder(data)
-        
-        // Actualizar la lista de órdenes después de crear
-        router.refresh()
-      } catch (error) {
-        console.error('Error al crear orden:', error)
-        throw error // Re-lanzar el error para que el modal lo maneje
-      }
+      await createProductionOrder(data)
+      router.refresh()
     })
   }
 

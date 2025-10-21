@@ -7,6 +7,7 @@
 
 import { ReactNode, useState } from "react"
 import { Plus } from "lucide-react"
+import { handleError, showSuccess } from "@/lib/error-handler"
 
 interface CreateButtonProps {
   /** Texto del botón en pantallas grandes */
@@ -84,7 +85,10 @@ export function CreateButton({
 /**
  * Hook para manejar el estado del modal de creación
  */
-export function useCreateModal() {
+export function useCreateModal(options?: {
+  successMessage?: string
+  errorTitle?: string
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -96,9 +100,17 @@ export function useCreateModal() {
     try {
       await submitFn()
       closeModal()
+      
+      // Mostrar mensaje de éxito si se proporciona
+      if (options?.successMessage) {
+        showSuccess(options.successMessage)
+      }
     } catch (error) {
-      console.error('Error en la operación:', error)
-      // El error específico debe ser manejado por el componente padre
+      // Usar el sistema global de manejo de errores
+      handleError(error, {
+        title: options?.errorTitle || 'Error en la operación'
+      })
+      // No cerrar el modal para que el usuario pueda corregir
     } finally {
       setIsLoading(false)
     }

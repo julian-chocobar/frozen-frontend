@@ -4,6 +4,7 @@ import { JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { NavigationProvider } from "@/components/providers/navigation-provider"
 import { NavigationLoader } from "@/components/layout/navigation-loader"
+import { Toaster } from "@/components/ui/toaster"
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -28,6 +29,7 @@ export default function RootLayout({
         <NavigationProvider>
           <NavigationLoader />
           {children}
+          <Toaster />
         </NavigationProvider>
       </body>
     </html>

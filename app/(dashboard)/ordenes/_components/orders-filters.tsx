@@ -15,18 +15,25 @@ interface OrdersFiltersProps {
 }
 
 interface FilterState {
-  status: ProductionOrderStatus | "Todos"
+  status: string
   productId: string
 }
 
-const statusOptions: (ProductionOrderStatus | "Todos")[] = ["Todos", "Pendiente", "Aprobado", "Rechazado", "Cancelada"]
+// Valores para mostrar en la UI
+const statusOptions = [
+  { value: "", label: "Todos los estados" },
+  { value: "PENDIENTE", label: "Pendiente" },
+  { value: "APROBADA", label: "Aprobada" },
+  { value: "RECHAZADA", label: "Rechazada" },
+  { value: "CANCELADA", label: "Cancelada" }
+]
 
 export function OrdersFilters({ onFilterChange }: OrdersFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   const [filters, setFilters] = useState<FilterState>({
-    status: (searchParams.get('status') as ProductionOrderStatus | "Todos") || "Todos",
+    status: searchParams.get('status') || "",
     productId: searchParams.get('productId') || ""
   })
 
@@ -58,17 +65,12 @@ export function OrdersFilters({ onFilterChange }: OrdersFiltersProps) {
 
   const handleSearch = () => {
     updateURL(filters)
-
-    const filterState: FilterState = {
-      status: filters.status as ProductionOrderStatus | "Todos",
-      productId: filters.productId
-    }
-    onFilterChange?.(filterState)
+    onFilterChange?.(filters)
   }
 
   const handleClear = () => {
     const clearedFilters: FilterState = {
-      status: "Todos",
+      status: "",
       productId: ""
     }
     setFilters(clearedFilters)
@@ -95,10 +97,7 @@ export function OrdersFilters({ onFilterChange }: OrdersFiltersProps) {
       key: 'status',
       label: 'Estado',
       type: 'select' as const,
-      options: statusOptions.map(status => ({
-        value: status,
-        label: status === "Todos" ? "Todos los estados" : status
-      }))
+      options: statusOptions
     },
   ]
 

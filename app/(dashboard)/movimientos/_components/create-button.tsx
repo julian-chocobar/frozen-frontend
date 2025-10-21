@@ -13,20 +13,15 @@ import type { MovementCreateRequest } from "@/types"
 
 export function MovementCreateButton() {
   const router = useRouter()
-  const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal()
+  const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
+    successMessage: 'Movimiento creado exitosamente',
+    errorTitle: 'Error al crear movimiento'
+  })
 
   const handleCreate = async (data: MovementCreateRequest) => {
     await handleSubmit(async () => {
-      try {
-        // Crear el movimiento usando la API real
-        await createMovement(data)
-        
-        // Actualizar la lista de movimientos después de crear
-        router.refresh()
-      } catch (error) {
-        console.error('Error al crear movimiento:', error)
-        throw error // Re-lanzar el error para que el modal lo maneje
-      }
+      await createMovement(data)
+      router.refresh()
     })
   }
 

@@ -7,6 +7,7 @@ import type {
     ProductionOrderStatus } from '@/types'
 
 
+
 function mapFiltersToAPI(filters: {
     page?: number
     size?: number
@@ -17,7 +18,7 @@ function mapFiltersToAPI(filters: {
         page: filters.page || 0,
         size: filters.size || 10
     }
-    if (filters.status && filters.status !== 'Pendiente') {
+    if (filters.status) {
         apiFilters.status = filters.status
     }
     if (filters.productId) {

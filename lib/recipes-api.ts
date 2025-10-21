@@ -7,7 +7,7 @@ export async function createRecipe(data: RecipeCreateRequest) {
 }
 
 export async function updateRecipe(id: string, data: RecipeUpdateRequest) {
-    const response = await api.put<RecipeResponse>(`/api/recipes/${id}`, data)
+    const response = await api.patch<RecipeResponse>(`/api/recipes/${id}`, data)
     return response
 }
 

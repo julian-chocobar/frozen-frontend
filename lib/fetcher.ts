@@ -3,6 +3,8 @@
  * Maneja autenticación básica de Spring Security
  */
 
+import { ApiError, type BackendErrorResponse } from './api-error'
+
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"
 
 // Credenciales por defecto de Spring Security
@@ -47,23 +49,34 @@ export async function fetcher<T>(endpoint: string, options: FetcherOptions = {})
       },
     })
 
-    // Manejar errores de autenticación
-    if (response.status === 401) {
-      // Usuario no autenticado - redirigir a login
-      if (typeof window !== "undefined") {
-        window.location.href = "/login"
-      }
-      throw new Error("No autenticado")
-    }
-
-    if (response.status === 403) {
-      // Usuario sin permisos
-      throw new Error("Sin permisos para esta acción")
-    }
-
+    // Manejar respuestas de error
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `Error ${response.status}`)
+      // Intentar parsear la respuesta de error del backend
+      let errorData: Partial<BackendErrorResponse> = {}
+      try {
+        errorData = await response.json()
+      } catch {
+        // Si no se puede parsear, usar un mensaje genérico
+        errorData = {}
+      }
+
+      // Extraer el mensaje de error del backend o usar uno por defecto
+      const errorMessage = errorData.message || response.statusText || `Error ${response.status}`
+
+      // Caso especial: Error 401 - Redirigir a login
+      if (response.status === 401) {
+        if (typeof window !== "undefined") {
+          window.location.href = "/login"
+        }
+      }
+
+      // Crear y lanzar ApiError con toda la información del backend
+      throw new ApiError(
+        errorMessage,
+        response.status,
+        response.statusText,
+        errorData
+      )
     }
 
     // Si la respuesta es 204 No Content, retornar null
@@ -75,9 +88,16 @@ export async function fetcher<T>(endpoint: string, options: FetcherOptions = {})
   } catch (error) {
     console.error(`Error en petición a ${endpoint}:`, error)
     
+    // Si ya es un ApiError, re-lanzarlo sin modificar
+    if (ApiError.isApiError(error)) {
+      throw error
+    }
+    
     // Manejar errores de conexión específicamente
-    if (error instanceof TypeError && error.message.includes('fetch failed')) {
-      throw new Error(`No se pudo conectar con el servidor`)
+    if (error instanceof TypeError && 
+        (error.message.includes('fetch failed') || 
+         error.message.includes('Failed to fetch'))) {
+      throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.')
     }
     
     throw error

@@ -7,17 +7,15 @@ import type { PackagingCreateRequest } from "@/types"
 
 export function PackagingCreateButton() {
     const router = useRouter()
-    const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal()
+    const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
+        successMessage: 'Packaging creado exitosamente',
+        errorTitle: 'Error al crear packaging'
+    })
 
     const handleCreate = async (data: PackagingCreateRequest) => {
         await handleSubmit(async () => {
-            try {
-                await createPackaging(data)
-                router.refresh()
-            } catch (error) {
-                console.error('Error al crear packaging:', error)
-                throw error
-            }
+            await createPackaging(data)
+            router.refresh()
         })
     }
 

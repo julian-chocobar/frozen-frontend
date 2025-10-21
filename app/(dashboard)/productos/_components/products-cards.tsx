@@ -55,8 +55,10 @@ export function ProductsCards({
                 showLabel: false,
                 render: (value, product) => (
                     <span className={cn(
-                        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-                        product.isReady ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border",
+                        product.isReady 
+                            ? "bg-blue-50 text-blue-700 border-blue-300" 
+                            : "bg-yellow-50 text-yellow-700 border-yellow-300"
                     )}>
                         {product.isReady ? (
                             <>
@@ -78,8 +80,10 @@ export function ProductsCards({
                 showLabel: false,
                 render: (value, product) => (
                     <span className={cn(
-                        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-                        product.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border",
+                        product.isActive 
+                            ? "bg-green-50 text-green-700 border-green-300" 
+                            : "bg-red-50 text-red-700 border-red-300"
                     )}>
                         {product.isActive ? (
                             <>
@@ -104,12 +108,12 @@ export function ProductsCards({
         toggleStatusIcon: (product) => (
             product.isActive ? <PowerOff className="w-4 h-4 text-red-500" /> : <Power className="w-4 h-4 text-green-500" />
         ),
-        customActions: [
+        customActions: (product) => [
             {
-                label: 'Marcar como listo',
-                icon: CircleX,
-                onClick: (product) => onMarkAsReady!(product),
-                className: 'text-green-500',
+                label: product.isReady ? 'Marcar como no listo' : 'Marcar como listo',
+                icon: product.isReady ? CircleX : Check,
+                onClick: () => onMarkAsReady!(product),
+                className: product.isReady ? 'text-yellow-600' : 'text-blue-600',
             }
         ]
     }

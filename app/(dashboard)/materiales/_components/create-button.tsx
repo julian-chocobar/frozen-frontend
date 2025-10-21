@@ -13,12 +13,15 @@ import type { MaterialCreateRequest } from "@/types"
 
 export function MaterialCreateButton() {
   const router = useRouter()
-  const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal()
+  const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
+    successMessage: 'Material creado exitosamente',
+    errorTitle: 'Error al crear material'
+  })
 
   const handleCreate = async (data: MaterialCreateRequest) => {
     await handleSubmit(async () => {
       await createMaterial(data)
-      router.refresh() // Recargar la página para mostrar los nuevos datos
+      router.refresh()
     })
   }
 

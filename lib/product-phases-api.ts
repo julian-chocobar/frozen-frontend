@@ -30,8 +30,8 @@ export async function updateProductPhase(id: string, data: ProductPhaseUpdateReq
     return response
 }
 
-export async function markProductPhaseAsReady(id: string) {
-    const response = await api.patch<ProductPhaseResponse>(`/api/product-phases/${id}/mark-ready`)
+export async function toggleReady(id: string) {
+    const response = await api.patch<ProductPhaseResponse>(`/api/product-phases/${id}/toggle-ready`)
     return response
 }
 

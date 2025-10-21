@@ -39,28 +39,28 @@ export function OrderDetails({
 }: OrderDetailsProps) {
   const getStatusBadge = (status: ProductionOrderStatus) => {
     const statusConfig = {
-      Pendiente: { 
+      PENDIENTE: { 
         variant: "secondary" as const, 
         label: "Pendiente", 
         icon: Clock,
         color: "text-yellow-600",
         bgColor: "bg-yellow-50"
       },
-      Aprobado: { 
+      APROBADA: { 
         variant: "default" as const, 
-        label: "Aprobado", 
+        label: "Aprobada", 
         icon: CheckCircle,
         color: "text-green-600",
         bgColor: "bg-green-50"
       },
-      Rechazado: { 
+      RECHAZADA: { 
         variant: "destructive" as const, 
-        label: "Rechazado", 
+        label: "Rechazada", 
         icon: XCircle,
         color: "text-red-600",
         bgColor: "bg-red-50"
       },
-      Cancelada: { 
+      CANCELADA: { 
         variant: "outline" as const, 
         label: "Cancelada", 
         icon: XCircle,
@@ -69,7 +69,7 @@ export function OrderDetails({
       }
     }
     
-    const config = statusConfig[status] || { variant: "secondary" as const, label: status, icon: Clock }
+    const config = statusConfig[status] || { variant: "secondary" as const, label: status, icon: Clock, color: "text-gray-600", bgColor: "bg-gray-50" }
     const Icon = config.icon
     
     return (
@@ -111,7 +111,7 @@ export function OrderDetails({
   }
 
   const getStatusActions = () => {
-    if (order.status === 'Pendiente') {
+    if (order.status === 'PENDIENTE') {
       return (
         <div className="flex gap-2">
           {onApprove && (
@@ -139,7 +139,7 @@ export function OrderDetails({
       )
     }
     
-    if (order.status === 'Aprobado' && onCancel) {
+    if (order.status === 'APROBADA' && onCancel) {
       return (
         <Button
           variant="outline"
@@ -157,7 +157,7 @@ export function OrderDetails({
   }
 
   const getProgressInfo = () => {
-    if (order.status === 'Pendiente') {
+    if (order.status === 'PENDIENTE') {
       return {
         message: "La orden está pendiente de aprobación",
         icon: Clock,
@@ -165,7 +165,7 @@ export function OrderDetails({
       }
     }
     
-    if (order.status === 'Aprobado') {
+    if (order.status === 'APROBADA') {
       return {
         message: "La orden ha sido aprobada y está lista para producción",
         icon: CheckCircle,
@@ -173,7 +173,7 @@ export function OrderDetails({
       }
     }
     
-    if (order.status === 'Rechazado') {
+    if (order.status === 'RECHAZADA') {
       return {
         message: "La orden ha sido rechazada",
         icon: XCircle,
@@ -181,7 +181,7 @@ export function OrderDetails({
       }
     }
     
-    if (order.status === 'Cancelada') {
+    if (order.status === 'CANCELADA') {
       return {
         message: "La orden ha sido cancelada",
         icon: XCircle,

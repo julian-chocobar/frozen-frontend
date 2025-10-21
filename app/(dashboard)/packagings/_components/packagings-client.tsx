@@ -9,6 +9,7 @@ import {
   updatePackaging, 
   togglePackagingActive 
 } from "@/lib/packagings-api"
+import { handleError, showSuccess } from "@/lib/error-handler"
 import type { PackagingResponse, PackagingUpdateRequest } from "@/types"
 
 interface PackagingsClientProps {
@@ -36,9 +37,11 @@ export function PackagingsClient({ packagings, pagination }: PackagingsClientPro
             router.refresh()
             setIsEditing(false)
             setSelectedPackaging(null)
+            showSuccess('Packaging actualizado exitosamente')
         } catch (error) {
-            console.error('Error al actualizar packaging:', error)
-            alert('Error al actualizar el packaging')
+            handleError(error, {
+                title: 'Error al actualizar packaging'
+            })
         } finally {
             setIsLoading(false)
         }
@@ -49,9 +52,12 @@ export function PackagingsClient({ packagings, pagination }: PackagingsClientPro
         try {
             await togglePackagingActive(packaging.id)
             router.refresh()
+            const action = packaging.isActive ? 'desactivado' : 'activado'
+            showSuccess(`Packaging ${action} exitosamente`)
         } catch (error) {
-            console.error('Error al cambiar estado del packaging:', error)
-            alert('Error al cambiar el estado del packaging')
+            handleError(error, {
+                title: 'Error al cambiar estado del packaging'
+            })
         } finally {
             setIsLoading(false)
         }

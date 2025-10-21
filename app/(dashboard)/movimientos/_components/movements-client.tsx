@@ -5,11 +5,13 @@
  * Incluye modales para crear/editar y confirmaciones para eliminar
  */
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { MovementsTable } from "./movements-table"
 import { MovementsCards } from "./movements-cards"
 import { MovementDetails } from "./movement-details"
 import { getMovementById } from "@/lib/movements-api"
+import { handleError, showSuccess } from "@/lib/error-handler"
+
 
 import type { MovementResponse, MovementDetailResponse } from "@/types"
 
@@ -38,7 +40,9 @@ export function MovementsClient({ movements }: MovementsClientProps) {
       const movementDetails = await getMovementById(movement.id)
       setSelectedMovement(movementDetails as unknown as MovementDetailResponse)
     } catch (error) {
-      console.error('Error al cargar detalles del movimiento:', error)
+      handleError(error, {
+        title: 'Error al cargar detalles del movimiento'
+      })
       setIsViewing(false)
     } finally {
       setLoadingDetails(false)

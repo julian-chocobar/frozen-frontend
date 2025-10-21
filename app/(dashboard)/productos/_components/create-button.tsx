@@ -8,7 +8,10 @@ import type { ProductCreateRequest } from "@/types"
 
 export function ProductCreateButton() {
   const router = useRouter()
-  const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal()
+  const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
+    successMessage: 'Producto creado exitosamente',
+    errorTitle: 'Error al crear producto'
+  })
 
   const handleCreate = async (data: ProductCreateRequest) => {
     await handleSubmit(async () => {
@@ -20,7 +23,6 @@ export function ProductCreateButton() {
   const handleComplete = async (data: ProductCreateRequest) => {
     await handleSubmit(async () => {
       const product = await createProduct(data)
-      // Redirigir a la página de detalle del producto para completar las recetas
       router.push(`/productos/${product.id}`)
     })
   }

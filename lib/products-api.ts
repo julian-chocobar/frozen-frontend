@@ -75,7 +75,7 @@ export async function createProduct(data: ProductCreateRequest) {
 }
 
 export async function updateProduct(id: string, data: ProductUpdateRequest) {
-    const product = await api.put<ProductResponse>(`/api/products/${id}`, data)
+    const product = await api.patch<ProductResponse>(`/api/products/${id}`, data)
     return product
 }
 
@@ -84,8 +84,8 @@ export async function toggleProductActive(id: string) {
     return product
 }
 
-export async function markProductAsReady(id: string) {
-    const product = await api.patch<ProductResponse>(`/api/products/${id}/mark-ready`)
+export async function toogleReady(id: string) {
+    const product = await api.patch<ProductResponse>(`/api/products/${id}/toogle-ready`)
     return product
 }
 

@@ -301,7 +301,7 @@ export interface RecipeUpdateRequest {
 // ORDERS
 // ============================================
 
-export type ProductionOrderStatus = "Pendiente" | "Aprobado" | "Rechazado" | "Cancelada"
+export type ProductionOrderStatus = "PENDIENTE" | "APROBADA" | "RECHAZADA" | "CANCELADA"
 
 export interface ProductionOrderResponse {
   id: string

@@ -8,8 +8,9 @@ import { ProductForm } from "./product-form"
 import { 
     updateProduct,
     toggleProductActive,
-    markProductAsReady
+    toogleReady
 } from "@/lib/products-api"
+import { handleError, showSuccess } from "@/lib/error-handler"
 import type { ProductResponse, ProductUpdateRequest } from "@/types"
 
 interface ProductsClientProps {
@@ -28,7 +29,6 @@ export function ProductsClient({ productos }: ProductsClientProps) {
     const router = useRouter()
     const [selectedProduct, setSelectedProduct] = useState<ProductResponse | null>(null)
     const [isEditing, setIsEditing] = useState(false)
-    const [isViewing, setIsViewing] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
 
     const handleEdit = async (id: string, data: ProductUpdateRequest) => {
@@ -38,9 +38,11 @@ export function ProductsClient({ productos }: ProductsClientProps) {
             router.refresh()
             setIsEditing(false)
             setSelectedProduct(null)
+            showSuccess('Producto actualizado exitosamente')
         } catch (error) {
-            console.error('Error al actualizar producto:', error)
-            alert('Error al actualizar el producto')
+            handleError(error, {
+                title: 'Error al actualizar producto'
+              })
         } finally {
             setIsLoading(false)
         }
@@ -51,9 +53,11 @@ export function ProductsClient({ productos }: ProductsClientProps) {
         try {
             await toggleProductActive(product.id)
             router.refresh()
+            showSuccess('Producto activado/desactivado exitosamente')
         } catch (error) {
-            console.error('Error al cambiar estado del producto:', error)
-            alert('Error al cambiar el estado del producto')
+            handleError(error, {
+                title: 'Error al cambiar estado del producto'
+            })
         } finally {
             setIsLoading(false)
         }
@@ -62,11 +66,14 @@ export function ProductsClient({ productos }: ProductsClientProps) {
     const handleMarkAsReady = async (product: ProductResponse) => {
         setIsLoading(true)
         try {
-            await markProductAsReady(product.id)
+            await toogleReady(product.id)
             router.refresh()
+            const action = product.isReady ? 'desmarcado' : 'marcado'
+            showSuccess(`Producto ${action} como listo exitosamente`)
         } catch (error) {
-            console.error('Error al marcar como listo el producto:', error)
-            alert('Error al marcar como listo el producto')
+            handleError(error, {
+                title: 'Error al cambiar estado del producto'
+            })
         } finally {
             setIsLoading(false)
         }

@@ -181,7 +181,9 @@ export function DataCards<T extends Record<string, any>>({
                       )}
                     </button>
                   )}
-                  {actions.customActions?.map((action, actionIndex) => {
+                  {(typeof actions.customActions === 'function' 
+                    ? actions.customActions(item) 
+                    : actions.customActions)?.map((action, actionIndex) => {
                     const IconComponent = action.icon
                     return (
                       <button

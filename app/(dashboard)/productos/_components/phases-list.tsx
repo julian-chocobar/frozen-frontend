@@ -11,7 +11,7 @@ interface PhasesListProps {
     recipesByPhase: Record<string, RecipeResponse[]>
     onEditPhase: (phaseId: string) => void
     onCreateRecipe: (phaseId: string) => void
-    onMarkPhaseReady: (phaseId: string) => void
+    onTogglePhaseReady: (phaseId: string, isReady: boolean) => void
     onEditRecipe: (recipe: RecipeResponse) => void
     onDeleteRecipe: (recipeId: string) => void
     updatingPhase: string | null
@@ -22,7 +22,7 @@ export function PhasesList({
     recipesByPhase, 
     onEditPhase, 
     onCreateRecipe, 
-    onMarkPhaseReady,
+    onTogglePhaseReady,
     onEditRecipe,
     onDeleteRecipe,
     updatingPhase 
@@ -58,7 +58,6 @@ export function PhasesList({
             <div className="space-y-4">
                 {phases.map((phase, index) => {
                     const phaseRecipes = getRecipesByPhase(phase.id)
-                    const canMarkReady = phaseRecipes.length > 0 && !phase.isReady
                     const isUpdating = updatingPhase === phase.id
                     const isLastPhase = index === phases.length - 1
 
@@ -76,88 +75,87 @@ export function PhasesList({
                                         : 'border-primary-300 bg-white hover:border-primary-400'
                                 }`}
                             >
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
+                                <div className="space-y-4 mb-3">
+                                    {/* Header con título y botones - siempre en la misma línea */}
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                                             {/* Indicador de fase */}
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                            <div className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-sm font-bold ${
                                                 phase.isReady 
                                                     ? 'bg-green-500 text-white' 
                                                     : 'bg-primary-100 text-primary-600'
                                             }`}>
                                                 {index + 1}
                                             </div>
-                                            <div>
-                                                <h3 className="text-lg font-semibold text-primary-900">
+                                            <div className="min-w-0">
+                                                <h3 className="text-base sm:text-lg font-semibold text-primary-900 truncate">
                                                     {getPhaseLabel(phase.phase)}
                                                 </h3>
-                                                <Badge variant={phase.isReady ? "default" : "secondary"}>
+                                                <Badge variant={phase.isReady ? "default" : "secondary"} className="mt-1">
                                                     {phase.isReady ? "Lista" : "Pendiente"}
                                                 </Badge>
                                             </div>
                                         </div>
-                                        
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm ml-11">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-primary-600">Entrada:</span>
-                                                <span className="font-medium text-primary-900">{phase.input}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-primary-600">Salida:</span>
-                                                <span className="font-medium text-primary-900">
-                                                    {phase.output} {phase.outputUnit}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-primary-600">Horas:</span>
-                                                <span className="font-medium text-primary-900">{phase.estimatedHours}h</span>
-                                            </div>
+
+                                        {/* Botones - solo iconos en móvil, con texto en pantallas grandes */}
+                                        <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => onEditPhase(phase.id)}
+                                                className="border-primary-300 text-primary-600 hover:bg-primary-50 h-8 px-2 lg:px-3"
+                                                title="Editar fase"
+                                            >
+                                                <Edit className="w-4 h-4 lg:mr-1" />
+                                                <span className="hidden lg:inline">Editar</span>
+                                            </Button>
+                                            
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => onCreateRecipe(phase.id)}
+                                                className="border-primary-300 text-primary-600 hover:bg-primary-50 h-8 px-2 lg:px-3"
+                                                title="Agregar ingrediente"
+                                            >
+                                                <Plus className="w-4 h-4 lg:mr-1" />
+                                                <span className="hidden lg:inline">Agregar</span>
+                                            </Button>
+
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => onTogglePhaseReady(phase.id, !phase.isReady)}
+                                                className={`${phase.isReady ? "bg-yellow-200 hover:bg-yellow-300" : "bg-blue-200 hover:bg-blue-300"} h-8 px-2 lg:px-3`}
+                                                title={phase.isReady ? "Marcar como no lista" : "Marcar como lista"}
+                                            >
+                                                <CheckCircle className="w-4 h-4 lg:mr-1" />
+                                                <span className="hidden lg:inline">{phase.isReady ? "No lista" : "Lista"}</span>
+                                            </Button>
                                         </div>
                                     </div>
-
-                                    <div className="flex flex-wrap items-center gap-2 ml-4">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => onEditPhase(phase.id)}
-                                            className="border-primary-300 text-primary-600 hover:bg-primary-50"
-                                        >
-                                            <Edit className="w-4 h-4 sm:mr-1" />
-                                            <span className="hidden sm:inline">Editar</span>
-                                        </Button>
-                                        
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => onCreateRecipe(phase.id)}
-                                            className="border-primary-300 text-primary-600 hover:bg-primary-50"
-                                        >
-                                            <Plus className="w-4 h-4 sm:mr-1" />
-                                            <span className="hidden sm:inline">Agregar</span>
-                                        </Button>
-
-                                        {canMarkReady && (
-                                            <Button
-                                                variant="default"
-                                                size="sm"
-                                                onClick={() => onMarkPhaseReady(phase.id)}
-                                                disabled={isUpdating}
-                                                className="bg-green-600 hover:bg-green-700"
-                                            >
-                                                {isUpdating ? (
-                                                    <Loader2 className="w-4 h-4 sm:mr-1 animate-spin" />
-                                                ) : (
-                                                    <CheckCircle className="w-4 h-4 sm:mr-1" />
-                                                )}
-                                                <span className="hidden sm:inline">Marcar Lista</span>
-                                            </Button>
-                                        )}
+                                    
+                                    {/* Grid de información */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm ml-0 sm:ml-11">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="text-primary-600 flex-shrink-0">Entrada:</span>
+                                            <span className="font-medium text-primary-900 truncate">{phase.input}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="text-primary-600 flex-shrink-0">Salida:</span>
+                                            <span className="font-medium text-primary-900 truncate">
+                                                {phase.output} {phase.outputUnit}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="text-primary-600 flex-shrink-0">Horas:</span>
+                                            <span className="font-medium text-primary-900">{phase.estimatedHours}h</span>
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Recetas de la fase */}
                                 {phaseRecipes.length > 0 && (
-                                    <div className="mt-4 pt-4 border-t border-primary-200 ml-11">
+                                    <div className="mt-4 pt-4 border-t border-primary-200 ml-0 sm:ml-11">
                                         <h4 className="text-sm font-medium text-primary-600 mb-3">
                                             Ingredientes ({phaseRecipes.length})
                                         </h4>
@@ -165,14 +163,14 @@ export function PhasesList({
                                             {phaseRecipes.map((recipe) => (
                                                 <div
                                                     key={recipe.id}
-                                                    className="flex items-center justify-between p-3 bg-primary-50 border border-primary-200 rounded-lg text-sm"
+                                                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-primary-50 border border-primary-200 rounded-lg text-sm"
                                                 >
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="font-medium text-primary-900">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className="font-medium text-primary-900 truncate">
                                                                 {recipe.materialName}
                                                             </span>
-                                                            <span className="text-primary-600">
+                                                            <span className="text-primary-600 flex-shrink-0">
                                                                 ({recipe.materialCode})
                                                             </span>
                                                         </div>
@@ -180,7 +178,7 @@ export function PhasesList({
                                                             {recipe.quantity} {recipe.materialUnit}
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1 ml-2">
+                                                    <div className="flex items-center gap-1 justify-end sm:justify-start flex-shrink-0">
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
@@ -205,7 +203,7 @@ export function PhasesList({
                                 )}
 
                                 {phaseRecipes.length === 0 && (
-                                    <div className="mt-4 pt-4 border-t border-primary-200 ml-11">
+                                    <div className="mt-4 pt-4 border-t border-primary-200 ml-0 sm:ml-11">
                                         <div className="text-center py-4 text-primary-600">
                                             <p className="text-sm">No hay ingredientes agregados a esta fase</p>
                                             <p className="text-xs mt-1">Agrega al menos un ingrediente para poder marcar la fase como lista</p>

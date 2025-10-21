@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { ProductResponse, ProductPhaseResponse, RecipeResponse, Phase } from "@/types"
-import { getProductPhasesByProductId } from "@/lib/product-phases-api"
+import { getProductPhasesByProductId, toggleReady, toggleReady as toglePhaseReady } from "@/lib/product-phases-api"
 import { getRecipesByProductPhaseId, updateRecipe, deleteRecipe } from "@/lib/recipes-api"
-import { markProductPhaseAsReady } from "@/lib/product-phases-api"
-import { markProductAsReady } from "@/lib/products-api"
+import { toogleReady as toogleProductReady } from "@/lib/products-api"
+import { handleError, showSuccess } from "@/lib/error-handler"
 import { ProductInfoCard } from "@/app/(dashboard)/productos/_components/product-info-card"
 import { PhasesList } from "@/app/(dashboard)/productos/_components/phases-list"
 import { RecipeForm } from "@/app/(dashboard)/productos/_components/recipe-form"
@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, XCircle, Edit, Plus, Loader2 } from "lucide-react"
-import { toast } from "sonner"
 
 interface ProductDetailClientProps {
     product: ProductResponse
@@ -62,20 +61,22 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         loadData()
     }, [product.id])
 
-    // Función para marcar fase como lista
-    const handleMarkPhaseReady = async (phaseId: string) => {
+    // Función para cambiar estado de fase (listo/no listo)
+    const handleTogglePhaseReady = async (phaseId: string, isReady: boolean) => {
         try {
             setUpdatingPhase(phaseId)
-            await markProductPhaseAsReady(phaseId)
+            await toggleReady(phaseId)
             
             // Recargar fases para actualizar estado
             const updatedPhases = await getProductPhasesByProductId(product.id)
             setPhases(updatedPhases)
             
-            toast.success("Fase marcada como lista")
-        } catch (err) {
-            console.error('Error al marcar fase como lista:', err)
-            toast.error(err instanceof Error ? err.message : 'Error al marcar fase como lista')
+            const action = isReady ? 'marcada como no lista' : 'marcada como lista'
+            showSuccess(`Fase ${action} exitosamente`)
+        } catch (error) {
+            handleError(error, {
+                title: 'Error al cambiar estado de la fase'
+            })
         } finally {
             setUpdatingPhase(null)
         }
@@ -89,24 +90,29 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
         try {
             await deleteRecipe(recipeId)
-            toast.success("Ingrediente eliminado correctamente")
+            showSuccess('Ingrediente eliminado exitosamente')
             refreshData()
-        } catch (err) {
-            console.error('Error al eliminar receta:', err)
-            toast.error(err instanceof Error ? err.message : 'Error al eliminar ingrediente')
+        } catch (error) {
+            handleError(error, {
+                title: 'Error al eliminar ingrediente'
+            })
         }
     }
 
-    // Función para marcar producto como listo/no listo
+    // Función para cambiar estado del producto (listo/no listo)
     const handleToggleProductReady = async () => {
         try {
-            await markProductAsReady(product.id)
+            await toogleProductReady(product.id)
             
-            // Recargar producto (en una implementación real, esto vendría del servidor)
-            toast.success(`Producto marcado como ${product.isReady ? 'No Listo' : 'Listo'}`)
-        } catch (err) {
-            console.error('Error al cambiar estado del producto:', err)
-            toast.error(err instanceof Error ? err.message : 'Error al cambiar estado del producto')
+            const action = product.isReady ? 'marcado como no listo' : 'marcado como listo'
+            showSuccess(`Producto ${action} exitosamente`)
+            
+            // Recargar página para reflejar cambios
+            window.location.reload()
+        } catch (error) {
+            handleError(error, {
+                title: 'Error al cambiar estado del producto'
+            })
         }
     }
 
@@ -183,7 +189,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 recipesByPhase={recipesByPhase}
                 onEditPhase={setEditingPhase}
                 onCreateRecipe={setCreatingRecipe}
-                onMarkPhaseReady={handleMarkPhaseReady}
+                onTogglePhaseReady={handleTogglePhaseReady}
                 onEditRecipe={setEditingRecipe}
                 onDeleteRecipe={handleDeleteRecipe}
                 updatingPhase={updatingPhase}

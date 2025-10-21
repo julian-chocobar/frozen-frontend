@@ -25,7 +25,13 @@ export interface TableActions<T> {
     onClick: (item: T) => void
     className?: string
     variant?: 'default' | 'primary' | 'danger' | 'warning'
-  }>
+  }> | ((item: T) => Array<{
+    label: string
+    icon: React.ComponentType<{ className?: string }>
+    onClick: (item: T) => void
+    className?: string
+    variant?: 'default' | 'primary' | 'danger' | 'warning'
+  }>)
 }
 
 interface DataTableProps<T> {
@@ -159,7 +165,9 @@ export function DataTable<T extends Record<string, any>>({
                         )}
                       </button>
                     )}
-                    {actions.customActions?.map((action, actionIndex) => {
+                    {(typeof actions.customActions === 'function' 
+                      ? actions.customActions(item) 
+                      : actions.customActions)?.map((action, actionIndex) => {
                       const IconComponent = action.icon
                       return (
                         <button

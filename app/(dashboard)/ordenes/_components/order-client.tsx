@@ -11,11 +11,11 @@ import { OrdersCards } from "./orders-cards"
 import { OrderForm } from "./order-form"
 import { OrderDetails } from "./order-details"
 import { 
-  createProductionOrder,
   approveProductionOrder, 
   rejectProductionOrder, 
   cancelProductionOrder 
 } from "@/lib/production-orders-api"
+import { handleError, showSuccess } from "@/lib/error-handler"
 import type { ProductionOrderResponse, ProductionOrderCreateRequest } from "@/types"
 
 interface OrderClientProps {
@@ -37,20 +37,6 @@ export function OrderClient({ orders }: OrderClientProps) {
   const [isViewing, setIsViewing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleCreate = async (data: ProductionOrderCreateRequest) => {
-    setIsLoading(true)
-    try {
-      await createProductionOrder(data)
-      router.refresh()
-      setIsCreating(false)
-    } catch (error) {
-      console.error('Error al crear orden:', error)
-      alert('Error al crear la orden')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleApprove = async (order: ProductionOrderResponse) => {
     setIsLoading(true)
     try {
@@ -58,9 +44,11 @@ export function OrderClient({ orders }: OrderClientProps) {
       router.refresh()
       setIsViewing(false)
       setSelectedOrder(null)
+      showSuccess('Orden aprobada exitosamente')
     } catch (error) {
-      console.error('Error al aprobar orden:', error)
-      alert('Error al aprobar la orden')
+      handleError(error, {
+        title: 'Error al aprobar orden'
+      })
     } finally {
       setIsLoading(false)
     }
@@ -73,9 +61,11 @@ export function OrderClient({ orders }: OrderClientProps) {
       router.refresh()
       setIsViewing(false)
       setSelectedOrder(null)
+      showSuccess('Orden rechazada exitosamente')
     } catch (error) {
-      console.error('Error al rechazar orden:', error)
-      alert('Error al rechazar la orden')
+      handleError(error, {
+        title: 'Error al rechazar orden'
+      })
     } finally {
       setIsLoading(false)
     }
@@ -88,9 +78,11 @@ export function OrderClient({ orders }: OrderClientProps) {
       router.refresh()
       setIsViewing(false)
       setSelectedOrder(null)
+      showSuccess('Orden cancelada exitosamente')
     } catch (error) {
-      console.error('Error al cancelar orden:', error)
-      alert('Error al cancelar la orden')
+      handleError(error, {
+        title: 'Error al cancelar orden'
+      })
     } finally {
       setIsLoading(false)
     }
@@ -115,39 +107,6 @@ export function OrderClient({ orders }: OrderClientProps) {
         onCancel={handleCancel}
         isLoading={isLoading}
       />
-
-      {/* Modal para crear orden */}
-      {isCreating && (
-        <div 
-          className="fixed inset-0 flex items-center justify-center p-4 z-50"
-          style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)'
-          }}
-        >
-          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-primary-600">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-primary-900">Crear Orden de Producción</h2>
-                <button
-                  onClick={() => setIsCreating(false)}
-                  className="p-2 hover:bg-primary-50 rounded-lg transition-colors text-primary-600"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <OrderForm
-                onSubmit={handleCreate}
-                onCancel={() => setIsCreating(false)}
-                isLoading={isLoading}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal para ver detalles */}
       {isViewing && selectedOrder && (
@@ -194,5 +153,3 @@ export function OrderClient({ orders }: OrderClientProps) {
   )
 }
 
-// Exportar función para crear orden desde el botón
-export { OrderClient as default }

@@ -15,7 +15,8 @@ import {
   updateMaterial, 
   toggleMaterialActive 
 } from "@/lib/materials-api"
-import type { Material, MaterialUpdateRequest } from "@/types"
+import { handleError, showSuccess } from "@/lib/error-handler"
+import type { Material, MaterialDetailResponse, MaterialUpdateRequest } from "@/types"
 
 interface MaterialsClientProps {
   materials: Material[]
@@ -43,9 +44,11 @@ export function MaterialsClient({ materials }: MaterialsClientProps) {
       router.refresh()
       setIsEditing(false)
       setSelectedMaterial(null)
+      showSuccess('Material actualizado exitosamente')
     } catch (error) {
-      console.error('Error al actualizar material:', error)
-      alert('Error al actualizar el material')
+      handleError(error, {
+        title: 'Error al actualizar material'
+      })
     } finally {
       setIsLoading(false)
     }
@@ -56,9 +59,12 @@ export function MaterialsClient({ materials }: MaterialsClientProps) {
     try {
       await toggleMaterialActive(material.id)
       router.refresh()
+      const action = material.isActive ? 'desactivado' : 'activado'
+      showSuccess(`Material ${action} exitosamente`)
     } catch (error) {
-      console.error('Error al cambiar estado del material:', error)
-      alert('Error al cambiar el estado del material')
+      handleError(error, {
+        title: 'Error al cambiar estado del material'
+      })
     } finally {
       setIsLoading(false)
     }
@@ -130,7 +136,7 @@ export function MaterialsClient({ materials }: MaterialsClientProps) {
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">Detalles del Material</h2>
               <MaterialDetails
-                material={selectedMaterial}
+                material={selectedMaterial as MaterialDetailResponse}
                 onClose={() => {
                   setIsViewing(false)
                   setSelectedMaterial(null)
