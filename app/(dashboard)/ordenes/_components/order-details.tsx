@@ -113,26 +113,28 @@ export function OrderDetails({
   const getStatusActions = () => {
     if (order.status === 'PENDIENTE') {
       return (
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {onApprove && (
             <Button
               onClick={() => onApprove(order)}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto text-xs sm:text-sm"
               disabled={isLoading}
+              size="sm"
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Aprobar Orden
+              <CheckCircle className="w-4 h-4 mr-1.5 sm:mr-2" />
+              <span>Aprobar</span>
             </Button>
           )}
           {onReject && (
             <Button
               variant="outline"
               onClick={() => onReject(order)}
-              className="border-red-600 text-red-600 hover:bg-red-50"
+              className="border-red-600 text-red-600 hover:bg-red-50 w-full sm:w-auto text-xs sm:text-sm"
               disabled={isLoading}
+              size="sm"
             >
-              <XCircle className="w-4 h-4 mr-2" />
-              Rechazar
+              <XCircle className="w-4 h-4 mr-1.5 sm:mr-2" />
+              <span>Rechazar</span>
             </Button>
           )}
         </div>
@@ -144,11 +146,12 @@ export function OrderDetails({
         <Button
           variant="outline"
           onClick={() => onCancel(order)}
-          className="border-orange-600 text-orange-600 hover:bg-orange-50"
+          className="border-orange-600 text-orange-600 hover:bg-orange-50 w-full sm:w-auto text-xs sm:text-sm"
           disabled={isLoading}
+          size="sm"
         >
-          <XCircle className="w-4 h-4 mr-2" />
-          Cancelar Orden
+          <XCircle className="w-4 h-4 mr-1.5 sm:mr-2" />
+          <span>Cancelar Orden</span>
         </Button>
       )
     }
@@ -195,23 +198,28 @@ export function OrderDetails({
   const progressInfo = getProgressInfo()
 
   return (
-    <div className="space-y-6">
-      {/* Header con estado y acciones */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-primary-50 rounded-lg">
-        <div className="flex items-center gap-3">
-          <Factory className="w-6 h-6 text-primary-600" />
-          <div>
-            <h2 className="text-xl font-semibold text-primary-900">
+    <div className="space-y-4 md:space-y-6">
+      {/* Header con estado y acciones - Completamente responsive */}
+      <div className="flex flex-col gap-3 md:gap-4 p-4 md:p-4 bg-primary-50 rounded-lg">
+        <div className="flex items-start gap-3">
+          <Factory className="w-5 h-5 md:w-6 md:h-6 text-primary-600 flex-shrink-0 mt-1" />
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg md:text-xl font-semibold text-primary-900 truncate">
               Orden de Producción
             </h2>
-            <p className="text-sm text-primary-600">
+            <p className="text-xs md:text-sm text-primary-600 truncate">
               {order.batchCode} • ID: {order.batchId}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {getStatusBadge(order.status)}
-          {getStatusActions()}
+        {/* Estado y acciones en fila separada en móvil */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex-shrink-0">
+            {getStatusBadge(order.status)}
+          </div>
+          <div className="flex-1 sm:flex-initial">
+            {getStatusActions()}
+          </div>
         </div>
       </div>
 

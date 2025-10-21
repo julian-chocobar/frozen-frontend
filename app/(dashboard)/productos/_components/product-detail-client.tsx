@@ -38,17 +38,24 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 const phasesData = await getProductPhasesByProductId(product.id)
                 setPhases(phasesData)
                 
-                // Cargar recetas para cada fase
+                // Cargar recetas para todas las fases EN PARALELO
                 const recipesMap: Record<string, RecipeResponse[]> = {}
-                for (const phase of phasesData) {
+                const recipePromises = phasesData.map(async (phase) => {
                     try {
                         const recipes = await getRecipesByProductPhaseId(phase.id)
-                        recipesMap[phase.id] = recipes
+                        return { phaseId: phase.id, recipes }
                     } catch (err) {
                         console.error(`Error al cargar recetas para fase ${phase.id}:`, err)
-                        recipesMap[phase.id] = []
+                        return { phaseId: phase.id, recipes: [] }
                     }
-                }
+                })
+                
+                // Esperar todas las promesas en paralelo
+                const results = await Promise.all(recipePromises)
+                results.forEach(({ phaseId, recipes }) => {
+                    recipesMap[phaseId] = recipes
+                })
+                
                 setRecipesByPhase(recipesMap)
             } catch (err) {
                 console.error('Error al cargar datos:', err)
@@ -122,17 +129,24 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             const phasesData = await getProductPhasesByProductId(product.id)
             setPhases(phasesData)
             
-            // Recargar recetas para cada fase
+            // Recargar recetas para todas las fases EN PARALELO
             const recipesMap: Record<string, RecipeResponse[]> = {}
-            for (const phase of phasesData) {
+            const recipePromises = phasesData.map(async (phase) => {
                 try {
                     const recipes = await getRecipesByProductPhaseId(phase.id)
-                    recipesMap[phase.id] = recipes
+                    return { phaseId: phase.id, recipes }
                 } catch (err) {
                     console.error(`Error al recargar recetas para fase ${phase.id}:`, err)
-                    recipesMap[phase.id] = []
+                    return { phaseId: phase.id, recipes: [] }
                 }
-            }
+            })
+            
+            // Esperar todas las promesas en paralelo
+            const results = await Promise.all(recipePromises)
+            results.forEach(({ phaseId, recipes }) => {
+                recipesMap[phaseId] = recipes
+            })
+            
             setRecipesByPhase(recipesMap)
         } catch (err) {
             console.error('Error al recargar datos:', err)
