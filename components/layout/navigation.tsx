@@ -118,7 +118,7 @@ export function Navigation({ variant, className }: NavigationProps) {
       <aside className={cn("hidden md:flex flex-col bg-background border-r border-stroke w-[72px]", className)}>
         {/* Logo */}
         <NavLink href="/" className="flex items-center justify-center h-16 hover:bg-surface-secondary transition-colors">
-          <div className="w-16 h-16 rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
+          <div className="w-15 h-15 flex items-center justify-center overflow-hidden">
             <img 
               src="/Frozen-icon.png" 
               alt="Frozen Cervecería Artesanal" 

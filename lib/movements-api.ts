@@ -80,13 +80,7 @@ export async function getMovements(filters: {
   if (apiFilters.dateFrom) urlParams.startDate = apiFilters.dateFrom
   if (apiFilters.dateTo) urlParams.endDate = apiFilters.dateTo
   
-  console.log('Parámetros enviados al backend:', urlParams)
   const response = await api.get<MovementsPageResponse>('/api/movements', urlParams)
-  console.log('Respuesta del backend:', response.content.map(m => ({
-    id: m.id,
-    date: m.realizationDate,
-    type: m.type
-  })))
 
   return {
     movements: response.content,
