@@ -1,4 +1,4 @@
-import { Check, CircleX, Power, PowerOff, X } from "lucide-react"
+import { Check, CircleX, Power, PowerOff, X, Wine } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
 import type { ProductResponse } from "@/types"
@@ -32,7 +32,15 @@ export function ProductsTable({
             key: 'isAlcoholic',
             label: 'Alcoholico',
             render: (value) => (
-                <span className="text-sm text-primary-600">{value ? "Si" : "No"}</span>
+                <span className={cn(
+                    "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border",
+                    value 
+                        ? "bg-purple-50 text-purple-700 border-purple-300" 
+                        : "bg-gray-50 text-gray-700 border-gray-300"
+                )}>
+                    <Wine className="w-3 h-3" />
+                    {value ? "Sí" : "No"}
+                </span>
             )
         },
         {

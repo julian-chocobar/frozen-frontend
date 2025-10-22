@@ -4,7 +4,7 @@ import { ProductResponse } from "@/types"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, XCircle } from "lucide-react"
+import { CheckCircle, XCircle, Power, PowerOff, Check, CircleX, Wine } from "lucide-react"
 
 interface ProductInfoCardProps {
     product: ProductResponse
@@ -30,15 +30,53 @@ export function ProductInfoCard({
                 <div className="flex-1">
                     <h1 className="text-xl md:text-2xl font-bold text-primary-900 mb-2">{product.name}</h1>
                     <div className="flex flex-wrap items-center gap-2 mb-2 md:mb-4">
-                        <Badge variant={product.isAlcoholic ? "default" : "secondary"}>
+                        {/* Badge Alcohólico */}
+                        <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${
+                            product.isAlcoholic 
+                                ? "bg-purple-50 text-purple-700 border-purple-300" 
+                                : "bg-gray-50 text-gray-700 border-gray-300"
+                        }`}>
+                            <Wine className="w-3 h-3" />
                             {product.isAlcoholic ? "Alcohólico" : "No Alcohólico"}
-                        </Badge>
-                        <Badge variant={product.isActive ? "default" : "destructive"}>
-                            {product.isActive ? "Activo" : "Inactivo"}
-                        </Badge>
-                        <Badge variant={product.isReady ? "default" : "secondary"}>
-                            {product.isReady ? "Listo" : "No Listo"}
-                        </Badge>
+                        </div>
+                        
+                        {/* Badge Estado */}
+                        <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${
+                            product.isActive 
+                                ? "bg-green-50 text-green-700 border-green-300" 
+                                : "bg-red-50 text-red-700 border-red-300"
+                        }`}>
+                            {product.isActive ? (
+                                <>
+                                    <Power className="w-3 h-3" />
+                                    Activo
+                                </>
+                            ) : (
+                                <>
+                                    <PowerOff className="w-3 h-3" />
+                                    Inactivo
+                                </>
+                            )}
+                        </div>
+                        
+                        {/* Badge Listo */}
+                        <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${
+                            product.isReady 
+                                ? "bg-blue-50 text-blue-700 border-blue-300" 
+                                : "bg-yellow-50 text-yellow-700 border-yellow-300"
+                        }`}>
+                            {product.isReady ? (
+                                <>
+                                    <Check className="w-3 h-3" />
+                                    Listo
+                                </>
+                            ) : (
+                                <>
+                                    <CircleX className="w-3 h-3" />
+                                    No Listo
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
                 {/* Botón responsive con texto visible */}

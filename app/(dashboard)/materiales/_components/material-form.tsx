@@ -48,12 +48,12 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
     }
 
     // Validaciones para campos opcionales (solo si tienen valor)
-    if (formData.value && formData.value !== "" && Number(formData.value) <= 0) {
-      newErrors.value = "El valor debe ser mayor a 0"
+    if (formData.value && formData.value !== "" && Number(formData.value) < 0) {
+      newErrors.value = "El valor no puede ser menor a 0"
     }
 
-    if (formData.stock && formData.stock !== "" && Number(formData.stock) <= 0) {
-      newErrors.stock = "El stock debe ser mayor a 0"
+    if (formData.stock && formData.stock !== "" && Number(formData.stock) < 0) {
+      newErrors.stock = "El stock no puede ser menor a 0"
     }
 
     setErrors(newErrors)
@@ -71,12 +71,12 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
         if (formData.name !== material?.name) updateData.name = formData.name
         if (formData.type !== material?.type) updateData.type = formData.type
         if (formData.supplier !== material?.supplier) updateData.supplier = formData.supplier
-        if (formData.value !== material?.value && formData.value !== "" && Number(formData.value) > 0) updateData.value = Number(formData.value)
+        if (formData.value !== material?.value && formData.value !== "" && Number(formData.value) >= 0) updateData.value = Number(formData.value)
         if (formData.unitMeasurement !== material?.unitMeasurement) updateData.unitMeasurement = formData.unitMeasurement
         if (formData.threshold !== material?.threshold && formData.threshold !== "" && Number(formData.threshold) > 0) updateData.threshold = Number(formData.threshold)
         
         // Solo incluir stock si allowStockEdit es true (para casos especiales)
-        if (allowStockEdit && formData.stock !== material?.totalStock && Number(formData.stock) > 0) {
+        if (allowStockEdit && formData.stock !== material?.totalStock && Number(formData.stock) >= 0) {
           // Nota: Esto requeriría extender MaterialUpdateRequest o crear un tipo especial
           console.warn('Edición de stock no está soportada en MaterialUpdateRequest')
         }
@@ -93,8 +93,8 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
         
         // Agregar campos opcionales solo si tienen valor
         if (formData.supplier.trim()) createData.supplier = formData.supplier
-        if (formData.value !== "" && Number(formData.value) > 0) createData.value = Number(formData.value)
-        if (formData.stock !== "" && Number(formData.stock) > 0) createData.stock = Number(formData.stock)
+        if (formData.value !== "" && Number(formData.value) >= 0) createData.value = Number(formData.value)
+        if (formData.stock !== "" && Number(formData.stock) >= 0) createData.stock = Number(formData.stock)
         
         onSubmit(createData)
       }

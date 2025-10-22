@@ -1,4 +1,4 @@
-import { Check, CircleX, Power, PowerOff } from "lucide-react"
+import { Check, CircleX, Power, PowerOff, Wine } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataCards, type CardField, type CardLayout, type TableActions } from "@/components/ui/data-cards"
 import type { ProductResponse } from "@/types"
@@ -35,7 +35,15 @@ export function ProductsCards({
                 label: '',
                 showLabel: false,
                 render: (value) => (
-                    <span className="text-sm text-primary-600"> {value ? "Alcoholico" : "No alcoholico"}</span>
+                    <span className={cn(
+                        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border",
+                        value 
+                            ? "bg-purple-50 text-purple-700 border-purple-300" 
+                            : "bg-gray-50 text-gray-700 border-gray-300"
+                    )}>
+                        <Wine className="w-3 h-3" />
+                        {value ? "Alcohólico" : "No Alcohólico"}
+                    </span>
                 )
             },
             {
