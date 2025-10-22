@@ -73,14 +73,14 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false, on
                 const updateData: ProductUpdateRequest = {}
                 if (formData.name !== product?.name) updateData.name = formData.name
                 if (formData.isAlcoholic !== product?.isAlcoholic) updateData.isAlcoholic = formData.isAlcoholic
-                if (formData.standardQuantity !== product?.standardQuantity) updateData.standardQuantity = formData.standardQuantity
+                if (formData.standardQuantity !== product?.standardQuantity) updateData.standardQuantity = Number(formData.standardQuantity)
                 if (formData.unitMeasurement !== product?.unitMeasurement) updateData.unitMeasurement = formData.unitMeasurement
                 onComplete(updateData)
             } else {
                 const createData: ProductCreateRequest = {
                     name: formData.name,
                     isAlcoholic: formData.isAlcoholic,
-                    standardQuantity: formData.standardQuantity,
+                    standardQuantity: Number(formData.standardQuantity),
                     unitMeasurement: formData.unitMeasurement
                 }
                 onComplete(createData)
@@ -114,16 +114,30 @@ const handleChange = (field: string, value: string | boolean | number) => {
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-primary-900 mb-2">
-                        Alcoholico *
+                        ¿Es alcoholico? *
                     </label>
-                    <input
-                        type="checkbox"
-                        checked={formData.isAlcoholic}
-                        onChange={(e) => handleChange("isAlcoholic", e.target.checked)}
-                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                            errors.isAlcoholic ? "border-red-500" : "border-stroke"
-                        }`}
-                    />
+                    <div className="flex gap-8 h-10">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="isAlcoholic"
+                                checked={formData.isAlcoholic === true}
+                                onChange={() => handleChange("isAlcoholic", true)}
+                                className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 focus:ring-2"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Sí</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="isAlcoholic"
+                                checked={!formData.isAlcoholic}
+                                onChange={() => handleChange("isAlcoholic", false)}
+                                className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 focus:ring-2"
+                            />
+                            <span className="text-sm font-medium text-gray-700">No</span>
+                        </label>
+                    </div>
                     {errors.isAlcoholic && <p className="text-red-500 text-sm mt-1">{errors.isAlcoholic}</p>}
                 </div>
                 

@@ -17,7 +17,7 @@ interface RecipeFormProps {
 export function RecipeForm({ phase, onSave, onCancel }: RecipeFormProps) {
     const [formData, setFormData] = useState({
         materialId: "",
-        quantity: 0,
+        quantity: "",
     })
     const [loading, setLoading] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
@@ -28,7 +28,7 @@ export function RecipeForm({ phase, onSave, onCancel }: RecipeFormProps) {
         if (!formData.materialId) {
             newErrors.materialId = "Debe seleccionar un material"
         }
-        if (formData.quantity <= 0) {
+        if (formData.quantity && Number(formData.quantity) <= 0) {
             newErrors.quantity = "La cantidad debe ser mayor a 0"
         }
 
@@ -47,7 +47,7 @@ export function RecipeForm({ phase, onSave, onCancel }: RecipeFormProps) {
             const recipeData: RecipeCreateRequest = {
                 productPhaseId: phase.id,
                 materialId: formData.materialId,
-                quantity: formData.quantity
+                quantity: Number(formData.quantity)
             }
 
             await createRecipe(recipeData)

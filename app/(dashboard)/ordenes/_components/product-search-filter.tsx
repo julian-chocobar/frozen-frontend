@@ -39,9 +39,11 @@ export function ProductSearchFilter({
 
       setLoading(true)
       try {
-        // Buscar productos sin filtros específicos para filtros
+        // Buscar productos activos y listos para órdenes
         const productsList = await getProductsIdNameList({
-          name: searchTerm
+          name: searchTerm,
+          active: true,
+          ready: true
         })
         setProducts(productsList)
       } catch (error) {
@@ -65,7 +67,8 @@ export function ProductSearchFilter({
         const findProduct = async () => {
           try {
             const productsList = await getProductsIdNameList({
-              // Buscar sin filtros para encontrar por ID
+              active: true,
+              ready: true
             })
             const product = productsList.find(p => p.id === value)
             if (product) {

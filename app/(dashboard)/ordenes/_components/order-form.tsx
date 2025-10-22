@@ -5,8 +5,8 @@
  */
 
 import { useState, useEffect } from "react"
-import { getProductsIdNameList } from "@/lib/products-api"
 import { getPackagingsIdNameList } from "@/lib/packagings-api"
+import { ProductSearchFilter } from "./product-search-filter"
 import type { 
   ProductionOrderResponse, 
   ProductionOrderCreateRequest
@@ -30,44 +30,11 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [products, setProducts] = useState<{ id: string; name: string }[]>([])
   const [packagings, setPackagings] = useState<{ id: number; name: string; productId: string }[]>([])
-  const [productSearch, setProductSearch] = useState("")
   const [packagingSearch, setPackagingSearch] = useState("")
-  const [showProductDropdown, setShowProductDropdown] = useState(false)
   const [showPackagingDropdown, setShowPackagingDropdown] = useState(false)
-  const [loadingProducts, setLoadingProducts] = useState(false)
   const [loadingPackagings, setLoadingPackagings] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState<{ id: string; name: string } | null>(null)
   const [selectedPackaging, setSelectedPackaging] = useState<{ id: number; name: string; productId: string } | null>(null)
-
-  // Buscar productos cuando cambie el término de búsqueda
-  useEffect(() => {
-    const searchProducts = async () => {
-      if (!productSearch.trim()) {
-        setProducts([])
-        return
-      }
-
-      setLoadingProducts(true)
-      try {
-        const productsData = await getProductsIdNameList({
-          name: productSearch,
-          active: true,
-          ready: true
-        })
-        setProducts(productsData)
-      } catch (error) {
-        console.error('Error al buscar productos:', error)
-        setProducts([])
-      } finally {
-        setLoadingProducts(false)
-      }
-    }
-
-    const timeoutId = setTimeout(searchProducts, 300)
-    return () => clearTimeout(timeoutId)
-  }, [productSearch])
 
   // Buscar packagings cuando cambie el término de búsqueda y haya un producto seleccionado
   useEffect(() => {
@@ -151,11 +118,8 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
     }
   }
 
-  const handleProductSelect = (product: { id: string; name: string }) => {
-    setSelectedProduct(product)
-    setFormData(prev => ({ ...prev, productId: product.id }))
-    setProductSearch(product.name)
-    setShowProductDropdown(false)
+  const handleProductChange = (productId: string) => {
+    setFormData(prev => ({ ...prev, productId }))
     // Limpiar packaging cuando cambie el producto
     setFormData(prev => ({ ...prev, packagingId: "" }))
     setSelectedPackaging(null)
@@ -174,16 +138,6 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
     // Limpiar errores
     if (errors.packagingId) {
       setErrors(prev => ({ ...prev, packagingId: "" }))
-    }
-  }
-
-  const handleProductSearchChange = (value: string) => {
-    setProductSearch(value)
-    setShowProductDropdown(true)
-    // Si el usuario está escribiendo, limpiar la selección
-    if (value !== productSearch && formData.productId) {
-      setFormData(prev => ({ ...prev, productId: "" }))
-      setSelectedProduct(null)
     }
   }
 
@@ -207,71 +161,14 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
             Producto *
           </label>
           
-          {/* Campo de búsqueda */}
-          <div className="relative">
-            <input
-              type="text"
-              value={productSearch}
-              onChange={(e) => handleProductSearchChange(e.target.value)}
-              onFocus={() => setShowProductDropdown(true)}
-              placeholder="Buscar producto por nombre..."
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                errors.productId ? "border-red-500" : "border-stroke"
-              }`}
-            />
-            {loadingProducts && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="w-4 h-4 border-2 border-primary-300 border-t-primary-600 rounded-full animate-spin"></div>
-              </div>
-            )}
-          </div>
-
-          {/* Dropdown de resultados */}
-          {showProductDropdown && productSearch && (
-            <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
-              {products.length === 0 && !loadingProducts ? (
-                <div className="px-3 py-2 text-sm text-gray-500">
-                  No se encontraron productos
-                </div>
-              ) : (
-                products.map((product) => (
-                  <button
-                    key={product.id}
-                    type="button"
-                    onClick={() => handleProductSelect(product)}
-                    className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-gray-100 last:border-b-0"
-                  >
-                    <div className="font-medium text-primary-900 text-sm">{product.name}</div>
-                  </button>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* Overlay para cerrar dropdown */}
-          {showProductDropdown && (
-            <div 
-              className="fixed inset-0 z-40" 
-              onClick={() => setShowProductDropdown(false)}
-            />
-          )}
+          <ProductSearchFilter
+            value={formData.productId}
+            onChange={handleProductChange}
+            placeholder="Buscar producto por nombre..."
+            className={errors.productId ? "border-red-500" : ""}
+          />
 
           {errors.productId && <p className="text-red-500 text-sm mt-1">{errors.productId}</p>}
-          
-          {/* Información del producto seleccionado */}
-          {selectedProduct && (
-            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-800 mb-1">Producto Seleccionado</h4>
-              <div className="text-sm text-blue-700">
-                <div>
-                  <span className="font-medium">Nombre:</span> {selectedProduct.name}
-                </div>
-                <div>
-                  <span className="font-medium">ID:</span> {selectedProduct.id}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Empaque */}
@@ -302,7 +199,7 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
 
           {/* Dropdown de resultados */}
           {showPackagingDropdown && packagingSearch && formData.productId && (
-            <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
+            <div className="absolute z-50 w-69 mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
               {packagings.length === 0 && !loadingPackagings ? (
                 <div className="px-3 py-2 text-sm text-gray-500">
                   No se encontraron empaques

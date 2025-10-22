@@ -15,10 +15,10 @@ interface PhaseFormProps {
 
 export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
     const [formData, setFormData] = useState({
-        input: phase.input || 0,
-        output: phase.output || 0,
+        input: phase.input || "",
+        output: phase.output || "",
         outputUnit: phase.outputUnit || "KG" as UnitMeasurement,
-        estimatedHours: phase.estimatedHours || 0,
+        estimatedHours: phase.estimatedHours || "",
     })
     const [loading, setLoading] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
@@ -28,16 +28,16 @@ export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
     const validateForm = () => {
         const newErrors: Record<string, string> = {}
         
-        if (formData.input <= 0) {
+        if (formData.input && Number(formData.input) <= 0) {
             newErrors.input = "La entrada debe ser mayor a 0"
         }
-        if (formData.output <= 0) {
+        if (formData.output && Number(formData.output) <= 0) {
             newErrors.output = "La salida debe ser mayor a 0"
         }
         if (!formData.outputUnit) {
             newErrors.outputUnit = "La unidad de salida es requerida"
         }
-        if (formData.estimatedHours <= 0) {
+        if (formData.estimatedHours && Number(formData.estimatedHours) <= 0) {
             newErrors.estimatedHours = "Las horas estimadas deben ser mayor a 0"
         }
 
@@ -54,10 +54,10 @@ export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
             setLoading(true)
             
             const updateData: ProductPhaseUpdateRequest = {}
-            if (formData.input !== phase.input) updateData.input = formData.input
-            if (formData.output !== phase.output) updateData.output = formData.output
+            if (formData.input !== phase.input) updateData.input = Number(formData.input)
+            if (formData.output !== phase.output) updateData.output = Number(formData.output)
             if (formData.outputUnit !== phase.outputUnit) updateData.outputUnit = formData.outputUnit
-            if (formData.estimatedHours !== phase.estimatedHours) updateData.estimatedHours = formData.estimatedHours
+            if (formData.estimatedHours !== phase.estimatedHours) updateData.estimatedHours = Number(formData.estimatedHours)
 
             await updateProductPhase(phase.id, updateData)
             toast.success("Fase actualizada correctamente")

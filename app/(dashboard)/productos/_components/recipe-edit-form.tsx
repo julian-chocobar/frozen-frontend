@@ -1,11 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { RecipeResponse, RecipeUpdateRequest, Phase } from "@/types"
 import { updateRecipe } from "@/lib/recipes-api"
-import { getMaterialsIdNameList, MaterialIdName } from "@/lib/materials-api"
 import { Button } from "@/components/ui/button"
-import { MaterialSearchFilter } from "@/app/(dashboard)/movimientos/_components/material-search-filter"
 import { toast } from "sonner"
 
 interface RecipeEditFormProps {
@@ -17,7 +15,7 @@ interface RecipeEditFormProps {
 
 export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFormProps) {
     const [formData, setFormData] = useState({
-        materialId: "",
+        materialId: recipe.materialName, // Usar el nombre del material para mostrar
         quantity: recipe.quantity,
     })
     const [loading, setLoading] = useState(false)
@@ -26,9 +24,6 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
     const validateForm = () => {
         const newErrors: Record<string, string> = {}
         
-        if (!formData.materialId) {
-            newErrors.materialId = "Debe seleccionar un material"
-        }
         if (formData.quantity <= 0) {
             newErrors.quantity = "La cantidad debe ser mayor a 0"
         }
@@ -46,7 +41,6 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
             setLoading(true)
             
             const updateData: RecipeUpdateRequest = {
-                materialId: formData.materialId,
                 quantity: formData.quantity
             }
 
@@ -99,7 +93,7 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
                             Editar Ingrediente en: {getPhaseLabel(phase)}
                         </h2>
                         <p className="text-sm text-primary-600">
-                            Modifica el material y la cantidad de este ingrediente
+                            Modifica la cantidad de este ingrediente
                         </p>
                     </div>
 
@@ -107,16 +101,14 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-primary-900 mb-2">
-                                    Material *
+                                    Material
                                 </label>
-                                <MaterialSearchFilter
-                                    value={formData.materialId}
-                                    onChange={(materialId) => handleChange("materialId", materialId)}
-                                    placeholder="Buscar material por nombre..."
-                                    className={errors.materialId ? "border-red-500" : ""}
-                                    phase={phase}
-                                />
-                                {errors.materialId && <p className="text-red-500 text-sm mt-1">{errors.materialId}</p>}
+                                <div className="w-full px-3 py-2 border border-stroke rounded-lg bg-gray-50 text-gray-700">
+                                    {recipe.materialName} ({recipe.materialCode})
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Este campo no se puede modificar
+                                </p>
                             </div>
 
                             <div>
