@@ -96,13 +96,16 @@ export const mobileNavItems: NavItem[] = [
 
 // Función helper para determinar si una ruta está activa
 export function isRouteActive(pathname: string, href: string): boolean {
-  if (href === "/") {
+  // Extraer la ruta base sin query params
+  const hrefPath = href.split('?')[0]
+  
+  if (hrefPath === "/") {
     // Para el dashboard, solo está activo si estamos exactamente en "/"
     return pathname === "/"
   }
   
-  // Para otras rutas, verificar si el pathname empieza con la ruta
-  return pathname.startsWith(href)
+  // Para otras rutas, verificar si el pathname empieza con la ruta base
+  return pathname.startsWith(hrefPath)
 }
 
 interface NavigationProps {
