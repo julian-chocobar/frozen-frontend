@@ -15,6 +15,7 @@ import { useState } from "react"
 import { Bell, User, Menu, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MobileMenu } from "./mobile-menu"
+import Link from "next/link"
 
 interface HeaderProps {
   title: string
@@ -63,8 +64,9 @@ export function Header({ title, subtitle, notificationCount = 0, actionButton }:
             {notificationCount > 0 && <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full" />}
           </button>
 
-          {/* Avatar de usuario */}
-          <button
+          {/* Avatar de usuario - Navega a login */}
+          <Link
+            href="/login"
             className={cn(
               "flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 pr-3 sm:pr-4 hover:bg-surface-secondary rounded-lg transition-colors border border-stroke",
               "focus:outline-none focus:ring-2 focus:ring-primary-300",
@@ -79,7 +81,7 @@ export function Header({ title, subtitle, notificationCount = 0, actionButton }:
               <p className="text-xs text-primary-600">Maestro Cervecero</p>
             </div>
             <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted hidden lg:block" />
-          </button>
+          </Link>
         </div>
       </div>
     </header>
