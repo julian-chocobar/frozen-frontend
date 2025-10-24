@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { Camera, Save, X, Eye, EyeOff, User, Mail, Shield, Lock, ArrowLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
-import Link from "next/link"
 
 /**
  * Página de Edición de Perfil de Usuario
@@ -101,14 +100,15 @@ export default function PerfilPage() {
 
         {/* Card principal con botón de regreso */}
         <div className="relative bottom-5 mb-[-18px]">
-          {/* Botón de regreso - Esquina superior izquierda de la card */}
-          <div className="relative  left-[-200px] bottom-[-40px]">
-            <Link href="/">
-              <Button variant="outline" className="border-primary-300 text-primary-600 hover:bg-primary-50">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Volver a inicio
-              </Button>
-            </Link>
+          {/* Botón de regreso - Volver a página anterior */}
+          <div className="relative  left-[-115px] bottom-[-40px]">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Volver</span>
+            </button>
           </div>
 
           <div className="bg-surface border-2 border-border rounded-lg p-6 md:p-8 shadow-card">
