@@ -64,14 +64,14 @@ export function Header({ title, subtitle, notificationCount = 0, actionButton }:
             {notificationCount > 0 && <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full" />}
           </button>
 
-          {/* Avatar de usuario - Navega a login */}
+          {/* Avatar de usuario - Navega a perfil */}
           <Link
-            href="/login"
+            href="/perfil"
             className={cn(
               "flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 pr-3 sm:pr-4 hover:bg-surface-secondary rounded-lg transition-colors border border-stroke",
               "focus:outline-none focus:ring-2 focus:ring-primary-300",
             )}
-            aria-label="Menú de usuario"
+            aria-label="Mi perfil"
           >
             <div className="w-7 h-7 sm:w-9 sm:h-9 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
