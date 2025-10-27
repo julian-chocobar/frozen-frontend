@@ -1,9 +1,11 @@
+'use client';
+
 /**
  * Página de Planificación de Producción
  * Gestiona las órdenes de producción de cerveza
  */
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from 'react'
 import { Header } from "@/components/layout/header"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatsCarousel } from "@/components/ui/stats-carousel"
@@ -16,43 +18,64 @@ import type { ProductionOrderResponse, ProductionOrderStatus } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
 import { PaginationClient } from "@/components/ui/pagination-client"
 import { ClipboardList, Clock, CheckCircle, XCircle, Ban, Package2 } from "lucide-react"
+import { useSearchParams } from 'next/navigation'
 
-interface OrdenesPageProps {
-  searchParams: Promise<{
-    page?: string
-    size?: string
-    status?: ProductionOrderStatus
-    productId?: string
-  }>
+// Tipo para los datos de la página
+interface OrdersPageData {
+  productionOrders: ProductionOrderResponse[]
+  pagination: {
+    currentPage: number
+    totalPages: number
+    totalElements: number
+    size: number
+    first: boolean
+    last: boolean
+  }
 }
 
-export default async function OrdenesPage({ searchParams }: OrdenesPageProps) {
-  const params = await searchParams
-  const page = parseInt(params.page || '0')
-  const status = params.status
-  const productId = params.productId
-  let ordersData
-  let error: string | null = null
+export default function OrdenesPage() {
+  const searchParams = useSearchParams()
+  const [ordersData, setOrdersData] = useState<OrdersPageData | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  try {
-    ordersData = await getProductionOrders({
-      page,
-      size: 10,
-      status,
-      productId
-    })
-  } catch (err) {
-    console.error('Error cargando órdenes:', err)
-    if (err instanceof Error) {
-      if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
-        error = 'No se pudo conectar con el backend'
-      } else {
-        error = err.message
+  // Obtener parámetros de búsqueda
+  const page = parseInt(searchParams.get('page') || '0')
+  const status = searchParams.get('status') as ProductionOrderStatus | undefined
+  const productId = searchParams.get('productId') || undefined
+
+  // Cargar datos cuando cambien los parámetros
+  useEffect(() => {
+    const loadOrders = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const data = await getProductionOrders({
+          page,
+          size: 10,
+          status,
+          productId
+        })
+        setOrdersData(data)
+      } catch (err) {
+        console.error('Error cargando órdenes:', err)
+        if (err instanceof Error) {
+          if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
+            setError('No se pudo conectar con el backend')
+          } else {
+            setError(err.message)
+          }
+        } else {
+          setError('No se pudieron cargar las órdenes')
+        }
+      } finally {
+        setLoading(false)
       }
-    } else {
-      error = 'No se pudieron cargar las órdenes'
     }
-  }
+
+    loadOrders()
+  }, [page, status, productId])
 
   // Calcular estadísticas
   const stats = {
@@ -153,6 +176,11 @@ export default async function OrdenesPage({ searchParams }: OrdenesPageProps) {
           <div className="card border-2 border-primary-600">
             <ErrorState error={error} />
           </div>
+        ) : loading ? (
+          <div className="card border-2 border-primary-600 p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-primary-600">Cargando órdenes...</p>
+          </div>
         ) : ordersData ? (
           <>
             <OrderClient
@@ -173,12 +201,7 @@ export default async function OrdenesPage({ searchParams }: OrdenesPageProps) {
               />
             </div>
           </>
-        ) : (
-          <div className="card border-2 border-primary-600 p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-4 text-primary-600">Cargando órdenes...</p>
-          </div>
-        )}
+        ) : null}
       </div>
     </>
   )

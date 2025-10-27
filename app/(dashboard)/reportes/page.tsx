@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Página de Reportes y Analítica
  * Placeholder para el módulo de reportes

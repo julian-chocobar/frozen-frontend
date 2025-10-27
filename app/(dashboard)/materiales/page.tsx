@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Página de Materias Primas
  * Muestra el inventario completo con filtros y búsqueda
@@ -10,32 +12,44 @@ import { PaginationClient } from "./_components/pagination-client"
 import { ErrorState } from "@/components/ui/error-state"
 import { MaterialCreateButton } from "./_components/create-button"
 import { getMaterials } from "@/lib/materials-api"
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { Material } from "@/types"
 
-interface MaterialesPageProps {
-  searchParams: Promise<{
-    page?: string
-    type?: string
-    estado?: string
-    name?: string
-    supplier?: string
-  }>
+// Tipo para los datos de la página
+interface MaterialsPageData {
+  materials: Material[]
+  pagination: {
+    currentPage: number
+    totalPages: number
+    totalElements: number
+    size: number
+    first: boolean
+    last: boolean
+  }
 }
 
-export default async function MaterialesPage({ searchParams }: MaterialesPageProps) {
-  // Obtener parámetros de búsqueda (await searchParams en Next.js 15)
-  const params = await searchParams
-  const page = parseInt(params.page || '0')
-  const type = params.type
-  const estado = params.estado
-  const name = params.name
-  const supplier = params.supplier
+export default function MaterialesPage() {
+  const searchParams = useSearchParams()
+  const [materialsData, setMaterialsData] = useState<MaterialsPageData | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Obtener datos del backend
-  let materialsData
-  let error: string | null = null
+  // Obtener parámetros de búsqueda
+  const page = parseInt(searchParams.get('page') || '0')
+  const type = searchParams.get('type') || undefined
+  const estado = searchParams.get('estado') || undefined
+  const name = searchParams.get('name') || undefined
+  const supplier = searchParams.get('supplier') || undefined
 
-  try {
-        materialsData = await getMaterials({
+  // Cargar datos cuando cambien los parámetros
+  useEffect(() => {
+    const loadMaterials = async () => {
+      setLoading(true)
+      setError(null)
+      
+      try {
+        const data = await getMaterials({
           page,
           type,
           estado,
@@ -43,20 +57,27 @@ export default async function MaterialesPage({ searchParams }: MaterialesPagePro
           supplier,
           size: 10
         })
-  } catch (err) {
-    console.error('Error al cargar materiales:', err)
-    
-    // Detectar tipo de error para mostrar mensaje apropiado
-    if (err instanceof Error) {
-      if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
-        error = 'No se pudo conectar con el backend'
-      } else {
-        error = err.message
+        setMaterialsData(data)
+      } catch (err) {
+        console.error('Error al cargar materiales:', err)
+        
+        // Detectar tipo de error para mostrar mensaje apropiado
+        if (err instanceof Error) {
+          if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
+            setError('No se pudo conectar con el backend')
+          } else {
+            setError(err.message)
+          }
+        } else {
+          setError('No se pudieron cargar los materiales')
+        }
+      } finally {
+        setLoading(false)
       }
-    } else {
-      error = 'No se pudieron cargar los materiales'
     }
-  }
+
+    loadMaterials()
+  }, [page, type, estado, name, supplier])
 
   return (
     <>
@@ -78,17 +99,17 @@ export default async function MaterialesPage({ searchParams }: MaterialesPagePro
           
           {error ? (
             <ErrorState error={error} />
+          ) : loading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="mt-4 text-primary-600">Cargando materiales...</p>
+            </div>
           ) : materialsData ? (
             <MaterialsClient 
               materials={materialsData.materials} 
               pagination={materialsData.pagination}
             />
-          ) : (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-4 text-primary-600">Cargando materiales...</p>
-            </div>
-          )}
+          ) : null}
         </div>
 
         {/* Contador de resultados y paginación */}

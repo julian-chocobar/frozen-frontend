@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Página de Packaging
  */
@@ -8,33 +10,54 @@ import { PackagingsClient } from "./_components/packagings-client"
 import { PackagingCreateButton } from "./_components/create-button"
 import { ErrorState } from "@/components/ui/error-state"
 import { PaginationClient } from "@/components/ui/pagination-client"
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { PackagingResponse } from "@/types"
 
-
-interface PackagingPageProps {
-  searchParams: Promise<{
-    page?: string
-    name?: string
-    unitMeasurement?: string
-    quantity?: string
-  }>
+// Tipo para los datos de la página
+interface PackagingsPageData {
+  packagings: PackagingResponse[]
+  pagination: {
+    currentPage: number
+    totalPages: number
+    totalElements: number
+    size: number
+    first: boolean
+    last: boolean
+  }
 }
 
-export default async function PackagingPage({ searchParams }: PackagingPageProps) {
-  const params = await searchParams
-  const page = parseInt(params.page || '0')
-  const name = params.name
-  const unitMeasurement = params.unitMeasurement
-  const quantity = params.quantity
+export default function PackagingPage() {
+  const searchParams = useSearchParams()
+  const [packagingsData, setPackagingsData] = useState<PackagingsPageData | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  let packagingsData
-  let error: string | null = null
+  // Obtener parámetros de búsqueda
+  const page = parseInt(searchParams.get('page') || '0')
+  const name = searchParams.get('name') || undefined
+  const unitMeasurement = searchParams.get('unitMeasurement') || undefined
+  const quantity = searchParams.get('quantity') || undefined
 
-  try {
-    packagingsData = await getPackagings({ page, size: 10 })
-  } catch (err) {
-    console.error('Error al cargar packagings:', err)
-    error = 'No se pudieron cargar los packagings'
-  }
+  // Cargar datos cuando cambien los parámetros
+  useEffect(() => {
+    const loadPackagings = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const data = await getPackagings({ page, size: 10 })
+        setPackagingsData(data)
+      } catch (err) {
+        console.error('Error al cargar packagings:', err)
+        setError('No se pudieron cargar los packagings')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadPackagings()
+  }, [page, name, unitMeasurement, quantity])
   return (
     <>
       <Header
@@ -52,17 +75,17 @@ export default async function PackagingPage({ searchParams }: PackagingPageProps
 
         {error ? (
                 <ErrorState error={error} />
+              ) : loading ? (
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                  <p className="mt-4 text-primary-600">Cargando packagings...</p>
+                </div>
               ) : packagingsData ? (
                 <PackagingsClient 
                   packagings={packagingsData.packagings} 
                   pagination={packagingsData.pagination}
                 />
-              ) : (
-                <div className="p-8 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                  <p className="mt-4 text-primary-600">Cargando packagings...</p>
-                </div>
-              )}
+              ) : null}
         </div>
         {/* Contador de resultados y paginación */}
         {packagingsData && (

@@ -5,6 +5,7 @@ import "./globals.css"
 import { NavigationProvider } from "@/components/providers/navigation-provider"
 import { NavigationLoader } from "@/components/layout/navigation-loader"
 import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from "@/contexts/auth-context"
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -26,11 +27,13 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${jetbrainsMono.variable}`}>
       <body className="antialiased font-sans">
+      <AuthProvider>
         <NavigationProvider>
           <NavigationLoader />
           {children}
           <Toaster />
         </NavigationProvider>
+       </AuthProvider>
       </body>
     </html>
   )

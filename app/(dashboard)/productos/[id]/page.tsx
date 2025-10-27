@@ -1,41 +1,55 @@
+'use client';
+
 import { Header } from "@/components/layout/header"
 import { ProductDetailClient } from "@/app/(dashboard)/productos/_components/product-detail-client"
 import { ErrorState } from "@/components/ui/error-state"
 import { getProductById } from "@/lib/products-api"
-import { notFound } from "next/navigation"
+import { notFound, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useState } from 'react'
+import { ProductResponse } from "@/types"
 
-interface ProductDetailPageProps {
-    params: Promise<{
-        id: string
-    }>
-}
-
-export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
-    const { id } = await params
+export default function ProductDetailPage() {
+    const params = useParams()
+    const id = params.id as string
     
-    let product
-    let error: string | null = null
+    const [product, setProduct] = useState<ProductResponse | null>(null)
+    const [error, setError] = useState<string | null>(null)
+    const [loading, setLoading] = useState(true)
 
-    try {
-        product = await getProductById(id)
-    } catch (err) {
-        console.error('Error al cargar producto:', err)
+    useEffect(() => {
+        const loadProduct = async () => {
+            setLoading(true)
+            setError(null)
 
-        if (err instanceof Error) {
-            if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
-                error = 'No se pudo conectar con el backend'
-            } else if (err.message.includes('404') || err.message.includes('Not Found')) {
-                notFound()
-            } else {
-                error = err.message
+            try {
+                const data = await getProductById(id)
+                setProduct(data)
+            } catch (err) {
+                console.error('Error al cargar producto:', err)
+
+                if (err instanceof Error) {
+                    if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
+                        setError('No se pudo conectar con el backend')
+                    } else if (err.message.includes('404') || err.message.includes('Not Found')) {
+                        notFound()
+                    } else {
+                        setError(err.message)
+                    }
+                } else {
+                    setError('No se pudo cargar el producto')
+                }
+            } finally {
+                setLoading(false)
             }
-        } else {
-            error = 'No se pudo cargar el producto'
         }
-    }
+
+        if (id) {
+            loadProduct()
+        }
+    }, [id])
 
     if (error) {
         return (
@@ -51,8 +65,26 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         )
     }
 
+    if (loading) {
+        return (
+            <>
+                <Header
+                    title="Cargando..."
+                    subtitle="Cargando detalles del producto"
+                />
+                <div className="p-4 md:p-6">
+                    <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                        <p className="mt-4 text-primary-600">Cargando producto...</p>
+                    </div>
+                </div>
+            </>
+        )
+    }
+
     if (!product) {
         notFound()
+        return null
     }
 
     return (

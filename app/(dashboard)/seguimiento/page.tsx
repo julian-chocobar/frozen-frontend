@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Página de Seguimiento de Producción
  * Muestra todos los lotes activos con su progreso y estado

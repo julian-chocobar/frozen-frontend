@@ -1,3 +1,5 @@
+'use client';
+
 import { Header } from "@/components/layout/header"
 import { ProductsClient } from "./_components/products-client"
 import { ProductsFilters } from "./_components/products-filters"
@@ -5,50 +7,71 @@ import { PaginationClient } from "@/components/ui/pagination-client"
 import { ErrorState } from "@/components/ui/error-state"
 import { ProductCreateButton } from "./_components/create-button"
 import { getProducts } from "@/lib/products-api"
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { ProductResponse } from "@/types"
 
-interface ProductosPageProps {
-    searchParams: Promise<{
-        page?: string
-        name?: string
-        alcoholic?: string
-        estado?: string
-        ready?: string
-    }>
+// Tipo para los datos de la página
+interface ProductsPageData {
+  products: ProductResponse[]
+  pagination: {
+    currentPage: number
+    totalPages: number
+    totalElements: number
+    size: number
+    first: boolean
+    last: boolean
+  }
 }
 
-export default async function ProductosPage({ searchParams }: ProductosPageProps) {
-    const params = await searchParams
-    const page = parseInt(params.page || '0')
-    const name = params.name
-    const alcoholic = params.alcoholic
-    const estado = params.estado
-    const ready = params.ready
+export default function ProductosPage() {
+    const searchParams = useSearchParams()
+    const [productsData, setProductsData] = useState<ProductsPageData | null>(null)
+    const [error, setError] = useState<string | null>(null)
+    const [loading, setLoading] = useState(true)
 
-    let productsData
-    let error: string | null = null
+    // Obtener parámetros de búsqueda
+    const page = parseInt(searchParams.get('page') || '0')
+    const name = searchParams.get('name') || undefined
+    const alcoholic = searchParams.get('alcoholic') || undefined
+    const estado = searchParams.get('estado') || undefined
+    const ready = searchParams.get('ready') || undefined
 
-    try {
-        productsData = await getProducts({
-            page,
-            name,
-            alcoholic,
-            estado,
-            ready,
-            size: 10
-        })
-    } catch (err) {
-        console.error('Error al cargar productos:', err)
+    // Cargar datos cuando cambien los parámetros
+    useEffect(() => {
+        const loadProducts = async () => {
+            setLoading(true)
+            setError(null)
 
-        if (err instanceof Error) {
-            if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
-                error = 'No se pudo conectar con el backend'
-            } else {
-                error = err.message
+            try {
+                const data = await getProducts({
+                    page,
+                    name,
+                    alcoholic,
+                    estado,
+                    ready,
+                    size: 10
+                })
+                setProductsData(data)
+            } catch (err) {
+                console.error('Error al cargar productos:', err)
+
+                if (err instanceof Error) {
+                    if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
+                        setError('No se pudo conectar con el backend')
+                    } else {
+                        setError(err.message)
+                    }
+                } else {
+                    setError('No se pudieron cargar los productos')
+                }
+            } finally {
+                setLoading(false)
             }
-        } else {
-            error = 'No se pudieron cargar los productos'
         }
-    }
+
+        loadProducts()
+    }, [page, name, alcoholic, estado, ready])
     return (
         <>
             <Header
@@ -68,17 +91,17 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
                     
                     {error ? (
                         <ErrorState error={error} />
+                    ) : loading ? (
+                        <div className="p-8 text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                            <p className="mt-4 text-primary-600">Cargando productos...</p>
+                        </div>
                     ) : productsData ? (
                         <ProductsClient 
                             productos={productsData.products} 
                             pagination={productsData.pagination} 
                         />
-                    ) : (
-                        <div className="p-8 text-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                            <p className="mt-4 text-primary-600">Cargando productos...</p>
-                        </div>
-                    )}
+                    ) : null}
                 </div>
             </div>
 

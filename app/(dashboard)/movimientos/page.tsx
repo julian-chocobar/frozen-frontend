@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Página de Movimientos de Stock (materias primas)
  */
@@ -8,55 +10,73 @@ import { MovementsFilters } from "./_components/movements-filters"
 import { MovementsClient } from "./_components/movements-client"
 import { PaginationClient } from "@/components/ui/pagination-client"
 import { ErrorState } from "@/components/ui/error-state"
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { MovementResponse } from "@/types"
 
-interface MovimientosPageProps {
-  searchParams: Promise<{
-    page?: string
-    type?: string // Tipo de movimiento: INGRESO, EGRESO
-    materialId?: string // ID del material
-    dateFrom?: string // Fecha desde
-    dateTo?: string // Fecha hasta
-    reason?: string // Motivo del movimiento
-  }>
+// Tipo para los datos de la página
+interface MovementsPageData {
+  movements: MovementResponse[]
+  pagination: {
+    currentPage: number
+    totalPages: number
+    totalElements: number
+    size: number
+    first: boolean
+    last: boolean
+  }
 }
 
-export default async function MovimientosPage({ searchParams }: MovimientosPageProps) {
-  // Obtener parámetros de búsqueda (await searchParams en Next.js 15)
-  const params = await searchParams
-  const page = parseInt(params.page || '0')
-  const type = params.type
-  const materialId = params.materialId
-  const dateFrom = params.dateFrom
-  const dateTo = params.dateTo
-  const reason = params.reason
+export default function MovimientosPage() {
+  const searchParams = useSearchParams()
+  const [movementsData, setMovementsData] = useState<MovementsPageData | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Obtener datos del backend
-  let movementsData
-  let error: string | null = null
+  // Obtener parámetros de búsqueda
+  const page = parseInt(searchParams.get('page') || '0')
+  const type = searchParams.get('type') || undefined
+  const materialId = searchParams.get('materialId') || undefined
+  const dateFrom = searchParams.get('dateFrom') || undefined
+  const dateTo = searchParams.get('dateTo') || undefined
+  const reason = searchParams.get('reason') || undefined
 
-  try {
-    movementsData = await getMovements({
-      page,
-      type,
-      materialId,
-      dateFrom,
-      dateTo,
-      size: 10
-    })
-  } catch (err) {
-    console.error('Error al cargar movimientos:', err)
-    
-    // Detectar tipo de error para mostrar mensaje apropiado
-    if (err instanceof Error) {
-      if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
-        error = 'No se pudo conectar con el backend'
-      } else {
-        error = err.message
+  // Cargar datos cuando cambien los parámetros
+  useEffect(() => {
+    const loadMovements = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const data = await getMovements({
+          page,
+          type,
+          materialId,
+          dateFrom,
+          dateTo,
+          size: 10
+        })
+        setMovementsData(data)
+      } catch (err) {
+        console.error('Error al cargar movimientos:', err)
+        
+        // Detectar tipo de error para mostrar mensaje apropiado
+        if (err instanceof Error) {
+          if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
+            setError('No se pudo conectar con el backend')
+          } else {
+            setError(err.message)
+          }
+        } else {
+          setError('No se pudieron cargar los movimientos')
+        }
+      } finally {
+        setLoading(false)
       }
-    } else {
-      error = 'No se pudieron cargar los movimientos'
     }
-  }
+
+    loadMovements()
+  }, [page, type, materialId, dateFrom, dateTo, reason])
 
   return (
     <>
@@ -79,17 +99,17 @@ export default async function MovimientosPage({ searchParams }: MovimientosPageP
           
           {error ? (
             <ErrorState error={error} />
+          ) : loading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="mt-4 text-primary-600">Cargando movimientos...</p>
+            </div>
           ) : movementsData ? (
             <MovementsClient 
               movements={movementsData.movements} 
               pagination={movementsData.pagination}
             />
-          ) : (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-4 text-primary-600">Cargando movimientos...</p>
-            </div>
-          )}
+          ) : null}
         </div>
 
         {/* Contador de resultados y paginación */}

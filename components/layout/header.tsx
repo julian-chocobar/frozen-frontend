@@ -1,21 +1,12 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-
-/**
- * Componente Header - Encabezado principal
- * - Título de página / breadcrumb
- * - Notificaciones con badge
- * - Avatar de usuario
- * - Menú móvil funcional
- * - Responsive
- */
-
-import { Bell, User, Menu, ChevronDown } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { Bell, User, Menu, ChevronDown, LogOut, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MobileMenu } from "./mobile-menu"
 import Link from "next/link"
+import { useAuth } from "@/contexts/auth-context"
 
 interface HeaderProps {
   title: string
@@ -26,6 +17,46 @@ interface HeaderProps {
 
 export function Header({ title, subtitle, notificationCount = 0, actionButton }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+  
+  const { user, logout, isAuthenticated } = useAuth()
+
+  // Cerrar menú al hacer clic fuera
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      setIsUserMenuOpen(false)
+    } catch (error) {
+      console.error("Error durante logout:", error)
+    }
+  }
+
+  // Si no está autenticado, no mostrar el header completo
+  if (!isAuthenticated) {
+    return (
+      <header className="sticky top-0 z-40 bg-background border-b border-stroke">
+        <div className="flex items-center justify-between h-16 px-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-semibold text-primary-800">{title}</h1>
+          </div>
+        </div>
+      </header>
+    )
+  }
 
   return (
     <>
@@ -42,55 +73,108 @@ export function Header({ title, subtitle, notificationCount = 0, actionButton }:
               <Menu className="w-5 h-5 text-foreground" />
             </button>
 
-          <div className="min-w-0 flex-1">
-            <h1 className="text-base md:text-lg lg:text-xl font-semibold text-primary-800 truncate">{title}</h1>
-            {subtitle && <p className="text-xs md:text-sm text-primary-600 hidden md:block truncate">{subtitle}</p>}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-base md:text-lg lg:text-xl font-semibold text-primary-800 truncate">
+                {title}
+              </h1>
+              {subtitle && (
+                <p className="text-xs md:text-sm text-primary-600 hidden md:block truncate">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Derecha: Botón de acción, Notificaciones y usuario */}
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
+            {actionButton}
+
+            {/* Notificaciones */}
+            <button
+              className={cn(
+                "relative p-2 sm:p-3 hover:bg-surface-secondary rounded-lg transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-primary-300"
+              )}
+              aria-label={`Notificaciones${notificationCount > 0 ? ` (${notificationCount} nuevas)` : ""}`}
+            >
+              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
+              {notificationCount > 0 && (
+                <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full" />
+              )}
+            </button>
+
+            {/* Avatar de usuario con menú desplegable */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                className={cn(
+                  "flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 pr-3 sm:pr-4 hover:bg-surface-secondary rounded-lg transition-colors border border-stroke",
+                  "focus:outline-none focus:ring-2 focus:ring-primary-300"
+                )}
+                aria-label="Menú de usuario"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              >
+                <div className="w-7 h-7 sm:w-9 sm:h-9 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
+                <div className="hidden lg:block text-left">
+                  <p className="text-sm font-medium text-foreground">
+                    {user?.username || "Usuario"}
+                  </p>
+                  <p className="text-xs text-primary-600 capitalize">
+                    {user?.role?.toLowerCase() || "Usuario"}
+                  </p>
+                </div>
+                <ChevronDown 
+                  className={cn(
+                    "w-4 h-4 sm:w-5 sm:h-5 text-muted hidden lg:block transition-transform",
+                    isUserMenuOpen && "rotate-180"
+                  )} 
+                />
+              </button>
+
+              {/* Menú desplegable del usuario */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-surface border border-stroke rounded-lg shadow-card z-50">
+                  {/* Perfil */}
+                  <Link
+                    href="/perfil"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-surface-secondary transition-colors border-b border-stroke"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Mi perfil</span>
+                  </Link>
+
+                  {/* Configuración */}
+                  <Link
+                    href="/configuracion"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-surface-secondary transition-colors border-b border-stroke"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Configuración</span>
+                  </Link>
+
+                  {/* Cerrar sesión */}
+                  <button
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-surface-secondary transition-colors w-full text-left text-red-600"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="w-4 h-4" />|
+                    <span>Cerrar sesión</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+      </header>
 
-        {/* Derecha: Botón de acción, Notificaciones y usuario */}
-        <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
-          {actionButton}
-
-          {/* Notificaciones */}
-          <button
-            className={cn(
-              "relative p-2 sm:p-3 hover:bg-surface-secondary rounded-lg transition-colors",
-              "focus:outline-none focus:ring-2 focus:ring-primary-300",
-            )}
-            aria-label={`Notificaciones${notificationCount > 0 ? ` (${notificationCount} nuevas)` : ""}`}
-          >
-            <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
-            {notificationCount > 0 && <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full" />}
-          </button>
-
-          {/* Avatar de usuario - Navega a perfil */}
-          <Link
-            href="/perfil"
-            className={cn(
-              "flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 pr-3 sm:pr-4 hover:bg-surface-secondary rounded-lg transition-colors border border-stroke",
-              "focus:outline-none focus:ring-2 focus:ring-primary-300",
-            )}
-            aria-label="Mi perfil"
-          >
-            <div className="w-7 h-7 sm:w-9 sm:h-9 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            </div>
-            <div className="hidden lg:block text-left">
-              <p className="text-sm font-medium text-foreground">Admin Usuario</p>
-              <p className="text-xs text-primary-600">Maestro Cervecero</p>
-            </div>
-            <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted hidden lg:block" />
-          </Link>
-        </div>
-      </div>
-    </header>
-
-    {/* Menú móvil */}
-    <MobileMenu 
-      isOpen={isMobileMenuOpen} 
-      onClose={() => setIsMobileMenuOpen(false)} 
-    />
+      {/* Menú móvil */}
+      <MobileMenu 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)} 
+      />
     </>
   )
 }

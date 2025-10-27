@@ -1,160 +1,167 @@
-/**
- * Utilidad para realizar peticiones HTTP al backend
- * Maneja autenticación básica de Spring Security
- */
+// lib/fetcher.ts
 
-import { ApiError, type BackendErrorResponse } from './api-error'
+export interface FetcherOptions extends RequestInit {
+  params?: Record<string, string>;
+}
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"
-
-// Credenciales por defecto de Spring Security
-// Estas son las credenciales que vienen por defecto con Spring Boot Security
-const DEFAULT_USERNAME = 'user'
-const DEFAULT_PASSWORD = '1234'
-
-interface FetcherOptions extends RequestInit {
-  params?: Record<string, string>
-  auth?: {
-    username?: string
-    password?: string
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public statusText: string,
+    public data?: any
+  ) {
+    super(message);
+    this.name = 'ApiError';
   }
 }
 
 /**
- * Función principal para hacer peticiones al backend
- * Incluye autenticación básica de Spring Security
+ * Cliente HTTP para Spring Security con proxy Next.js
+ * - Usa rutas relativas /api/* que se redirigen al backend via proxy
+ * - Maneja cookies JSESSIONID automáticamente
+ * - Funciona tanto en cliente como servidor
  */
-export async function fetcher<T>(endpoint: string, options: FetcherOptions = {}): Promise<T> {
-  const { params, auth, ...fetchOptions } = options
+export async function fetcher<T>(
+  endpoint: string,
+  options: FetcherOptions = {}
+): Promise<T> {
+  const { params, ...fetchOptions } = options;
 
-  // Construir URL con parámetros de query si existen
-  let url = `${BACKEND_URL}${endpoint}`
+  // Determinar URL base según el contexto
+  let url: string;
+  
+  if (typeof window === 'undefined') {
+    // Server-side: usar backend directo con URL absoluta
+    const backendUrl = 'http://localhost:8080';
+    url = `${backendUrl}${endpoint}`;
+  } else {
+    // Client-side: usar proxy de Next.js (rutas relativas)
+    url = endpoint;
+  }
+  
   if (params) {
-    const searchParams = new URLSearchParams(params)
-    url += `?${searchParams.toString()}`
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, value.toString());
+      }
+    });
+    url += `?${searchParams.toString()}`;
   }
 
-  // Usar credenciales proporcionadas o las por defecto
-  const username = auth?.username || DEFAULT_USERNAME
-  const password = auth?.password || DEFAULT_PASSWORD
-  const basicAuth = btoa(`${username}:${password}`)
+  console.log('🌐 Fetching:', url, typeof window === 'undefined' ? '(SSR)' : '(Client)'); // Debug
 
+  let response: Response;
   try {
-    const response = await fetch(url, {
+    response = await fetch(url, {
       ...fetchOptions,
       headers: {
-        'Authorization': `Basic ${basicAuth}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...fetchOptions.headers,
       },
-    })
-
-    // Manejar respuestas de error
-    if (!response.ok) {
-      // Intentar parsear la respuesta de error del backend
-      let errorData: Partial<BackendErrorResponse> = {}
-      try {
-        errorData = await response.json()
-      } catch {
-        // Si no se puede parsear, usar un mensaje genérico
-        errorData = {}
-      }
-
-      // Extraer el mensaje de error del backend o usar uno por defecto
-      const errorMessage = errorData.message || response.statusText || `Error ${response.status}`
-
-      // Caso especial: Error 401 - Redirigir a login
-      if (response.status === 401) {
-        if (typeof window !== "undefined") {
-          window.location.href = "/login"
-        }
-      }
-
-      // Crear y lanzar ApiError con toda la información del backend
-      throw new ApiError(
-        errorMessage,
-        response.status,
-        response.statusText,
-        errorData
-      )
-    }
-
-    // Si la respuesta es 204 No Content, retornar null
-    if (response.status === 204) {
-      return null as T
-    }
-
-    return await response.json()
+      credentials: 'include', // 🔐 CRÍTICO: Incluir cookies JSESSIONID
+    });
   } catch (error) {
-    console.error(`Error en petición a ${endpoint}:`, error)
-    
-    // Si ya es un ApiError, re-lanzarlo sin modificar
-    if (ApiError.isApiError(error)) {
-      throw error
-    }
-    
-    // Manejar errores de conexión específicamente
-    if (error instanceof TypeError && 
-        (error.message.includes('fetch failed') || 
-         error.message.includes('Failed to fetch'))) {
-      throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.')
-    }
-    
-    throw error
+    console.error('🚨 Fetch failed:', error);
+    throw new ApiError(
+      `Error de conexión: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      0,
+      'NETWORK_ERROR'
+    );
   }
+
+  // Manejar respuesta vacía
+  if (response.status === 204) {
+    return null as T;
+  }
+
+  // Parsear JSON
+  let data;
+  try {
+    data = await response.json();
+  } catch (error) {
+    if (!response.ok) {
+      throw new ApiError(
+        response.statusText,
+        response.status,
+        response.statusText
+      );
+    }
+    return null as T;
+  }
+
+  // Manejar errores HTTP
+  if (!response.ok) {
+    // Redirigir a login en caso de 401
+    if (response.status === 401 && typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    
+    throw new ApiError(
+      data?.message || data?.error || response.statusText,
+      response.status,
+      response.statusText,
+      data
+    );
+  }
+
+  return data;
 }
 
-/**
- * Métodos de conveniencia para diferentes tipos de peticiones
- */
 export const api = {
-  get: <T>(endpoint: string, params?: Record<string, string>, auth?: { username?: string; password?: string }) =>
-    fetcher<T>(endpoint, { method: 'GET', params, auth }),
-
-  post: <T>(endpoint: string, data?: unknown, auth?: { username?: string; password?: string }) =>
-    fetcher<T>(endpoint, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-      auth,
+  get: <T>(endpoint: string, params?: Record<string, string>) =>
+    fetcher<T>(endpoint, { 
+      method: 'GET', 
+      params 
     }),
 
-  put: <T>(endpoint: string, data?: unknown, auth?: { username?: string; password?: string }) =>
-    fetcher<T>(endpoint, {
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-      auth,
+  post: <T>(endpoint: string, data?: unknown) =>
+    fetcher<T>(endpoint, { 
+      method: 'POST', 
+      body: JSON.stringify(data) 
     }),
 
-  patch: <T>(endpoint: string, data?: unknown, auth?: { username?: string; password?: string }) =>
-    fetcher<T>(endpoint, {
-      method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined,
-      auth,
+  patch: <T>(endpoint: string, data?: unknown) =>
+    fetcher<T>(endpoint, { 
+      method: 'PATCH', 
+      body: JSON.stringify(data) 
     }),
 
-  delete: <T>(endpoint: string, auth?: { username?: string; password?: string }) =>
-    fetcher<T>(endpoint, { method: 'DELETE', auth }),
-}
+  delete: <T>(endpoint: string) =>
+    fetcher<T>(endpoint, { 
+      method: 'DELETE' 
+    }),
+};export const authApi = {
+  login: async (credentials: { username: string; password: string }) => {
+    return api.post<{
+      token: string;
+      username: string;
+      role: string;
+      message?: string;
+    }>('/api/auth/login', credentials);
+  },
 
-/**
- * Función helper para crear un cliente API con credenciales personalizadas
- * Útil cuando necesites usar diferentes credenciales en el futuro
- */
-export function createApiClient(username: string, password: string) {
-  return {
-    get: <T>(endpoint: string, params?: Record<string, string>) =>
-      api.get<T>(endpoint, params, { username, password }),
+  logout: async (): Promise<void> => {
+    await api.post('/api/auth/logout');
+  },
 
-    post: <T>(endpoint: string, data?: unknown) =>
-      api.post<T>(endpoint, data, { username, password }),
+  validateSession: async (): Promise<boolean> => {
+    try {
+      await api.get('/api/auth/validate');
+      return true;
+    } catch {
+      return false;
+    }
+  },
 
-    put: <T>(endpoint: string, data?: unknown) =>
-      api.put<T>(endpoint, data, { username, password }),
+  getCurrentUser: async () => {
+    return api.get<{
+      id: string;
+      username: string;
+      role: string;
+      email?: string;
+    }>('/api/auth/me');
+  },
+};
 
-    patch: <T>(endpoint: string, data?: unknown) =>
-      api.patch<T>(endpoint, data, { username, password }),
-
-    delete: <T>(endpoint: string) =>
-      api.delete<T>(endpoint, { username, password }),
-  }
-}

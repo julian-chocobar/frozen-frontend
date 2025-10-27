@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Página de Gestión de Usuarios
  * - Lista de usuarios en tabla

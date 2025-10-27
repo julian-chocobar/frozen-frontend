@@ -1,31 +1,59 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Lock, Mail, ArrowLeft } from "lucide-react"
+import { Eye, EyeOff, Lock, User, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { useAuth } from "@/contexts/auth-context" // Asegúrate de crear este contexto
 
 export default function LoginPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const { login, isAuthenticated, isLoading, error, clearError } = useAuth()
+
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/")
+    }
+  }, [isAuthenticated, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    clearError() // Limpiar errores anteriores
+
+    try {
+      await login({ username, password })
+      // La redirección se maneja en el useEffect
+    } catch (err) {
+      // El error ya se maneja en el contexto
+      console.error("Error en login:", err)
+    }
+  }
+
+  const handleInputChange = (field: string, value: string) => {
+    if (field === "username") setUsername(value)
+    if (field === "password") setPassword(value)
     
-    // Simular autenticación
-    setTimeout(() => {
-      setIsLoading(false)
-      // Aquí iría la lógica de autenticación real
-      router.push("/")
-    }, 1500)
+    // Limpiar error cuando el usuario empiece a escribir
+    if (error) clearError()
+  }
+
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Redirigiendo...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -64,21 +92,22 @@ export default function LoginPage() {
         {/* Card de login */}
         <div className="bg-surface border-2 border-border rounded-lg p-6 md:p-8 shadow-card">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
+            {/* Usuario (reemplaza Email) */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-semibold text-foreground">
-                Correo electrónico
+              <Label htmlFor="username" className="text-sm font-semibold text-foreground">
+                Nombre de usuario
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="ejemplo@frozen.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="Tu nombre de usuario"
+                  value={username}
+                  onChange={(e) => handleInputChange("username", e.target.value)}
                   className="pl-10 h-11"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -95,15 +124,17 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => handleInputChange("password", e.target.value)}
                   className="pl-10 pr-10 h-11"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -113,6 +144,13 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {/* Mostrar errores */}
+            {error && (
+              <div className="rounded-md bg-red-50 p-4 border border-red-200">
+                <div className="text-sm text-red-700">{error}</div>
+              </div>
+            )}
 
             {/* Botón de inicio de sesión */}
             <Button
@@ -135,4 +173,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

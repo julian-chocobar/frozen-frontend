@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Página de detalle de lote
  * Muestra información completa de un lote específico
@@ -5,24 +7,45 @@
 
 import { Header } from "@/components/layout/header"
 import { mockLotes } from "@/lib/mock-data"
-import { notFound } from "next/navigation"
+import { notFound, useParams } from "next/navigation"
 import { ArrowLeft, Thermometer, Droplet, Calendar, User, Package, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { formatearFecha, cn } from "@/lib/utils"
+import { useEffect, useState } from 'react'
 
-interface PageProps {
-  params: {
-    id: string
-  }
-}
+export default function LoteDetailPage() {
+  const params = useParams()
+  const id = params.id as string
+  const [lote, setLote] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-export default async function LoteDetailPage({ params }: PageProps) {
-  // Asegurarse de que params esté disponible
-  const { id } = await params;
-  const lote = mockLotes.find((l) => l.id === id);
+  useEffect(() => {
+    // Simular carga de datos
+    const foundLote = mockLotes.find((l) => l.id === id);
+    
+    setTimeout(() => {
+      setLote(foundLote)
+      setLoading(false)
+    }, 100)
+  }, [id])
   
+  if (loading) {
+    return (
+      <>
+        <Header title="Cargando..." subtitle="Cargando detalles del lote" />
+        <div className="p-4 md:p-6">
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-primary-600">Cargando lote...</p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   if (!lote) {
     notFound()
+    return null
   }
 
   const hasAlerts = lote.alertas && lote.alertas.length > 0
