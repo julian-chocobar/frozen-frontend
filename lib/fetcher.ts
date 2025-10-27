@@ -1,4 +1,5 @@
 // lib/fetcher.ts
+import { config, logger } from './config';
 
 export interface FetcherOptions extends RequestInit {
   params?: Record<string, string>;
@@ -32,9 +33,8 @@ export async function fetcher<T>(
   let url: string;
   
   if (typeof window === 'undefined') {
-    // Server-side: usar backend directo con URL absoluta
-    const backendUrl = 'http://localhost:8080';
-    url = `${backendUrl}${endpoint}`;
+    // Server-side: usar backend directo con URL absoluta desde configuración
+    url = `${config.backend.url}${endpoint}`;
   } else {
     // Client-side: usar proxy de Next.js (rutas relativas)
     url = endpoint;
@@ -50,7 +50,8 @@ export async function fetcher<T>(
     url += `?${searchParams.toString()}`;
   }
 
-  console.log('🌐 Fetching:', url, typeof window === 'undefined' ? '(SSR)' : '(Client)'); // Debug
+  // Debug logging usando configuración centralizada
+  logger.api('Fetching:', url, typeof window === 'undefined' ? '(SSR)' : '(Client)');
 
   let response: Response;
   try {
@@ -63,7 +64,7 @@ export async function fetcher<T>(
       credentials: 'include', // 🔐 CRÍTICO: Incluir cookies JSESSIONID
     });
   } catch (error) {
-    console.error('🚨 Fetch failed:', error);
+    logger.error('Fetch failed:', error);
     throw new ApiError(
       `Error de conexión: ${error instanceof Error ? error.message : 'Unknown error'}`,
       0,
