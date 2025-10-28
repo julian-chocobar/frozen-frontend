@@ -8,14 +8,14 @@ export interface LoginRequest {
 export interface AuthResponse {
   token: string;
   username: string;
-  role: string;
+  roles: string[]; // Backend devuelve Set<String> roles
   message?: string;
 }
 
 export interface User {
   id: string;
   username: string;
-  role: string;
+  roles: string[]; // Array de roles del usuario
 }
 
 export interface AuthState {

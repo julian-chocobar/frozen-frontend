@@ -72,9 +72,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const isValid = await authApi.validateSession();
       if (isValid) {
-        const user = await authApi.getCurrentUser();
-        console.log('🔐 User authenticated:', user);
-        console.log('🔐 User role:', user.role);
+        const currentUser = await authApi.getCurrentUser();
+        console.log('🔐 User authenticated:', currentUser);
+        console.log('🔐 User roles:', currentUser.roles);
+        
+        // Crear objeto User con ID como string
+        const user: User = {
+          id: currentUser.id.toString(),
+          username: currentUser.username,
+          roles: currentUser.roles,
+        };
+        
         dispatch({ type: 'AUTH_SUCCESS', payload: user });
       } else {
         dispatch({ type: 'AUTH_FAILURE', payload: 'No autenticado' });
@@ -90,11 +98,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authApi.login(credentials);
       
-      // Crear usuario desde la respuesta
+      // Obtener el usuario completo con ID desde /api/auth/me
+      const currentUser = await authApi.getCurrentUser();
+      
+      // Crear usuario desde la respuesta completa
       const user: User = {
-        id: '', // Backend no devuelve ID en login
-        username: response.username,
-        role: response.role,
+        id: currentUser.id.toString(), // Convertir a string para consistencia
+        username: currentUser.username || response.username,
+        roles: currentUser.roles || response.roles || [],
       };
       
       dispatch({ type: 'AUTH_SUCCESS', payload: user });

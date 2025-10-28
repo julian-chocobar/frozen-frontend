@@ -1,18 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Camera, Save, X, Eye, EyeOff, User, Mail, Shield, Lock, ArrowLeft } from "lucide-react"
-import { cn } from "@/lib/utils"
-import Image from "next/image"
+import { Save, Eye, EyeOff, User as UserIcon, Mail, Shield, Lock, ArrowLeft } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { getUserById, updateUser, updateUserPassword } from "@/lib/users-api"
+import { handleError, showSuccess } from "@/lib/error-handler"
+import type { UserDetail, UserUpdateRequest, UpdatePasswordRequest } from "@/types"
+import { getRoleLabel } from "@/lib/users-api"
 
 /**
  * Página de Edición de Perfil de Usuario
- * - Cambiar foto de perfil
- * - Editar nombre representativo
+ * - Editar nombre
  * - Ver email (no editable)
  * - Cambiar contraseña
  * - Ver rol (no editable)
@@ -20,16 +22,19 @@ import Image from "next/image"
 
 export default function PerfilPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(true)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
   // Estados del perfil
-  const [profileImage, setProfileImage] = useState<string | null>(null)
-  const [nombre, setNombre] = useState("Admin Usuario")
-  const [email] = useState("admin@frozen.com") // No editable
-  const [rol] = useState("Maestro Cervecero") // No editable
+  const [userDetail, setUserDetail] = useState<UserDetail | null>(null)
+  const [nombre, setNombre] = useState("")
+  const [email, setEmail] = useState("")
+  const [phoneNumber, setPhoneNumber] = useState("")
+  const [roles, setRoles] = useState<string[]>([])
   
   // Estados de contraseña
   const [currentPassword, setCurrentPassword] = useState("")
@@ -37,56 +42,116 @@ export default function PerfilPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPasswordSection, setShowPasswordSection] = useState(false)
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setProfileImage(reader.result as string)
+  // Cargar datos del usuario
+  useEffect(() => {
+    const loadUserData = async () => {
+      // Verificar que el usuario existe y tiene ID válido
+      if (!user?.id || user.id === '' || user.id === 'undefined') {
+        console.log('⚠️ Usuario sin ID válido:', user)
+        setIsLoadingData(false)
+        return
       }
-      reader.readAsDataURL(file)
+      
+      setIsLoadingData(true)
+      try {
+        // Convertir ID a número (el backend devuelve numbers)
+        const userId = typeof user.id === 'number' ? user.id : parseInt(user.id)
+        
+        if (isNaN(userId)) {
+          console.error('❌ ID de usuario inválido:', user.id)
+          setIsLoadingData(false)
+          return
+        }
+        
+        const userData = await getUserById(userId)
+        setUserDetail(userData)
+        setNombre(userData.name)
+        setEmail(userData.email || "")
+        setPhoneNumber(userData.phoneNumber || "")
+        setRoles(userData.roles)
+      } catch (error) {
+        console.error('Error loading user data:', error)
+        handleError(error, { title: 'Error al cargar datos del usuario' })
+        setIsLoadingData(false)
+      } finally {
+        setIsLoadingData(false)
+      }
     }
-  }
 
-  const handleRemoveImage = () => {
-    setProfileImage(null)
-  }
+    loadUserData()
+  }, [user])
 
   const handleSaveProfile = async () => {
-    setIsLoading(true)
+    if (!user?.id || !userDetail) return
     
-    // Simular guardado
-    setTimeout(() => {
+    setIsLoading(true)
+    try {
+      const userId = parseInt(user.id)
+      const updateData: UserUpdateRequest = {
+        name: nombre,
+        email: email || undefined,
+        phoneNumber: phoneNumber || undefined
+      }
+      
+      await updateUser(userId, updateData)
+      showSuccess('Perfil actualizado exitosamente')
+      router.refresh()
+    } catch (error) {
+      handleError(error, { title: 'Error al actualizar perfil' })
+    } finally {
       setIsLoading(false)
-      // Aquí iría la lógica de guardado real
-      alert("Perfil actualizado exitosamente")
-      // Redirigir al inicio
-      router.push("/")
-    }, 1500)
+    }
   }
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
-      alert("Las contraseñas no coinciden")
-      router.push("/perfil")
+      showSuccess('Las contraseñas no coinciden', 'error')
+      return
     }
     
-    if (newPassword.length < 4) {
-      alert("La contraseña debe tener al menos 4 caracteres")
+    if (newPassword.length < 8) {
+      showSuccess('La contraseña debe tener al menos 8 caracteres', 'error')
       return
     }
 
-    setIsLoading(true)
+    if (!user?.id) return
     
-    // Simular cambio de contraseña
-    setTimeout(() => {
-      setIsLoading(false)
+    setIsLoading(true)
+    try {
+      const userId = parseInt(user.id)
+      const passwordData: UpdatePasswordRequest = {
+        password: newPassword,
+        passwordConfirmacion: confirmPassword,
+        passwordMatching: newPassword === confirmPassword
+      }
+      
+      await updateUserPassword(userId, passwordData)
+      showSuccess('Contraseña actualizada exitosamente')
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
       setShowPasswordSection(false)
-      alert("Contraseña actualizada exitosamente")
-    }, 1500)
+    } catch (error) {
+      handleError(error, { title: 'Error al cambiar contraseña' })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isLoadingData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
+
+  if (!userDetail) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-primary-600">No se pudieron cargar los datos del usuario</p>
+      </div>
+    )
   }
 
   return (
@@ -101,7 +166,7 @@ export default function PerfilPage() {
         {/* Card principal con botón de regreso */}
         <div className="relative bottom-5 mb-[-18px]">
           {/* Botón de regreso - Volver a página anterior */}
-          <div className="relative  left-[-115px] bottom-[-40px]">
+          <div className="relative left-[-115px] bottom-[-40px]">
             <button
               onClick={() => router.back()}
               className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
@@ -113,54 +178,18 @@ export default function PerfilPage() {
 
           <div className="bg-surface border-2 border-border rounded-lg p-6 md:p-8 shadow-card">
         <div className="space-y-8">
-          {/* Foto de perfil */}
+          {/* Avatar fijo */}
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4">Foto de Perfil</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Identidad</h3>
             <div className="flex flex-col sm:flex-row items-center gap-6">
-              {/* Avatar */}
               <div className="relative">
-                <div className="w-32 h-32 rounded-full border-4 border-border overflow-hidden bg-primary-100 flex items-center justify-center">
-                  {profileImage ? (
-                    <Image
-                      src={profileImage}
-                      alt="Foto de perfil"
-                      width={128}
-                      height={128}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-16 h-16 text-primary-600" />
-                  )}
+                <div className="w-32 h-32 rounded-full border-4 border-primary-600 overflow-hidden bg-primary-100 flex items-center justify-center">
+                  <UserIcon className="w-16 h-16 text-primary-600" />
                 </div>
-                {profileImage && (
-                  <button
-                    onClick={handleRemoveImage}
-                    className="absolute top-0 right-0 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                    aria-label="Eliminar foto"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
               </div>
-
-              {/* Botones */}
-              <div className="flex-1 space-y-3">
-                <label htmlFor="profile-image" className="cursor-pointer">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium">
-                    <Camera className="w-4 h-4" />
-                    <span>Cambiar foto</span>
-                  </div>
-                  <input
-                    id="profile-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </label>
-                <p className="text-sm text-muted">
-                  Formatos recomendados: JPG, PNG o GIF. Tamaño máximo: 5MB
-                </p>
+              <div className="flex-1 space-y-2">
+                <p className="text-lg font-semibold text-primary-900">{userDetail.name}</p>
+                <p className="text-sm text-primary-600">@{userDetail.username}</p>
               </div>
             </div>
           </div>
@@ -174,10 +203,10 @@ export default function PerfilPage() {
               {/* Nombre */}
               <div className="space-y-2">
                 <Label htmlFor="nombre" className="text-sm font-semibold text-foreground">
-                  Nombre completo
+                  Nombre completo *
                 </Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <Input
                     id="nombre"
                     type="text"
@@ -189,11 +218,10 @@ export default function PerfilPage() {
                 </div>
               </div>
 
-              {/* Email (no editable) */}
+              {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Label htmlFor="email" className="text-sm font-semibold text-foreground">
                   Correo electrónico
-                  <span className="text-xs text-muted font-normal">(No se puede modificar)</span>
                 </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
@@ -201,28 +229,47 @@ export default function PerfilPage() {
                     id="email"
                     type="email"
                     value={email}
-                    className="pl-10 h-11 bg-surface-secondary cursor-not-allowed"
-                    disabled
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 h-11"
+                    placeholder="usuario@frozen.com (opcional)"
                   />
                 </div>
               </div>
 
-              {/* Rol (no editable) */}
+              {/* Teléfono */}
               <div className="space-y-2">
-                <Label htmlFor="rol" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  Rol
-                  <span className="text-xs text-muted font-normal">(No se puede modificar)</span>
+                <Label htmlFor="telefono" className="text-sm font-semibold text-foreground">
+                  Teléfono
                 </Label>
                 <div className="relative">
-                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                   <Input
-                    id="rol"
-                    type="text"
-                    value={rol}
-                    className="pl-10 h-11 bg-surface-secondary cursor-not-allowed"
-                    disabled
+                    id="telefono"
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="pl-10 h-11"
+                    placeholder="+54 9 1234 5678 (opcional)"
                   />
                 </div>
+              </div>
+
+              {/* Roles */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Roles
+                </Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {roles.map(role => (
+                    <span
+                      key={role}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700 border border-primary-300"
+                    >
+                      {getRoleLabel(role as any)}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs text-muted">Los roles son asignados por el administrador</p>
               </div>
             </div>
           </div>

@@ -138,7 +138,7 @@ export const api = {
     return api.post<{
       token: string;
       username: string;
-      role: string;
+      roles: string[];
       message?: string;
     }>('/api/auth/login', credentials);
   },
@@ -158,9 +158,9 @@ export const api = {
 
   getCurrentUser: async () => {
     return api.get<{
-      id: string;
+      id: number | string; // Backend puede devolver number, pero lo usamos como string en User
       username: string;
-      role: string;
+      roles: string[];
       email?: string;
     }>('/api/auth/me');
   },

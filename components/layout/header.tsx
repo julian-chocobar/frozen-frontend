@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Bell, User, Menu, ChevronDown, LogOut, Settings } from "lucide-react"
+import { Bell, User, Menu, ChevronDown, LogOut, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MobileMenu } from "./mobile-menu"
 import Link from "next/link"
@@ -121,7 +121,7 @@ export function Header({ title, subtitle, notificationCount = 0, actionButton }:
                     {user?.username || "Usuario"}
                   </p>
                   <p className="text-xs text-primary-600 capitalize">
-                    {user?.role?.toLowerCase() || "Usuario"}
+                    {user?.roles?.[0]?.toLowerCase() || "Usuario"}
                   </p>
                 </div>
                 <ChevronDown 
@@ -145,22 +145,24 @@ export function Header({ title, subtitle, notificationCount = 0, actionButton }:
                     <span>Mi perfil</span>
                   </Link>
 
-                  {/* Configuración */}
-                  <Link
-                    href="/configuracion"
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-surface-secondary transition-colors border-b border-stroke"
-                    onClick={() => setIsUserMenuOpen(false)}
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>Configuración</span>
-                  </Link>
+                  {/* Gestión de Usuarios - Solo para ADMIN */}
+                  {user?.roles?.includes('ADMIN') && (
+                    <Link
+                      href="/usuarios"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-surface-secondary transition-colors border-b border-stroke"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Gestión de Usuarios</span>
+                    </Link>
+                  )}
 
                   {/* Cerrar sesión */}
                   <button
                     className="flex items-center gap-3 px-4 py-3 hover:bg-surface-secondary transition-colors w-full text-left text-red-600"
                     onClick={handleLogout}
                   >
-                    <LogOut className="w-4 h-4" />|
+                    <LogOut className="w-4 h-4" />
                     <span>Cerrar sesión</span>
                   </button>
                 </div>

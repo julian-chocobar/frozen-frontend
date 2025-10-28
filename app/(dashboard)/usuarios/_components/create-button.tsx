@@ -7,18 +7,21 @@
 
 import { CreateButton, useCreateModal } from "@/components/ui/create-button"
 import { UserForm } from "./user-form"
+import { createUser } from "@/lib/users-api"
+import { useRouter } from "next/navigation"
+import type { UserCreateRequest } from "@/types"
 
 export function UserCreateButton() {
+  const router = useRouter()
   const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
     successMessage: 'Usuario creado exitosamente',
     errorTitle: 'Error al crear usuario'
   })
 
-  const handleCreate = async (data: any) => {
+  const handleCreate = async (data: UserCreateRequest) => {
     await handleSubmit(async () => {
-      // Simular creación
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      window.location.reload()
+      await createUser(data)
+      router.refresh()
     })
   }
 
@@ -31,7 +34,7 @@ export function UserCreateButton() {
       onOpen={openModal}
     >
       <UserForm
-        onSubmit={handleCreate}
+        onSubmit={(data) => handleCreate(data as UserCreateRequest)}
         onCancel={closeModal}
         isLoading={isLoading}
       />

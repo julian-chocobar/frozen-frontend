@@ -1,142 +1,234 @@
 "use client"
 
+/**
+ * Formulario para crear usuarios
+ */
+
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { User, Mail, Lock, Shield } from "lucide-react"
+import { getRoles } from "@/lib/users-api"
+import type { UserCreateRequest, Role } from "@/types"
 
 interface UserFormProps {
-  onSubmit: (data: any) => Promise<void>
+  onSubmit: (data: UserCreateRequest) => void
   onCancel: () => void
-  isLoading: boolean
+  isLoading?: boolean
 }
 
-const ROLES = [
-  "Administrador",
-  "Maestro Cervecero",
-  "Supervisor",
-  "Operario",
-]
-
-export function UserForm({ onSubmit, onCancel, isLoading }: UserFormProps) {
+export function UserForm({ onSubmit, onCancel, isLoading = false }: UserFormProps) {
   const [formData, setFormData] = useState({
-    nombre: "",
-    email: "",
+    username: "",
+    name: "",
     password: "",
-    rol: "",
+    email: "",
+    phoneNumber: "",
+    roles: [] as Role[]
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await onSubmit(formData)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const roles = getRoles()
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.username.trim()) {
+      newErrors.username = "El nombre de usuario es requerido"
+    }
+
+    if (!formData.name.trim()) {
+      newErrors.name = "El nombre completo es requerido"
+    }
+
+    if (!formData.password) {
+      newErrors.password = "La contraseña es requerida"
+    } else if (formData.password.length < 8) {
+      newErrors.password = "La contraseña debe tener al menos 8 caracteres"
+    }
+
+    if (formData.roles.length === 0) {
+      newErrors.roles = "Debe seleccionar al menos un rol"
+    }
+
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "El email no es válido"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  const isFormValid = formData.nombre && formData.email && formData.password && formData.rol
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (validateForm()) {
+      const createData: UserCreateRequest = {
+        username: formData.username,
+        name: formData.name,
+        password: formData.password,
+        roles: formData.roles,
+      }
+      
+      if (formData.email.trim()) createData.email = formData.email
+      if (formData.phoneNumber.trim()) createData.phoneNumber = formData.phoneNumber
+      
+      onSubmit(createData)
+    }
+  }
+
+  const handleChange = (field: string, value: string | Role[]) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" }))
+    }
+  }
+
+  const handleRoleToggle = (role: Role) => {
+    setFormData(prev => {
+      const isSelected = prev.roles.includes(role)
+      return {
+        ...prev,
+        roles: isSelected 
+          ? prev.roles.filter(r => r !== role)
+          : [...prev.roles, role]
+      }
+    })
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Nombre completo */}
-      <div className="space-y-2">
-        <Label htmlFor="nombre" className="text-sm font-semibold text-foreground">
-          Nombre Completo
-        </Label>
-        <div className="relative">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
-          <Input
-            id="nombre"
+    <form onSubmit={handleSubmit} className="space-y-6 bg-background p-4 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Username */}
+        <div>
+          <label className="block text-sm font-medium text-primary-900 mb-2">
+            Nombre de Usuario *
+          </label>
+          <input
             type="text"
+            value={formData.username}
+            onChange={(e) => handleChange("username", e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+              errors.username ? "border-red-500" : "border-stroke"
+            }`}
+            placeholder="Ej: juan.perez"
+          />
+          {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
+        </div>
+
+        {/* Nombre */}
+        <div>
+          <label className="block text-sm font-medium text-primary-900 mb-2">
+            Nombre Completo *
+          </label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => handleChange("name", e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+              errors.name ? "border-red-500" : "border-stroke"
+            }`}
             placeholder="Ej: Juan Pérez"
-            value={formData.nombre}
-            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-            className="pl-10 h-11"
-            required
           />
+          {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
         </div>
-      </div>
 
-      {/* Email */}
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-sm font-semibold text-foreground">
-          Correo Electrónico
-        </Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
-          <Input
-            id="email"
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-primary-900 mb-2">
+            Email
+          </label>
+          <input
             type="email"
-            placeholder="usuario@frozen.com"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="pl-10 h-11"
-            required
+            onChange={(e) => handleChange("email", e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+              errors.email ? "border-red-500" : "border-stroke"
+            }`}
+            placeholder="usuario@frozen.com (opcional)"
+          />
+          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+        </div>
+
+        {/* Teléfono */}
+        <div>
+          <label className="block text-sm font-medium text-primary-900 mb-2">
+            Teléfono
+          </label>
+          <input
+            type="text"
+            value={formData.phoneNumber}
+            onChange={(e) => handleChange("phoneNumber", e.target.value)}
+            className="w-full px-3 py-2 border border-stroke rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
+            placeholder="+54 9 1234 5678 (opcional)"
           />
         </div>
-      </div>
 
-      {/* Contraseña */}
-      <div className="space-y-2">
-        <Label htmlFor="password" className="text-sm font-semibold text-foreground">
-          Contraseña Inicial
-        </Label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
-          <Input
-            id="password"
+        {/* Contraseña */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-primary-900 mb-2">
+            Contraseña Inicial *
+          </label>
+          <input
             type="password"
-            placeholder="Mínimo 8 caracteres"
             value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="pl-10 h-11"
-            required
-            minLength={8}
+            onChange={(e) => handleChange("password", e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+              errors.password ? "border-red-500" : "border-stroke"
+            }`}
+            placeholder="**********"
           />
-        </div>
-        <p className="text-xs text-muted">
-          El usuario podrá cambiar su contraseña después del primer inicio de sesión
-        </p>
-      </div>
-
-      {/* Rol */}
-      <div className="space-y-2">
-        <Label htmlFor="rol-form" className="text-sm font-semibold text-foreground">
-          Rol del Usuario
-        </Label>
-        <div className="relative">
-          <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted z-10 pointer-events-none" />
-          <Select value={formData.rol} onValueChange={(value) => setFormData({ ...formData, rol: value })}>
-            <SelectTrigger id="rol-form" className="h-11 pl-10 bg-white">
-              <SelectValue placeholder="Selecciona un rol" />
-            </SelectTrigger>
-            <SelectContent className="bg-white">
-              {ROLES.map((role) => (
-                <SelectItem key={role} value={role}>
-                  {role}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+          <p className="text-xs text-gray-500 mt-1">
+            La contraseña debe tener al menos 8 caracteres y al menos una letra mayúscula, una letra minúscula y un número.
+          </p>
         </div>
       </div>
 
-      <div className="flex gap-2 pt-4">
-        <Button
+      {/* Roles */}
+      <div>
+        <label className="block text-sm font-medium text-primary-900 mb-3">
+          Roles *
+        </label>
+        <div className="border border-stroke rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
+          {roles.map((role) => (
+            <label
+              key={role.value}
+              className="flex items-center cursor-pointer hover:bg-primary-50 p-2 rounded"
+            >
+              <input
+                type="checkbox"
+                checked={formData.roles.includes(role.value)}
+                onChange={() => handleRoleToggle(role.value)}
+                className="mr-2"
+              />
+              <span className="text-sm text-primary-900">{role.label}</span>
+            </label>
+          ))}
+        </div>
+        {errors.roles && <p className="text-red-500 text-sm mt-1">{errors.roles}</p>}
+        {formData.roles.length > 0 && (
+          <p className="text-sm text-primary-600 mt-2">
+            Roles seleccionados: {formData.roles.map(r => getRoles().find(role => role.value === r)?.label).join(", ")}
+          </p>
+        )}
+      </div>
+
+      {/* Botones */}
+      <div className="flex justify-end gap-3 pt-6 border-t border-stroke">
+        <button
           type="button"
-          variant="outline"
           onClick={onCancel}
+          className="px-4 py-2 text-sm font-medium text-primary-600 bg-white border border-stroke rounded-lg hover:bg-primary-50 transition-colors"
           disabled={isLoading}
-          className="flex-1"
         >
           Cancelar
-        </Button>
-        <Button
+        </button>
+        <button
           type="submit"
-          disabled={isLoading || !isFormValid}
-          className="flex-1 bg-primary-600 hover:bg-primary-700 text-white"
+          disabled={isLoading}
+          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? "Creando..." : "Crear Usuario"}
-        </Button>
+        </button>
       </div>
     </form>
   )
