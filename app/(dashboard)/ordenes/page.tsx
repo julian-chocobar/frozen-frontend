@@ -181,14 +181,12 @@ export default function OrdenesPage() {
                 <OrdersFilters />
               </div>
 
-              {/* Botón de Nueva Orden - Siempre visible pero deshabilitado durante carga */}
+              {/* Botón de Nueva Orden - Siempre visible */}
               <div className="flex-shrink-0 w-full sm:w-auto sm:self-center">
-                <OrderCreateButton 
-                  onCreateCallback={() => setRefreshKey(prev => prev + 1)}
-                  disabled={loading}
-                />
+                <OrderCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+                
               </div>
-
+            
             </div>
           </div>
         </div>
