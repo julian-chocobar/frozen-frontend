@@ -34,6 +34,7 @@ export default function MaterialesPage() {
   const [materialsData, setMaterialsData] = useState<MaterialsPageData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Obtener parámetros de búsqueda
   const page = parseInt(searchParams.get('page') || '0')
@@ -42,7 +43,17 @@ export default function MaterialesPage() {
   const name = searchParams.get('name') || undefined
   const supplier = searchParams.get('supplier') || undefined
 
-  // Cargar datos cuando cambien los parámetros
+  // Escuchar cambios de navegación para forzar refresh
+  useEffect(() => {
+    const handleFocus = () => {
+      setRefreshKey(prev => prev + 1)
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [])
+
+  // Cargar datos cuando cambien los parámetros o refreshKey
   useEffect(() => {
     const loadMaterials = async () => {
       setLoading(true)
@@ -77,7 +88,7 @@ export default function MaterialesPage() {
     }
 
     loadMaterials()
-  }, [page, type, estado, name, supplier])
+  }, [page, type, estado, name, supplier, refreshKey])
 
   return (
     <>
@@ -85,7 +96,6 @@ export default function MaterialesPage() {
         title="Inventario de Materiales"
         subtitle="Administra tu stock de materias primas cerveceras"
         notificationCount={2}
-        actionButton={<MaterialCreateButton />}
       />
       <div className="p-4 md:p-6 space-y-6">
         {/* Filtros */}
@@ -93,8 +103,15 @@ export default function MaterialesPage() {
     
         <div className="card border-2 border-primary-600 overflow-hidden">
           <div className="p-6 border-b border-stroke">
-            <h2 className="text-xl font-semibold text-primary-900 mb-1">Materias Primas</h2>
-            <p className="text-sm text-primary-600">Gestiona maltas, lúpulos, levaduras y otros insumos</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-primary-солют900 mb-1">Materias Primas</h2>
+                <p className="text-sm text-primary-600">Gestiona maltas, lúpulos, levaduras y otros insumos</p>
+              </div>
+              {!loading && materialsData && (
+                <MaterialCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+              )}
+            </div>
           </div>
           
           {error ? (

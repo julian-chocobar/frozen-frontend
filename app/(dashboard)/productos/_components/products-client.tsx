@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ProductsTable } from "./products-table"
 import { ProductsCards } from "./products-cards"
@@ -27,18 +27,24 @@ interface ProductsClientProps {
 
 export function ProductsClient({ productos }: ProductsClientProps) {
     const router = useRouter()
+    const [localProducts, setLocalProducts] = useState<ProductResponse[]>(productos)
     const [selectedProduct, setSelectedProduct] = useState<ProductResponse | null>(null)
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+
+    // Sincronizar con props
+    useEffect(() => {
+        setLocalProducts(productos)
+    }, [productos])
 
     const handleEdit = async (id: string, data: ProductUpdateRequest) => {
         setIsLoading(true)
         try {
             await updateProduct(id, data)
-            router.refresh()
             setIsEditing(false)
             setSelectedProduct(null)
             showSuccess('Producto actualizado exitosamente')
+            setTimeout(() => router.refresh(), 500)
         } catch (error) {
             handleError(error, {
                 title: 'Error al actualizar producto'
@@ -51,10 +57,27 @@ export function ProductsClient({ productos }: ProductsClientProps) {
     const handleToggleActive = async (product: ProductResponse) => {
         setIsLoading(true)
         try {
+            // Actualización optimista
+            setLocalProducts(prevProducts => 
+                prevProducts.map(p => 
+                    p.id === product.id 
+                        ? { ...p, isActive: !p.isActive }
+                        : p
+                )
+            )
+            
             await toggleProductActive(product.id)
-            router.refresh()
             showSuccess('Producto activado/desactivado exitosamente')
+            setTimeout(() => router.refresh(), 500)
         } catch (error) {
+            // Revertir en caso de error
+            setLocalProducts(prevProducts => 
+                prevProducts.map(p => 
+                    p.id === product.id 
+                        ? { ...p, isActive: product.isActive }
+                        : p
+                )
+            )
             handleError(error, {
                 title: 'Error al cambiar estado del producto'
             })
@@ -66,11 +89,28 @@ export function ProductsClient({ productos }: ProductsClientProps) {
     const handleMarkAsReady = async (product: ProductResponse) => {
         setIsLoading(true)
         try {
+            // Actualización optimista
+            setLocalProducts(prevProducts => 
+                prevProducts.map(p => 
+                    p.id === product.id 
+                        ? { ...p, isReady: !p.isReady }
+                        : p
+                )
+            )
+            
             await toogleReady(product.id)
-            router.refresh()
             const action = product.isReady ? 'desmarcado' : 'marcado'
             showSuccess(`Producto ${action} como listo exitosamente`)
+            setTimeout(() => router.refresh(), 500)
         } catch (error) {
+            // Revertir en caso de error
+            setLocalProducts(prevProducts => 
+                prevProducts.map(p => 
+                    p.id === product.id 
+                        ? { ...p, isReady: product.isReady }
+                        : p
+                )
+            )
             handleError(error, {
                 title: 'Error al cambiar estado del producto'
             })
@@ -90,14 +130,14 @@ export function ProductsClient({ productos }: ProductsClientProps) {
     return (
         <>
             <ProductsTable 
-                productos={productos} 
+                productos={localProducts} 
                 onEdit={handleEditClick} 
                 onToggleActive={handleToggleActive} 
                 onViewDetails={handleViewDetails} 
                 onMarkAsReady={handleMarkAsReady}
             />
             <ProductsCards 
-                productos={productos} 
+                productos={localProducts} 
                 onEdit={handleEditClick} 
                 onToggleActive={handleToggleActive}
                 onMarkAsReady={handleMarkAsReady} 

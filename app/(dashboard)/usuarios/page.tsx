@@ -36,11 +36,22 @@ export default function UsuariosPage() {
   const [usersData, setUsersData] = useState<UsersPageData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Obtener parámetros de búsqueda
   const page = parseInt(searchParams.get('page') || '0')
 
-  // Cargar datos cuando cambien los parámetros
+  // Escuchar cambios de navegación para forzar refresh
+  useEffect(() => {
+    const handleFocus = () => {
+      setRefreshKey(prev => prev + 1)
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [])
+
+  // Cargar datos cuando cambien los parámetros o refreshKey
   useEffect(() => {
     const loadUsers = async () => {
       setLoading(true)
@@ -71,7 +82,7 @@ export default function UsuariosPage() {
     }
 
     loadUsers()
-  }, [page])
+  }, [page, refreshKey])
 
   return (
     <>
@@ -79,14 +90,20 @@ export default function UsuariosPage() {
         title="Gestión de Usuarios"
         subtitle="Administra los usuarios del sistema"
         notificationCount={2}
-        actionButton={<UserCreateButton />}
       />
       
       <div className="p-4 md:p-6 space-y-6">
         <div className="card border-2 border-primary-600 overflow-hidden">
           <div className="p-6 border-b border-stroke">
-            <h2 className="text-xl font-semibold text-primary-900 mb-1">Usuarios del Sistema</h2>
-            <p className="text-sm text-primary-600">Gestiona roles, permisos y accesos de usuarios</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-primary-900 mb-1">Usuarios del Sistema</h2>
+                <p className="text-sm text-primary-600">Gestiona roles, permisos y accesos de usuarios</p>
+              </div>
+              {!loading && usersData && (
+                <UserCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+              )}
+            </div>
           </div>
           
           {error ? (

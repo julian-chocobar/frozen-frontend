@@ -5,7 +5,7 @@
  * Incluye modales para crear/editar y confirmaciones para eliminar
  */
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { MaterialsTable } from "./materials-table"
 import { MaterialsCards } from "./materials-cards"
@@ -32,19 +32,25 @@ interface MaterialsClientProps {
 
 export function MaterialsClient({ materials }: MaterialsClientProps) {
   const router = useRouter()
+  const [localMaterials, setLocalMaterials] = useState<Material[]>(materials)
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isViewing, setIsViewing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Sincronizar con props
+  useEffect(() => {
+    setLocalMaterials(materials)
+  }, [materials])
+
   const handleEdit = async (id: string, data: MaterialUpdateRequest) => {
     setIsLoading(true)
     try {
       await updateMaterial(id, data)
-      router.refresh()
       setIsEditing(false)
       setSelectedMaterial(null)
       showSuccess('Material actualizado exitosamente')
+      setTimeout(() => router.refresh(), 500)
     } catch (error) {
       handleError(error, {
         title: 'Error al actualizar material'
@@ -57,11 +63,28 @@ export function MaterialsClient({ materials }: MaterialsClientProps) {
   const handleToggleActive = async (material: Material) => {
     setIsLoading(true)
     try {
+      // Actualización optimista
+      setLocalMaterials(prevMaterials => 
+        prevMaterials.map(m => 
+          m.id === material.id 
+            ? { ...m, isActive: !m.isActive }
+            : m
+        )
+      )
+      
       await toggleMaterialActive(material.id)
-      router.refresh()
       const action = material.isActive ? 'desactivado' : 'activado'
       showSuccess(`Material ${action} exitosamente`)
+      setTimeout(() => router.refresh(), 500)
     } catch (error) {
+      // Revertir en caso de error
+      setLocalMaterials(prevMaterials => 
+        prevMaterials.map(m => 
+          m.id === material.id 
+            ? { ...m, isActive: material.isActive }
+            : m
+        )
+      )
       handleError(error, {
         title: 'Error al cambiar estado del material'
       })
@@ -83,13 +106,13 @@ export function MaterialsClient({ materials }: MaterialsClientProps) {
   return (
     <>
       <MaterialsTable
-        materiales={materials}
+        materiales={localMaterials}
         onEdit={handleEditClick}
         onToggleActive={handleToggleActive}
         onViewDetails={handleViewDetails}
       />
       <MaterialsCards
-        materiales={materials}
+        materiales={localMaterials}
         onEdit={handleEditClick}
         onToggleActive={handleToggleActive}
         onViewDetails={handleViewDetails}

@@ -5,7 +5,11 @@ import { createPackaging } from "@/lib/packagings-api"
 import { useRouter } from "next/navigation"
 import type { PackagingCreateRequest } from "@/types"
 
-export function PackagingCreateButton() {
+interface PackagingCreateButtonProps {
+  onCreateCallback?: () => void
+}
+
+export function PackagingCreateButton({ onCreateCallback }: PackagingCreateButtonProps) {
     const router = useRouter()
     const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
         successMessage: 'Packaging creado exitosamente',
@@ -15,7 +19,15 @@ export function PackagingCreateButton() {
     const handleCreate = async (data: PackagingCreateRequest) => {
         await handleSubmit(async () => {
             await createPackaging(data)
-            router.refresh()
+            // Pequeño delay para asegurar que el servidor procese
+            await new Promise(resolve => setTimeout(resolve, 300))
+            
+            // Usar callback si existe, sino hacer refresh
+            if (onCreateCallback) {
+              onCreateCallback()
+            } else {
+              router.refresh()
+            }
         })
     }
 

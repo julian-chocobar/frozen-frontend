@@ -11,7 +11,11 @@ import { createProductionOrder } from "@/lib/production-orders-api"
 import { useRouter } from "next/navigation"
 import type { ProductionOrderCreateRequest } from "@/types"
 
-export function OrderCreateButton() {
+interface OrderCreateButtonProps {
+  onCreateCallback?: () => void
+}
+
+export function OrderCreateButton({ onCreateCallback }: OrderCreateButtonProps) {
   const router = useRouter()
   const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
     successMessage: 'Orden de producción creada exitosamente',
@@ -21,13 +25,21 @@ export function OrderCreateButton() {
   const handleCreate = async (data: ProductionOrderCreateRequest) => {
     await handleSubmit(async () => {
       await createProductionOrder(data)
-      router.refresh()
+      // Pequeño delay para asegurar que el servidor procese
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Usar callback si existe, sino hacer refresh
+      if (onCreateCallback) {
+        onCreateCallback()
+      } else {
+        router.refresh()
+      }
     })
   }
 
   return (
     <CreateButton
-      buttonText="Nueva Orden"
+      buttonText="Nueva"
       modalTitle="Crear Nueva Orden de Producción"
       ariaLabel="Agregar nueva orden de producción"
       isOpen={isOpen}

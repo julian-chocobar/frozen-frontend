@@ -11,7 +11,11 @@ import { createMovement } from "@/lib/movements-api"
 import { useRouter } from "next/navigation"
 import type { MovementCreateRequest } from "@/types"
 
-export function MovementCreateButton() {
+interface MovementCreateButtonProps {
+  onCreateCallback?: () => void
+}
+
+export function MovementCreateButton({ onCreateCallback }: MovementCreateButtonProps) {
   const router = useRouter()
   const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
     successMessage: 'Movimiento creado exitosamente',
@@ -21,7 +25,15 @@ export function MovementCreateButton() {
   const handleCreate = async (data: MovementCreateRequest) => {
     await handleSubmit(async () => {
       await createMovement(data)
-      router.refresh()
+      // Pequeño delay para asegurar que el servidor procese
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Usar callback si existe, sino hacer refresh
+      if (onCreateCallback) {
+        onCreateCallback()
+      } else {
+        router.refresh()
+      }
     })
   }
 

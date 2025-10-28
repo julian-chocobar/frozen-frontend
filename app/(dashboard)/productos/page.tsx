@@ -29,6 +29,7 @@ export default function ProductosPage() {
     const [productsData, setProductsData] = useState<ProductsPageData | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
+    const [refreshKey, setRefreshKey] = useState(0)
 
     // Obtener parámetros de búsqueda
     const page = parseInt(searchParams.get('page') || '0')
@@ -37,7 +38,17 @@ export default function ProductosPage() {
     const estado = searchParams.get('estado') || undefined
     const ready = searchParams.get('ready') || undefined
 
-    // Cargar datos cuando cambien los parámetros
+    // Escuchar cambios de navegación para forzar refresh
+    useEffect(() => {
+        const handleFocus = () => {
+            setRefreshKey(prev => prev + 1)
+        }
+        
+        window.addEventListener('focus', handleFocus)
+        return () => window.removeEventListener('focus', handleFocus)
+    }, [])
+
+    // Cargar datos cuando cambien los parámetros o refreshKey
     useEffect(() => {
         const loadProducts = async () => {
             setLoading(true)
@@ -71,22 +82,28 @@ export default function ProductosPage() {
         }
 
         loadProducts()
-    }, [page, name, alcoholic, estado, ready])
+    }, [page, name, alcoholic, estado, ready, refreshKey])
     return (
         <>
             <Header
                 title="Productos"
                 subtitle="Gestiona tus productos"
                 notificationCount={2}
-                actionButton={<ProductCreateButton />}
             />
             <div className="p-4 md:p-6 space-y-6">
                 {/* Filtros */}
                 <ProductsFilters />
                 <div className="card border-2 border-primary-600 overflow-hidden">
                     <div className="p-6 border-b border-stroke">
-                        <h2 className="text-xl font-semibold text-primary-900 mb-1">Productos</h2>
-                        <p className="text-sm text-primary-600">Gestiona tus productos</p>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-xl font-semibold text-primary-900 mb-1">Productos</h2>
+                                <p className="text-sm text-primary-600">Gestiona tus productos</p>
+                            </div>
+                            {!loading && productsData && (
+                                <ProductCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+                            )}
+                        </div>
                     </div>
                     
                     {error ? (

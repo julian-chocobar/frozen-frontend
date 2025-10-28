@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { PackagingsTable } from "./packagings-table"
 import { PackagingsCards } from "./packagings-cards"
@@ -26,18 +26,24 @@ interface PackagingsClientProps {
 
 export function PackagingsClient({ packagings, pagination }: PackagingsClientProps) {
     const router = useRouter()
+    const [localPackagings, setLocalPackagings] = useState<PackagingResponse[]>(packagings)
     const [selectedPackaging, setSelectedPackaging] = useState<PackagingResponse | null>(null)
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+
+    // Sincronizar con props
+    useEffect(() => {
+        setLocalPackagings(packagings)
+    }, [packagings])
 
     const handleEdit = async (id: string, data: PackagingUpdateRequest) => {
         setIsLoading(true)
         try {
             await updatePackaging(id, data)
-            router.refresh()
             setIsEditing(false)
             setSelectedPackaging(null)
             showSuccess('Packaging actualizado exitosamente')
+            setTimeout(() => router.refresh(), 500)
         } catch (error) {
             handleError(error, {
                 title: 'Error al actualizar packaging'
@@ -50,11 +56,28 @@ export function PackagingsClient({ packagings, pagination }: PackagingsClientPro
     const handleToggleActive = async (packaging: PackagingResponse) => {
         setIsLoading(true)
         try {
+            // Actualización optimista
+            setLocalPackagings(prevPackagings => 
+                prevPackagings.map(p => 
+                    p.id === packaging.id 
+                        ? { ...p, isActive: !p.isActive }
+                        : p
+                )
+            )
+            
             await togglePackagingActive(packaging.id)
-            router.refresh()
             const action = packaging.isActive ? 'desactivado' : 'activado'
             showSuccess(`Packaging ${action} exitosamente`)
+            setTimeout(() => router.refresh(), 500)
         } catch (error) {
+            // Revertir en caso de error
+            setLocalPackagings(prevPackagings => 
+                prevPackagings.map(p => 
+                    p.id === packaging.id 
+                        ? { ...p, isActive: packaging.isActive }
+                        : p
+                )
+            )
             handleError(error, {
                 title: 'Error al cambiar estado del packaging'
             })
@@ -71,12 +94,12 @@ export function PackagingsClient({ packagings, pagination }: PackagingsClientPro
     return (
         <>
             <PackagingsTable
-                packagings={packagings}
+                packagings={localPackagings}
                 onEdit={handleEditClick}
                 onToggleActive={handleToggleActive}
             />
             <PackagingsCards
-                packagings={packagings}
+                packagings={localPackagings}
                 onEdit={handleEditClick}
                 onToggleActive={handleToggleActive}
             />

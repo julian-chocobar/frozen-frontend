@@ -107,7 +107,6 @@ export function getRoles(): Array<{ value: Role; label: string }> {
     { value: 'SUPERVISOR_DE_CALIDAD', label: 'Supervisor de Calidad' },
     { value: 'SUPERVISOR_DE_PRODUCCION', label: 'Supervisor de Producción' },
     { value: 'SUPERVISOR_DE_ALMACEN', label: 'Supervisor de Almacén' },
-    { value: 'OPERARIO_DE_PLANTA', label: 'Operario de Planta' },
     { value: 'OPERARIO_DE_ALMACEN', label: 'Operario de Almacén' },
     { value: 'OPERARIO_DE_CALIDAD', label: 'Operario de Calidad' },
     { value: 'OPERARIO_DE_PRODUCCION', label: 'Operario de Producción' }

@@ -38,13 +38,24 @@ export default function OrdenesPage() {
   const [ordersData, setOrdersData] = useState<OrdersPageData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Obtener parámetros de búsqueda
   const page = parseInt(searchParams.get('page') || '0')
   const status = searchParams.get('status') as ProductionOrderStatus | undefined
   const productId = searchParams.get('productId') || undefined
 
-  // Cargar datos cuando cambien los parámetros
+  // Escuchar cambios de navegación para forzar refresh
+  useEffect(() => {
+    const handleFocus = () => {
+      setRefreshKey(prev => prev + 1)
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [])
+
+  // Cargar datos cuando cambien los parámetros o refreshKey
   useEffect(() => {
     const loadOrders = async () => {
       setLoading(true)
@@ -75,7 +86,7 @@ export default function OrdenesPage() {
     }
 
     loadOrders()
-  }, [page, status, productId])
+  }, [page, status, productId, refreshKey])
 
   // Calcular estadísticas
   const stats = {
@@ -93,7 +104,6 @@ export default function OrdenesPage() {
         title="Planificación de Producción"
         subtitle="Gestiona las órdenes de producción de cerveza"
         notificationCount={stats.pending}
-        actionButton={<OrderCreateButton />}
       />
       
       <div className="p-4 md:p-6 space-y-6">
@@ -155,18 +165,30 @@ export default function OrdenesPage() {
           </div>
         </StatsCarousel>
 
-        {/* Recuadro con título y filtros */}
+        {/* Recuadro con título, filtros y botón de nueva orden */}
         <div className="card border-2 border-primary-600 p-6 overflow-hidden">
-          <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
             {/* Título y subtítulo */}
             <div className="flex-shrink-0 min-w-0">
               <h2 className="text-xl font-semibold text-primary-900 mb-1">Órdenes de Producción</h2>
               <p className="text-sm text-primary-600">Listado de todas las órdenes planificadas y en proceso</p>
             </div>
             
-            {/* Filtros alineados a la derecha */}
-            <div className="flex-shrink-0 w-full xl:w-auto xl:ml-auto">
-              <OrdersFilters />
+            {/* Contenedor para filtros y botón - alineados horizontalmente */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto xl:ml-auto ">
+              {/* Filtros */}
+              <div className="flex-shrink-0 w-full sm:w-auto">
+                <OrdersFilters />
+              </div>
+
+              {/* Botón de Nueva Orden - Siempre visible pero deshabilitado durante carga */}
+              <div className="flex-shrink-0 w-full sm:w-auto sm:self-center">
+                <OrderCreateButton 
+                  onCreateCallback={() => setRefreshKey(prev => prev + 1)}
+                  disabled={loading}
+                />
+              </div>
+
             </div>
           </div>
         </div>

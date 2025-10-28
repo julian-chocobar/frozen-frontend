@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Botón para crear nuevo material desde el header
+ * Botón para crear nuevo material
  * Usa el componente genérico CreateButton
  */
 
@@ -11,7 +11,11 @@ import { createMaterial } from "@/lib/materials-api"
 import { useRouter } from "next/navigation"
 import type { MaterialCreateRequest } from "@/types"
 
-export function MaterialCreateButton() {
+interface MaterialCreateButtonProps {
+  onCreateCallback?: () => void
+}
+
+export function MaterialCreateButton({ onCreateCallback }: MaterialCreateButtonProps) {
   const router = useRouter()
   const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
     successMessage: 'Material creado exitosamente',
@@ -21,7 +25,15 @@ export function MaterialCreateButton() {
   const handleCreate = async (data: MaterialCreateRequest) => {
     await handleSubmit(async () => {
       await createMaterial(data)
-      router.refresh()
+      // Pequeño delay para asegurar que el servidor procese
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Usar callback si existe, sino hacer refresh
+      if (onCreateCallback) {
+        onCreateCallback()
+      } else {
+        router.refresh()
+      }
     })
   }
 
