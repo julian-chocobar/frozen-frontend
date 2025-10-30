@@ -12,7 +12,7 @@ interface WorkingDayFormProps {
 export function WorkingDayForm({ initial, onSubmit, onCancel, isLoading }: WorkingDayFormProps) {
   const [form, setForm] = useState<WorkingDayUpdateRequest>({
     dayOfWeek: initial.dayOfWeek,
-    isWorkingDay: initial.isWorkingDay,
+    isWorkingDay: initial.isWorkingDay ?? false,
     openingHour: initial.openingHour,
     closingHour: initial.closingHour,
   })
