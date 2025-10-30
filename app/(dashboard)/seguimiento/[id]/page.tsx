@@ -52,7 +52,7 @@ export default function LoteDetailPage() {
 
   return (
     <>
-      <Header title={`Lote ${lote.codigo}`} subtitle={lote.nombreProducto} notificationCount={2} />
+      <Header title={`Lote ${lote.codigo}`} subtitle={lote.nombreProducto} />
       <div className="p-4 md:p-6">
         {/* Botón volver */}
         <Link

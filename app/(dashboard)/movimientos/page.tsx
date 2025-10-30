@@ -94,7 +94,6 @@ export default function MovimientosPage() {
       <Header
         title="Movimientos de Stock"
         subtitle="Administra los movimientos de stock de insumos"
-        notificationCount={2}
       />
       
       <div className="p-4 md:p-6 space-y-6">

@@ -95,7 +95,6 @@ export default function MaterialesPage() {
       <Header
         title="Inventario de Materiales"
         subtitle="Administra tu stock de materias primas cerveceras"
-        notificationCount={2}
       />
       <div className="p-4 md:p-6 space-y-6">
         {/* Filtros */}

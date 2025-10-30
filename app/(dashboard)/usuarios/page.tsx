@@ -89,7 +89,6 @@ export default function UsuariosPage() {
       <Header
         title="Gestión de Usuarios"
         subtitle="Administra los usuarios del sistema"
-        notificationCount={2}
       />
       
       <div className="p-4 md:p-6 space-y-6">

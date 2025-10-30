@@ -5,22 +5,25 @@ import { useState, useRef, useEffect } from "react"
 import { Bell, User, Menu, ChevronDown, LogOut, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MobileMenu } from "./mobile-menu"
+import { NotificationsPanel } from "./notifications-panel"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
+import { useNotifications } from "@/hooks/use-notifications"
 
 interface HeaderProps {
   title: string
   subtitle?: string
-  notificationCount?: number
   actionButton?: React.ReactNode
 }
 
-export function Header({ title, subtitle, notificationCount = 0, actionButton }: HeaderProps) {
+export function Header({ title, subtitle, actionButton }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   
   const { user, logout, isAuthenticated } = useAuth()
+  const { stats, isConnected, notifications, error } = useNotifications()
 
   // Cerrar menú al hacer clic fuera
   useEffect(() => {
@@ -89,19 +92,52 @@ export function Header({ title, subtitle, notificationCount = 0, actionButton }:
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
             {actionButton}
 
+            {/* Debug info en desarrollo */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="hidden xl:block text-xs text-muted bg-surface-secondary px-2 py-1 rounded">
+                📡 {isConnected ? 'Conectado' : 'Desconectado'} | 
+                📨 {notifications.length} | 
+                🔔 {stats.unreadCount}
+                {error && ' | ❌ Error'}
+              </div>
+            )}
+
             {/* Notificaciones */}
-            <button
-              className={cn(
-                "relative p-2 sm:p-3 hover:bg-surface-secondary rounded-lg transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-primary-300"
-              )}
-              aria-label={`Notificaciones${notificationCount > 0 ? ` (${notificationCount} nuevas)` : ""}`}
-            >
-              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
-              {notificationCount > 0 && (
-                <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full" />
-              )}
-            </button>
+            <div className="relative">
+              <button
+                className={cn(
+                  "relative p-2 sm:p-3 hover:bg-surface-secondary rounded-lg transition-colors",
+                  "focus:outline-none focus:ring-2 focus:ring-primary-300",
+                  isNotificationsOpen && "bg-surface-secondary"
+                )}
+                aria-label={`Notificaciones${stats.unreadCount > 0 ? ` (${stats.unreadCount} nuevas)` : ""}`}
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              >
+                <Bell className={cn(
+                  "w-5 h-5 sm:w-6 sm:h-6",
+                  stats.unreadCount > 0 ? "text-primary-600" : "text-foreground"
+                )} />
+                {stats.unreadCount > 0 && (
+                  <>
+                    <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full" />
+                    {stats.unreadCount < 100 && (
+                      <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                        {stats.unreadCount}
+                      </span>
+                    )}
+                  </>
+                )}
+                {!isConnected && (
+                  <span className="absolute bottom-0 right-0 w-2 h-2 bg-yellow-500 rounded-full border-2 border-background" title="Desconectado" />
+                )}
+              </button>
+              
+              {/* Panel de notificaciones */}
+              <NotificationsPanel
+                isOpen={isNotificationsOpen}
+                onClose={() => setIsNotificationsOpen(false)}
+              />
+            </div>
 
             {/* Avatar de usuario con menú desplegable */}
             <div className="relative" ref={userMenuRef}>

@@ -9,7 +9,7 @@ import { ArrowLeft } from "lucide-react"
 export default function LoteDetailLoading() {
   return (
     <>
-      <Header title="Cargando..." subtitle="Obteniendo información del lote" notificationCount={0} />
+      <Header title="Cargando..." subtitle="Obteniendo información del lote" />
       <div className="p-4 md:p-6">
         {/* Botón volver skeleton */}
         <div className="inline-flex items-center gap-2 mb-6">

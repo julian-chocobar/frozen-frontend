@@ -10,7 +10,7 @@ import { Header } from "@/components/layout/header"
 export default function ReportesPage() {
   return (
     <>
-      <Header title="Reportes y Analítica" subtitle="Analiza el rendimiento de tu producción" notificationCount={2} />
+      <Header title="Reportes y Analítica" subtitle="Analiza el rendimiento de tu producción" />
       <div className="p-4 md:p-6">
         <div className="text-center py-20">
           <h2 className="text-2xl font-semibold text-foreground mb-2">Módulo de Reportes</h2>

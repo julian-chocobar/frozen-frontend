@@ -74,7 +74,6 @@ export default function PackagingPage() {
       <Header
         title="Packagings"
         subtitle="Administra todos los packagings disponibles"
-        notificationCount={2}
       />
       <div className="p-4 md:p-6 space-y-6">
         <div className="card border-2 border-primary-600 overflow-hidden">

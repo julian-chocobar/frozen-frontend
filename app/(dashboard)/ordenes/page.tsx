@@ -103,7 +103,6 @@ export default function OrdenesPage() {
       <Header
         title="Planificación de Producción"
         subtitle="Gestiona las órdenes de producción de cerveza"
-        notificationCount={stats.pending}
       />
       
       <div className="p-4 md:p-6 space-y-6">

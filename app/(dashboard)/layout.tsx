@@ -9,6 +9,7 @@ import type React from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { BottomBar } from "@/components/layout/bottom-bar"
 import ProtectedRoute from "@/components/auth/protected-route"
+import { NotificationsDebug } from "@/components/debug/notifications-debug"
 
 
 export default function DashboardLayout({
@@ -34,6 +35,9 @@ export default function DashboardLayout({
         {/* BottomBar - Solo móvil */}
         <BottomBar />
       </div>
+      
+      {/* Debug panel - Solo en desarrollo */}
+      <NotificationsDebug />
     </ProtectedRoute>
   )
 }
