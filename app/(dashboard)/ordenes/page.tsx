@@ -40,6 +40,7 @@ export default function OrdenesPage() {
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
 
+
   // Obtener parámetros de búsqueda
   const page = parseInt(searchParams.get('page') || '0')
   const status = searchParams.get('status') as ProductionOrderStatus | undefined

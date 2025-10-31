@@ -3,7 +3,7 @@
  * Muestra todos los movimientos en formato tabla para desktop
  */
 
-import { ArrowUp, ArrowDown, Calendar, Package } from "lucide-react"
+import { ArrowUp, ArrowDown, Calendar, Package, Lock, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
 import type { MovementResponse } from "@/types"
@@ -51,7 +51,8 @@ export function MovementsTable({
           "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
           value === 'PENDIENTE' && "bg-yellow-100 text-yellow-800",
           value === 'EN_PROCESO' && "bg-blue-100 text-blue-800", 
-          value === 'COMPLETADO' && "bg-green-100 text-green-800"
+          value === 'COMPLETADO' && "bg-green-100 text-green-800",
+          value === '' && "-"
         )}>
           {getStatusLabel(value)}
         </span>
@@ -60,21 +61,40 @@ export function MovementsTable({
     {
       key: 'type',
       label: 'Tipo',
-      render: (value) => (
-        <div className="flex items-center gap-2">
-          {value === 'INGRESO' ? (
-            <ArrowUp className="w-4 h-4 text-green-600" />
-          ) : (
-            <ArrowDown className="w-4 h-4 text-red-600" />
-          )}
-          <span className={cn(
-            "text-sm font-medium",
-            value === 'INGRESO' ? "text-green-800" : "text-red-800"
-          )}>
-            {value === 'INGRESO' ? 'Ingreso' : 'Egreso'}
-          </span>
-        </div>
-      )
+      render: (value) => {
+        const icon = value === 'INGRESO'
+          ? <ArrowUp className="w-4 h-4 text-green-600" />
+          : value === 'EGRESO'
+          ? <ArrowDown className="w-4 h-4 text-red-600" />
+          : value === 'RESERVA'
+          ? <Lock className="w-4 h-4 text-orange-600" />
+          : <RotateCcw className="w-4 h-4 text-purple-600" />
+
+        const label = value === 'INGRESO'
+          ? 'Ingreso'
+          : value === 'EGRESO'
+          ? 'Egreso'
+          : value === 'RESERVA'
+          ? 'Reserva'
+          : 'Devuelto'
+
+        const colorClass = value === 'INGRESO'
+          ? 'text-green-800'
+          : value === 'EGRESO'
+          ? 'text-red-800'
+          : value === 'RESERVA'
+          ? 'text-orange-800'
+          : 'text-purple-800'
+
+        return (
+          <div className="flex items-center gap-2">
+            {icon}
+            <span className={cn("text-sm font-medium", colorClass)}>
+              {label}
+            </span>
+          </div>
+        )
+      }
     },
     {
       key: 'materialName',

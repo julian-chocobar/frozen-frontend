@@ -15,7 +15,9 @@ import type {
 
 const TYPE_LABELS: Record<MovementType, string> = {
   'INGRESO': 'Ingreso',
-  'EGRESO': 'Egreso'
+  'EGRESO': 'Egreso',
+  'RESERVA': 'Reserva',
+  'DEVUELTO': 'Devuelto'
 }
 
 const STATUS_LABELS: Record<MovementStatus, string> = {

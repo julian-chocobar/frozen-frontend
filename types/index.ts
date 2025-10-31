@@ -98,7 +98,7 @@ export interface MaterialsFilters {
 // ============================================
 // MOVIMIENTOS
 // ============================================
-export type MovementType = "INGRESO" | "EGRESO"
+export type MovementType = "INGRESO" | "EGRESO" | "RESERVA" | "DEVUELTO"
 export type MovementStatus = "PENDIENTE" | "EN_PROCESO" | "COMPLETADO"
 
 export interface MovementResponse {
@@ -341,10 +341,10 @@ export interface ProductionOrderResponse {
 }
 
 export interface ProductionOrderCreateRequest {
-  productId: string
-  packagingId: string
+  productId: number
+  packagingId: number
   quantity: number
-  plannedDate: string
+  plannedDate: string // ISO 8601 OffsetDateTime, ej: 2025-10-31T00:00:00-03:00
 }
 
 export interface ProductionOrderFilters {

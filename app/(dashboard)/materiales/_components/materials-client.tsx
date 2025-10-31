@@ -46,9 +46,14 @@ export function MaterialsClient({ materials, autoOpenId }: MaterialsClientProps)
 
   // Auto-abrir modal si se proporciona autoOpenId
   useEffect(() => {
+    console.log('MaterialsClient autoOpenId effect:', { autoOpenId, materialsCount: materials.length })
     if (autoOpenId && materials.length > 0) {
+      console.log('Looking for material with id:', autoOpenId)
+      console.log('Available materials:', materials.map(m => ({ id: m.id, name: m.name })))
       const targetMaterial = materials.find(m => m.id === autoOpenId)
+      console.log('Found target material:', targetMaterial)
       if (targetMaterial) {
+        console.log('Opening modal for material:', targetMaterial.name)
         handleViewDetails(targetMaterial)
       }
     }

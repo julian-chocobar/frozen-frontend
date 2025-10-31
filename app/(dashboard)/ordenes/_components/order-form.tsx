@@ -100,10 +100,10 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
     
     if (validateForm()) {
       const submitData: ProductionOrderCreateRequest = {
-        productId: formData.productId,
-        packagingId: formData.packagingId.toString(),
+        productId: Number(formData.productId),
+        packagingId: Number(formData.packagingId),
         quantity: Number(formData.quantity),
-        plannedDate: new Date(formData.plannedDate).toISOString()
+        plannedDate: toOffsetDateTimeLocal(formData.plannedDate)
       }
       
       onSubmit(submitData)
@@ -150,6 +150,19 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
       setSelectedPackaging(null)
     }
   }
+
+  const toOffsetDateTimeLocal = (dateString: string) => {
+    // dateString en formato YYYY-MM-DD; construir medianoche local con offset
+    const [y, m, d] = dateString.split('-').map(Number)
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    const local = new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0)
+    const tzOffsetMinutes = -local.getTimezoneOffset() // minutos al Este de UTC
+    const sign = tzOffsetMinutes >= 0 ? '+' : '-'
+    const abs = Math.abs(tzOffsetMinutes)
+    const oh = pad(Math.floor(abs / 60))
+    const om = pad(abs % 60)
+    return `${y}-${pad(m || 1)}-${pad(d || 1)}T00:00:00${sign}${oh}:${om}`
+  };
 
 
   return (

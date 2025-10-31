@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from "react"
-import { ArrowUp, ArrowDown } from "lucide-react"
+import { ArrowUp, ArrowDown, Lock, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getMaterialsIdNameList, type MaterialIdName } from "@/lib/materials-api"
 import type { MovementType, MovementCreateRequest } from "@/types"
@@ -127,6 +127,9 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
   const selectedMaterial = formData.materialId ? 
     materials.find(m => m.id.toString() === formData.materialId) : null
   const isIngreso = formData.type === 'INGRESO'
+  const isEgreso = formData.type === 'EGRESO'
+  const isReserva = formData.type === 'RESERVA'
+  const isDevuelto = formData.type === 'DEVUELTO'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -220,20 +223,24 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
           >
             <option value="INGRESO">Ingreso</option>
             <option value="EGRESO">Egreso</option>
+            <option value="RESERVA">Reserva</option>
+            <option value="DEVUELTO">Devuelto</option>
           </select>
           
           {/* Indicador visual del tipo */}
           <div className="mt-2 flex items-center gap-2">
-            {isIngreso ? (
-              <ArrowUp className="w-4 h-4 text-green-600" />
-            ) : (
-              <ArrowDown className="w-4 h-4 text-red-600" />
-            )}
+            {isIngreso && <ArrowUp className="w-4 h-4 text-green-600" />}
+            {isEgreso && <ArrowDown className="w-4 h-4 text-red-600" />}
+            {isReserva && <Lock className="w-4 h-4 text-orange-600" />}
+            {isDevuelto && <RotateCcw className="w-4 h-4 text-purple-600" />}
             <span className={cn(
               "text-sm font-medium",
-              isIngreso ? "text-green-800" : "text-red-800"
+              isIngreso ? "text-green-800" : isEgreso ? "text-red-800" : isReserva ? "text-orange-800" : "text-purple-800"
             )}>
-              {isIngreso ? 'Aumentará el stock' : 'Disminuirá el stock'}
+              {isIngreso && 'Aumentará el stock'}
+              {isEgreso && 'Disminuirá el stock'}
+              {isReserva && 'Reservará stock (baja disponible, sube reservado)'}
+              {isDevuelto && 'Devolverá stock (sube disponible, baja reservado)'}
             </span>
           </div>
         </div>

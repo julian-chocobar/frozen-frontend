@@ -70,6 +70,17 @@ export function MaterialsTable({
       )
     },
     {
+      key: 'totalStock',
+      label: 'Stock Total',
+      render: (value, material) => (
+        <div>
+          <p className="text-sm font-bold text-blue-900">
+            {value || 0} {getUnitLabel(material.unitMeasurement)}
+          </p>
+        </div>
+      )
+    },  
+    {
       key: 'supplier',
       label: 'Proveedor',
       render: (value) => (

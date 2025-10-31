@@ -10,7 +10,7 @@ import { MovementsFilters } from "./_components/movements-filters"
 import { MovementsClient } from "./_components/movements-client"
 import { PaginationClient } from "@/components/ui/pagination-client"
 import { ErrorState } from "@/components/ui/error-state"
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { MovementResponse } from "@/types"
 
@@ -28,11 +28,13 @@ interface MovementsPageData {
 }
 
 export default function MovimientosPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [movementsData, setMovementsData] = useState<MovementsPageData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
+
 
   // Obtener parámetros de búsqueda
   const page = parseInt(searchParams.get('page') || '0')

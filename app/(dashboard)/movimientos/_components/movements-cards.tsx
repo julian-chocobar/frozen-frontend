@@ -3,7 +3,7 @@
  * Transforma la tabla en cards apiladas para pantallas pequeñas
  */
 
-import { ArrowUp, ArrowDown, Calendar, Package } from "lucide-react"
+import { ArrowUp, ArrowDown, Calendar, Package, Lock, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataCards, type CardField, type CardLayout, type TableActions } from "@/components/ui/data-cards"
 import type { MovementResponse } from "@/types"
@@ -33,21 +33,35 @@ export function MovementsCards({
         key: 'type',
         label: '',
         showLabel: false,
-        render: (value, movement) => (
-          <div className="flex items-center gap-2">
-            {value === 'INGRESO' ? (
-              <ArrowUp className="w-4 h-4 text-green-600" />
-            ) : (
-              <ArrowDown className="w-4 h-4 text-red-600" />
-            )}
-            <h3 className={cn(
-              "text-base font-semibold",
-              value === 'INGRESO' ? "text-green-800" : "text-red-800"
-            )}>
-              {value === 'INGRESO' ? 'Ingreso' : 'Egreso'}
-            </h3>
-          </div>
-        )
+        render: (value) => {
+          const icon = value === 'INGRESO'
+            ? <ArrowUp className="w-4 h-4 text-green-600" />
+            : value === 'EGRESO'
+            ? <ArrowDown className="w-4 h-4 text-red-600" />
+            : value === 'RESERVA'
+            ? <Lock className="w-4 h-4 text-orange-600" />
+            : <RotateCcw className="w-4 h-4 text-purple-600" />
+          const title = value === 'INGRESO'
+            ? 'Ingreso'
+            : value === 'EGRESO'
+            ? 'Egreso'
+            : value === 'RESERVA'
+            ? 'Reserva'
+            : 'Devuelto'
+          const color = value === 'INGRESO'
+            ? 'text-green-800'
+            : value === 'EGRESO'
+            ? 'text-red-800'
+            : value === 'RESERVA'
+            ? 'text-orange-800'
+            : 'text-purple-800'
+          return (
+            <div className="flex items-center gap-2">
+              {icon}
+              <h3 className={cn("text-base font-semibold", color)}>{title}</h3>
+            </div>
+          )
+        }
       }
     ],
     content: [
@@ -115,26 +129,29 @@ export function MovementsCards({
         key: 'type',
         label: '',
         showLabel: false,
-        render: (value) => (
-          <span className={cn(
-            "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-            value === 'INGRESO' 
-              ? "bg-green-100 text-green-800" 
-              : "bg-red-100 text-red-800"
-          )}>
-            {value === 'INGRESO' ? (
-              <>
-                <ArrowUp className="w-3 h-3" />
-                Ingreso
-              </>
-            ) : (
-              <>
-                <ArrowDown className="w-3 h-3" />
-                Egreso
-              </>
-            )}
-          </span>
-        )
+        render: (value) => {
+          const badgeClass = value === 'INGRESO'
+            ? 'bg-green-100 text-green-800'
+            : value === 'EGRESO'
+            ? 'bg-red-100 text-red-800'
+            : value === 'RESERVA'
+            ? 'bg-orange-100 text-orange-800'
+            : 'bg-purple-100 text-purple-800'
+          const icon = value === 'INGRESO'
+            ? <ArrowUp className="w-3 h-3" />
+            : value === 'EGRESO'
+            ? <ArrowDown className="w-3 h-3" />
+            : value === 'RESERVA'
+            ? <Lock className="w-3 h-3" />
+            : <RotateCcw className="w-3 h-3" />
+          const title = value === 'INGRESO' ? 'Ingreso' : value === 'EGRESO' ? 'Egreso' : value === 'RESERVA' ? 'Reserva' : 'Devuelto'
+          return (
+            <span className={cn("inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium", badgeClass)}>
+              {icon}
+              {title}
+            </span>
+          )
+        }
       }
     ]
   }

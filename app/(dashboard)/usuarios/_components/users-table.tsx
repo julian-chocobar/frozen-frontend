@@ -32,7 +32,7 @@ export function UsersTable({
     },
     {
       key: 'username',
-      label: 'Usuario',
+      label: 'Username',
       render: (value) => (
         <span className="text-sm font-medium text-primary-900">{value}</span>
       )

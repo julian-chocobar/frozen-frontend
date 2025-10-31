@@ -151,6 +151,7 @@ export function getMaterialTypes() {
     { value: 'AGUA', label: 'Agua' },
     { value: 'LEVADURA', label: 'Levadura' },
     { value: 'ENVASE', label: 'Envase' },
+    { value: 'ETIQUETADO', label: 'Etiquetado' },
     { value: 'OTROS', label: 'Otros' }
   ]
 }

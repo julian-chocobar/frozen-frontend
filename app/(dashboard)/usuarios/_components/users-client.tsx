@@ -88,10 +88,29 @@ export function UsersClient({ users }: UsersClientProps) {
     setIsLoading(true)
     try {
       await updateUserRoles(selectedUser.id, data)
-      router.refresh()
+      
+      // Actualizar el estado local inmediatamente
+      setLocalUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.id === selectedUser.id 
+            ? { ...u, roles: data.roles }
+            : u
+        )
+      )
+      
+      // Actualizar también el userDetail si está disponible
+      if (userDetail) {
+        setUserDetail(prev => prev ? { ...prev, roles: data.roles } : null)
+      }
+      
       setIsEditingRoles(false)
       setSelectedUser(null)
       showSuccess('Roles actualizados exitosamente')
+      
+      // Refrescar la página después de un breve delay para sincronizar con el backend
+      setTimeout(() => {
+        router.refresh()
+      }, 500)
     } catch (error) {
       handleError(error, {
         title: 'Error al actualizar roles'

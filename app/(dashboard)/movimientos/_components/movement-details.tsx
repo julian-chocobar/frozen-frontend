@@ -3,11 +3,12 @@
  * Componente para mostrar detalles completos de un movimiento
  */
 
-import { ArrowUp, ArrowDown, Calendar, Package, X, Clock, Play, CheckCircle, MapPin } from "lucide-react"
+import { ArrowUp, ArrowDown, Calendar, Package, X, Clock, Play, CheckCircle, MapPin, User, Lock, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MovementDetailResponse } from "@/types"
 import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
 import { getStatusLabel } from "@/lib/movements-api"
+import { useAuth } from "@/contexts/auth-context"
 
 interface MovementDetailsProps {
   movement: MovementDetailResponse
@@ -24,7 +25,14 @@ export function MovementDetails({
   onComplete,
   isLoading = false
 }: MovementDetailsProps) {
+  const { user } = useAuth()
   const isIngreso = movement.type === 'INGRESO'
+  const isEgreso = movement.type === 'EGRESO'
+  const isReserva = movement.type === 'RESERVA'
+  const isDevuelto = movement.type === 'DEVUELTO'
+  
+  const isMovementTakenByCurrentUser = movement.status === 'EN_PROCESO' && movement.inProgressByUserId === user?.id
+  const isMovementTakenByOtherUser = movement.status === 'EN_PROCESO' && movement.inProgressByUserId && movement.inProgressByUserId !== user?.id
   
   return (
     <div 
@@ -41,16 +49,15 @@ export function MovementDetails({
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                {isIngreso ? (
-                  <ArrowUp className="w-6 h-6 text-green-600" />
-                ) : (
-                  <ArrowDown className="w-6 h-6 text-red-600" />
-                )}
+                {isIngreso && <ArrowUp className="w-6 h-6 text-green-600" />}
+                {isEgreso && <ArrowDown className="w-6 h-6 text-red-600" />}
+                {isReserva && <Lock className="w-6 h-6 text-orange-600" />}
+                {isDevuelto && <RotateCcw className="w-6 h-6 text-purple-600" />}
                 <h3 className={cn(
                   "text-lg font-semibold",
-                  isIngreso ? "text-green-800" : "text-red-800"
+                  isIngreso ? "text-green-800" : isEgreso ? "text-red-800" : isReserva ? "text-orange-800" : "text-purple-800"
                 )}>
-                  {isIngreso ? 'Ingreso de Stock' : 'Egreso de Stock'}
+                  {isIngreso ? 'Ingreso de Stock' : isEgreso ? 'Egreso de Stock' : isReserva ? 'Reserva de Stock' : 'Devuelto de Stock'}
                 </h3>
               </div>
               <p className="text-sm text-primary-600 font-mono">#{movement.id}</p>
@@ -75,28 +82,19 @@ export function MovementDetails({
                 <div className="mt-1">
                   <span className={cn(
                     "inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium",
-                    isIngreso 
-                      ? "bg-green-100 text-green-800" 
-                      : "bg-red-100 text-red-800"
+                    isIngreso ? "bg-green-100 text-green-800" : isEgreso ? "bg-red-100 text-red-800" : isReserva ? "bg-orange-100 text-orange-800" : "bg-purple-100 text-purple-800"
                   )}>
-                    {isIngreso ? (
-                      <>
-                        <ArrowUp className="w-4 h-4" />
-                        Ingreso
-                      </>
-                    ) : (
-                      <>
-                        <ArrowDown className="w-4 h-4" />
-                        Egreso
-                      </>
-                    )}
+                    {isIngreso && (<><ArrowUp className="w-4 h-4" /> Ingreso</>)}
+                    {isEgreso && (<><ArrowDown className="w-4 h-4" /> Egreso</>)}
+                    {isReserva && (<><Lock className="w-4 h-4" /> Reserva</>)}
+                    {isDevuelto && (<><RotateCcw className="w-4 h-4" /> Devuelto</>)}
                   </span>
                 </div>
               </div>
 
               <div>
                 <label className="text-sm text-primary-700">Estado</label>
-                <div className="mt-1">
+                <div className="mt-1 space-y-2">
                   <span className={cn(
                     "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
                     movement.status === 'PENDIENTE' && "bg-yellow-100 text-yellow-800",
@@ -105,6 +103,30 @@ export function MovementDetails({
                   )}>
                     {getStatusLabel(movement.status)}
                   </span>
+                  
+                  {/* Información adicional sobre el estado del movimiento */}
+                  {movement.status === 'EN_PROCESO' && movement.inProgressByUserId && (
+                    <div className="flex items-center gap-2 mt-2">
+                      {isMovementTakenByCurrentUser ? (
+                        <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded">
+                          <User className="w-3 h-3" />
+                          <span>Tomado por ti</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded">
+                          <Lock className="w-3 h-3" />
+                          <span>Tomado por otro usuario (ID: {movement.inProgressByUserId})</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {movement.status === 'PENDIENTE' && (
+                    <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mt-2">
+                      <Clock className="w-3 h-3" />
+                      <span>Disponible para tomar</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -226,9 +248,18 @@ export function MovementDetails({
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
             <h5 className="font-medium text-blue-800 mb-2">ℹ️ Información Adicional</h5>
             <p className="text-sm text-blue-700">
-              Este movimiento {isIngreso ? 'aumentó' : 'disminuyó'} el stock del material 
-              <strong> {movement.materialName}</strong> en <strong>{movement.stock} {getUnitLabel(movement.unitMeasurement)}</strong>.
-              {isIngreso ? ' El stock fue agregado al inventario.' : ' El stock fue retirado del inventario.'}
+              {isIngreso && (
+                <>Este movimiento aumentó el stock del material <strong>{movement.materialName}</strong> en <strong>{movement.stock} {getUnitLabel(movement.unitMeasurement)}</strong>. El stock fue agregado al inventario.</>
+              )}
+              {isEgreso && (
+                <>Este movimiento disminuyó el stock del material <strong>{movement.materialName}</strong> en <strong>{movement.stock} {getUnitLabel(movement.unitMeasurement)}</strong>. El stock fue retirado del inventario.</>
+              )}
+              {isReserva && (
+                <>Este movimiento reservó <strong>{movement.stock} {getUnitLabel(movement.unitMeasurement)}</strong> de <strong>{movement.materialName}</strong>. Disminuye el disponible y aumenta el reservado.</>
+              )}
+              {isDevuelto && (
+                <>Este movimiento devolvió <strong>{movement.stock} {getUnitLabel(movement.unitMeasurement)}</strong> de <strong>{movement.materialName}</strong> al stock disponible. Disminuye el reservado y aumenta el disponible.</>
+              )}
             </p>
           </div>
 
@@ -251,8 +282,17 @@ export function MovementDetails({
                       isLoading && "opacity-50 cursor-not-allowed"
                     )}
                   >
-                    <Play className="w-4 h-4" />
-                    {movement.status === 'EN_PROCESO' ? 'Marcar como Pendiente' : 'Marcar como En Proceso'}
+                    {movement.status === 'EN_PROCESO' ? (
+                      <>
+                        <Clock className="w-4 h-4" />
+                        Liberar Movimiento
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4" />
+                        Tomar Movimiento
+                      </>
+                    )}
                   </button>
                 )}
 

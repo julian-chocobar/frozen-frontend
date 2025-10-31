@@ -21,7 +21,7 @@ interface FilterState {
     dateTo: string
 }
 
-const tipos: (MovementType | "Todas")[] = ["Todas", "INGRESO", "EGRESO"]
+const tipos: (MovementType | "Todas")[] = ["Todas", "INGRESO", "EGRESO", "RESERVA", "DEVUELTO"]
 const estados: (MovementStatus | "Todos")[] = ["Todos", "PENDIENTE", "EN_PROCESO", "COMPLETADO"]
 
 export function MovementsFilters({ onFilterChange }: MovementsFiltersProps) {

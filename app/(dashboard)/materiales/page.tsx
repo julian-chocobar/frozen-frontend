@@ -36,6 +36,7 @@ export default function MaterialesPage() {
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
 
+
   // Obtener parámetros de búsqueda
   const page = parseInt(searchParams.get('page') || '0')
   const type = searchParams.get('type') || undefined
@@ -43,6 +44,8 @@ export default function MaterialesPage() {
   const name = searchParams.get('name') || undefined
   const supplier = searchParams.get('supplier') || undefined
   const autoOpenId = searchParams.get('id') || undefined // Para abrir modal automáticamente
+  
+  console.log('MaterialesPage autoOpenId from URL:', autoOpenId)
 
   // Escuchar cambios de navegación para forzar refresh
   useEffect(() => {

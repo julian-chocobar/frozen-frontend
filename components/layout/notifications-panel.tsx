@@ -49,10 +49,12 @@ function getNotificationColor(type: NotificationType) {
   }
 }
 
+
+
 /**
- * Obtener URL de acción según tipo de notificación
+ * Obtener URL de fallback para navegación si no hay handlers
  */
-function getNotificationUrl(notification: NotificationResponseDTO): string | null {
+function getFallbackUrl(notification: NotificationResponseDTO): string | null {
   const { type, relatedEntityId } = notification;
 
   switch (type) {
@@ -208,7 +210,8 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
               {notifications.map((notification) => {
                 const Icon = getNotificationIcon(notification.type);
                 const colorClass = getNotificationColor(notification.type);
-                const actionUrl = getNotificationUrl(notification);
+                const actionUrl = getFallbackUrl(notification);
+                
                 const NotificationContent = (
                   <div
                     className={cn(
@@ -241,6 +244,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                   </div>
                 );
 
+                // Si hay URL de acción, usar Link para navegar
                 if (actionUrl) {
                   return (
                     <Link key={notification.id} href={actionUrl} onClick={onClose}>
@@ -249,6 +253,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                   );
                 }
 
+                // Si no hay acción disponible, solo mostrar contenido
                 return <div key={notification.id}>{NotificationContent}</div>;
               })}
             </div>

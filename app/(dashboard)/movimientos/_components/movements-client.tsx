@@ -29,16 +29,27 @@ interface MovementsClientProps {
 }
 
 export function MovementsClient({ movements, autoOpenId }: MovementsClientProps) {
+  const [localMovements, setLocalMovements] = useState<MovementResponse[]>(movements)
   const [selectedMovement, setSelectedMovement] = useState<MovementDetailResponse | null>(null)
   const [isViewing, setIsViewing] = useState(false)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [isLoadingAction, setIsLoadingAction] = useState(false)
 
+  // Actualizar localMovements cuando cambien los props
+  useEffect(() => {
+    setLocalMovements(movements)
+  }, [movements])
+
   // Auto-abrir modal si se proporciona autoOpenId
   useEffect(() => {
+    console.log('MovementsClient autoOpenId effect:', { autoOpenId, movementsCount: movements.length })
     if (autoOpenId && movements.length > 0) {
+      console.log('Looking for movement with id:', autoOpenId)
+      console.log('Available movements:', movements.map(m => ({ id: m.id, type: m.type })))
       const targetMovement = movements.find(m => m.id === autoOpenId)
+      console.log('Found target movement:', targetMovement)
       if (targetMovement) {
+        console.log('Opening modal for movement:', targetMovement.id)
         handleViewDetails(targetMovement)
       }
     }
@@ -72,6 +83,18 @@ export function MovementsClient({ movements, autoOpenId }: MovementsClientProps)
       const updatedMovement = await getMovementById(id)
       setSelectedMovement(updatedMovement as unknown as MovementDetailResponse)
       
+      // Actualizar el estado local de la lista de movimientos
+      setLocalMovements(prevMovements => 
+        prevMovements.map(m => 
+          m.id === id 
+            ? { 
+                ...m, 
+                status: m.status === "EN_PROCESO" ? "PENDIENTE" : "EN_PROCESO"
+              }
+            : m
+        )
+      )
+      
       showSuccess('Estado del movimiento actualizado')
     } catch (error) {
       handleError(error, {
@@ -93,6 +116,19 @@ export function MovementsClient({ movements, autoOpenId }: MovementsClientProps)
       const updatedMovement = await getMovementById(id)
       setSelectedMovement(updatedMovement as unknown as MovementDetailResponse)
       
+      // Actualizar el estado local de la lista de movimientos
+      setLocalMovements(prevMovements => 
+        prevMovements.map(m => 
+          m.id === id 
+            ? { 
+                ...m, 
+                status: "COMPLETADO",
+                realizationDate: new Date().toISOString()
+              }
+            : m
+        )
+      )
+      
       showSuccess('Movimiento completado exitosamente')
     } catch (error) {
       handleError(error, {
@@ -106,10 +142,10 @@ export function MovementsClient({ movements, autoOpenId }: MovementsClientProps)
   return (
     <div>
       <MovementsTable 
-        movements={movements} 
+        movements={localMovements} 
         onViewDetails={handleViewDetails} />
       <MovementsCards 
-        movements={movements} 
+        movements={localMovements} 
         onViewDetails={handleViewDetails} />
 
       {/* Modal para ver detalles */}
