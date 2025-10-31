@@ -37,12 +37,11 @@ export default function MovimientosPage() {
   // Obtener parámetros de búsqueda
   const page = parseInt(searchParams.get('page') || '0')
   const type = searchParams.get('type') || undefined
-  const status = searchParams.get('status') || undefined
   const materialId = searchParams.get('materialId') || undefined
   const dateFrom = searchParams.get('dateFrom') || undefined
   const dateTo = searchParams.get('dateTo') || undefined
   const reason = searchParams.get('reason') || undefined
-  const detailId = searchParams.get('detail') || undefined
+  const autoOpenId = searchParams.get('id') || undefined // Para abrir modal automáticamente
 
   // Escuchar cambios de navegación para forzar refresh
   useEffect(() => {
@@ -64,7 +63,6 @@ export default function MovimientosPage() {
         const data = await getMovements({
           page,
           type,
-          status,
           materialId,
           dateFrom,
           dateTo,
@@ -90,7 +88,7 @@ export default function MovimientosPage() {
     }
 
     loadMovements()
-  }, [page, type, status, materialId, dateFrom, dateTo, reason, refreshKey])
+  }, [page, type, materialId, dateFrom, dateTo, reason, refreshKey])
 
   return (
     <>
@@ -127,7 +125,7 @@ export default function MovimientosPage() {
             <MovementsClient 
               movements={movementsData.movements} 
               pagination={movementsData.pagination}
-              autoOpenDetailId={detailId}
+              autoOpenId={autoOpenId}
             />
           ) : null}
         </div>

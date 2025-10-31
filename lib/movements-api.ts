@@ -9,11 +9,19 @@ import type {
   MovementsPageResponse, 
   MovementsFilters,
   MovementType,
+  MovementStatus,
+  MovementDetailResponse,
 } from '@/types'
 
 const TYPE_LABELS: Record<MovementType, string> = {
   'INGRESO': 'Ingreso',
   'EGRESO': 'Egreso'
+}
+
+const STATUS_LABELS: Record<MovementStatus, string> = {
+  'PENDIENTE': 'Pendiente',
+  'EN_PROCESO': 'En Proceso',
+  'COMPLETADO': 'Completado'
 }
 
 /**
@@ -43,7 +51,7 @@ function mapFiltersToAPI(filters: {
     apiFilters.type = filters.type as MovementType
   }
   if (filters.status) {
-    apiFilters.status = filters.status as import('@/types').MovementStatus
+    apiFilters.status = filters.status as MovementStatus
   }
   if (filters.materialId) {
     apiFilters.materialId = filters.materialId
@@ -117,9 +125,16 @@ export async function createMovement(data: MovementCreateRequest) {
   return movement
 }
 
+/**
+ * Obtiene un movimiento detallado por ID
+ */
+export async function getMovementDetailById(id: string) {
+  const movement = await api.get<MovementDetailResponse>(`/api/movements/${id}`)
+  return movement
+}
 
 /**
- * Cambia el estado de un movimiento entre PENDIENTE y EN_PROCESO
+ * Marca un movimiento como "En proceso" o lo revierte a "Pendiente" (toggle)
  */
 export async function toggleMovementInProgress(id: string) {
   const movement = await api.patch<MovementResponse>(`/api/movements/${id}/in-progress`)
@@ -127,7 +142,7 @@ export async function toggleMovementInProgress(id: string) {
 }
 
 /**
- * Completa un movimiento (cambia estado a COMPLETADO)
+ * Completa un movimiento pendiente o en proceso
  */
 export async function completeMovement(id: string) {
   const movement = await api.patch<MovementResponse>(`/api/movements/${id}/complete`)
@@ -139,5 +154,12 @@ export async function completeMovement(id: string) {
  */
 export function getTypeLabel(type: MovementType): string {
   return TYPE_LABELS[type]
+}
+
+/**
+ * Obtiene el label en español para un estado de movimiento
+ */
+export function getStatusLabel(status: MovementStatus): string {
+  return STATUS_LABELS[status]
 }
 

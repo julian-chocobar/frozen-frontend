@@ -25,7 +25,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
     type: material?.type || "MALTA" as MaterialType,
     supplier: material?.supplier || "",
     value: material?.value || "",
-    stock: material?.totalStock || "",
+    stock: material?.availableStock || "",
     unitMeasurement: material?.unitMeasurement || "KG" as UnitMeasurement,
     threshold: material?.threshold || "",
   })
@@ -76,7 +76,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
         if (formData.threshold !== material?.threshold && formData.threshold !== "" && Number(formData.threshold) > 0) updateData.threshold = Number(formData.threshold)
         
         // Solo incluir stock si allowStockEdit es true (para casos especiales)
-        if (allowStockEdit && formData.stock !== material?.totalStock && Number(formData.stock) >= 0) {
+        if (allowStockEdit && formData.stock !== material?.availableStock && Number(formData.stock) >= 0) {
           // Nota: Esto requeriría extender MaterialUpdateRequest o crear un tipo especial
           console.warn('Edición de stock no está soportada en MaterialUpdateRequest')
         }

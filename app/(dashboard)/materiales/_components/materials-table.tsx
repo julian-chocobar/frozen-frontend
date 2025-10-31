@@ -49,8 +49,8 @@ export function MaterialsTable({
       label: 'Stock Disponible',
       render: (value, material) => (
         <div>
-          <p className="text-sm font-bold text-primary-900">
-            {value} {getUnitLabel(material.unitMeasurement)}
+          <p className="text-sm font-bold text-green-900">
+            {value || 0} {getUnitLabel(material.unitMeasurement)}
           </p>
           <p className="text-xs text-primary-700">
             Mín: {material.threshold} {getUnitLabel(material.unitMeasurement)}
@@ -63,8 +63,8 @@ export function MaterialsTable({
       label: 'Stock Reservado',
       render: (value, material) => (
         <div>
-          <p className="text-sm font-medium text-orange-900">
-            {value} {getUnitLabel(material.unitMeasurement)}
+          <p className="text-sm font-bold text-orange-900">
+            {value || 0} {getUnitLabel(material.unitMeasurement)}
           </p>
         </div>
       )

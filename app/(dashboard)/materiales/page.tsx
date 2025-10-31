@@ -42,6 +42,7 @@ export default function MaterialesPage() {
   const estado = searchParams.get('estado') || undefined
   const name = searchParams.get('name') || undefined
   const supplier = searchParams.get('supplier') || undefined
+  const autoOpenId = searchParams.get('id') || undefined // Para abrir modal automáticamente
 
   // Escuchar cambios de navegación para forzar refresh
   useEffect(() => {
@@ -124,6 +125,7 @@ export default function MaterialesPage() {
             <MaterialsClient 
               materials={materialsData.materials} 
               pagination={materialsData.pagination}
+              autoOpenId={autoOpenId}
             />
           ) : null}
         </div>

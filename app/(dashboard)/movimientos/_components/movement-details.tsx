@@ -3,19 +3,26 @@
  * Componente para mostrar detalles completos de un movimiento
  */
 
-import { ArrowUp, ArrowDown, Calendar, Package, X, Clock } from "lucide-react"
+import { ArrowUp, ArrowDown, Calendar, Package, X, Clock, Play, CheckCircle, MapPin } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MovementDetailResponse } from "@/types"
 import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
+import { getStatusLabel } from "@/lib/movements-api"
 
 interface MovementDetailsProps {
   movement: MovementDetailResponse
   onClose: () => void
+  onToggleInProgress?: (id: string) => Promise<void>
+  onComplete?: (id: string) => Promise<void>
+  isLoading?: boolean
 }
 
 export function MovementDetails({ 
   movement, 
-  onClose
+  onClose,
+  onToggleInProgress,
+  onComplete,
+  isLoading = false
 }: MovementDetailsProps) {
   const isIngreso = movement.type === 'INGRESO'
   
@@ -88,6 +95,20 @@ export function MovementDetails({
               </div>
 
               <div>
+                <label className="text-sm text-primary-700">Estado</label>
+                <div className="mt-1">
+                  <span className={cn(
+                    "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                    movement.status === 'PENDIENTE' && "bg-yellow-100 text-yellow-800",
+                    movement.status === 'EN_PROCESO' && "bg-blue-100 text-blue-800", 
+                    movement.status === 'COMPLETADO' && "bg-green-100 text-green-800"
+                  )}>
+                    {getStatusLabel(movement.status)}
+                  </span>
+                </div>
+              </div>
+
+              <div>
                 <label className="text-sm text-primary-700">Cantidad</label>
                 <p className="text-sm font-medium text-primary-900">
                   {movement.stock} {getUnitLabel(movement.unitMeasurement)}
@@ -95,33 +116,19 @@ export function MovementDetails({
               </div>
 
               <div>
-                <label className="text-sm text-primary-700">Estado</label>
-                <div className="mt-1">
-                  <span className={cn(
-                    "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
-                    {
-                      'bg-yellow-100 text-yellow-800': movement.status === 'PENDIENTE',
-                      'bg-blue-100 text-blue-800': movement.status === 'EN_PROCESO', 
-                      'bg-green-100 text-green-800': movement.status === 'COMPLETADO'
-                    }
-                  )}>
-                    {movement.status === 'PENDIENTE' ? 'Pendiente' : 
-                     movement.status === 'EN_PROCESO' ? 'En Proceso' : 'Completado'}
-                  </span>
-                </div>
-              </div>
-
-              {movement.location && (
-                <div>
-                  <label className="text-sm text-primary-700">Ubicación</label>
+                <label className="text-sm text-primary-700">Ubicación</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <MapPin className="w-4 h-4 text-primary-600" />
                   <p className="text-sm font-medium text-primary-900">{movement.location}</p>
                 </div>
-              )}
-
-              <div>
-                <label className="text-sm text-primary-700">Motivo</label>
-                <p className="text-sm font-medium text-primary-900">{movement.reason || 'Sin motivo especificado'}</p>
               </div>
+
+              {movement.reason && (
+                <div>
+                  <label className="text-sm text-primary-700">Motivo</label>
+                  <p className="text-sm font-medium text-primary-900">{movement.reason}</p>
+                </div>
+              )}
             </div>
 
             {/* Información del material */}
@@ -192,42 +199,24 @@ export function MovementDetails({
                 </div>
               )}
 
-              {movement.takenAt && (
-                <div>
-                  <label className="text-sm text-primary-700">Tomado el</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Clock className="w-4 h-4 text-primary-600" />
-                    <p className="text-sm font-medium text-primary-900">
-                      {new Date(movement.takenAt).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {movement.createdByUserId && (
                 <div>
                   <label className="text-sm text-primary-700">Creado por Usuario ID</label>
-                  <p className="text-sm font-medium text-primary-900 font-mono">#{movement.createdByUserId}</p>
-                </div>
-              )}
-
-              {movement.inProgressByUserId && (
-                <div>
-                  <label className="text-sm text-primary-700">En proceso por Usuario ID</label>
-                  <p className="text-sm font-medium text-primary-900 font-mono">#{movement.inProgressByUserId}</p>
+                  <p className="text-sm font-medium text-primary-900 font-mono">{movement.createdByUserId}</p>
                 </div>
               )}
 
               {movement.completedByUserId && (
                 <div>
                   <label className="text-sm text-primary-700">Completado por Usuario ID</label>
-                  <p className="text-sm font-medium text-primary-900 font-mono">#{movement.completedByUserId}</p>
+                  <p className="text-sm font-medium text-primary-900 font-mono">{movement.completedByUserId}</p>
+                </div>
+              )}
+
+              {movement.inProgressByUserId && (
+                <div>
+                  <label className="text-sm text-primary-700">En proceso por Usuario ID</label>
+                  <p className="text-sm font-medium text-primary-900 font-mono">{movement.inProgressByUserId}</p>
                 </div>
               )}
             </div>
@@ -242,6 +231,48 @@ export function MovementDetails({
               {isIngreso ? ' El stock fue agregado al inventario.' : ' El stock fue retirado del inventario.'}
             </p>
           </div>
+
+          {/* Botones de gestión de estado */}
+          {(movement.status === 'PENDIENTE' || movement.status === 'EN_PROCESO') && (onToggleInProgress || onComplete) && (
+            <div className="pt-4 border-t border-stroke">
+              <h4 className="font-medium text-primary-900 mb-4">Gestión de Estado</h4>
+              <div className="flex flex-wrap gap-3">
+                
+                {/* Botón para marcar/desmarcar como en proceso */}
+                {onToggleInProgress && (movement.status === 'PENDIENTE' || movement.status === 'EN_PROCESO') && (
+                  <button
+                    onClick={() => onToggleInProgress(movement.id)}
+                    disabled={isLoading}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                      movement.status === 'EN_PROCESO' 
+                        ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200" 
+                        : "bg-blue-100 text-blue-800 hover:bg-blue-200",
+                      isLoading && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <Play className="w-4 h-4" />
+                    {movement.status === 'EN_PROCESO' ? 'Marcar como Pendiente' : 'Marcar como En Proceso'}
+                  </button>
+                )}
+
+                {/* Botón para completar movimiento */}
+                {onComplete && (movement.status === 'PENDIENTE' || movement.status === 'EN_PROCESO') && (
+                  <button
+                    onClick={() => onComplete(movement.id)}
+                    disabled={isLoading}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-green-100 text-green-800 hover:bg-green-200",
+                      isLoading && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Completar Movimiento
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Botones de acción */}
           <div className="flex flex-wrap gap-3 pt-6 border-t border-stroke">

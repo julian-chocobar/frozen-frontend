@@ -24,24 +24,25 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
     })
     const [errors, setErrors] = useState<Record<string, string>>({})
     
-    // Para material de envasado
+    // Estados para material de envasado
     const [packagingMaterials, setPackagingMaterials] = useState<MaterialIdName[]>([])
     const [loadingPackagingMaterials, setLoadingPackagingMaterials] = useState(false)
     const [packagingSearchTerm, setPackagingSearchTerm] = useState("")
     const [showPackagingDropdown, setShowPackagingDropdown] = useState(false)
     const [selectedPackagingMaterial, setSelectedPackagingMaterial] = useState<MaterialIdName | null>(null)
     
-    // Para material de etiquetado
+    // Estados para material de etiquetado
     const [labelingMaterials, setLabelingMaterials] = useState<MaterialIdName[]>([])
     const [loadingLabelingMaterials, setLoadingLabelingMaterials] = useState(false)
     const [labelingSearchTerm, setLabelingSearchTerm] = useState("")
     const [showLabelingDropdown, setShowLabelingDropdown] = useState(false)
     const [selectedLabelingMaterial, setSelectedLabelingMaterial] = useState<MaterialIdName | null>(null)
+    
     const unitMeasurements = getUnitMeasurements()
 
-    // Buscar materiales de tipo ENVASE cuando cambie el término de búsqueda
+    // Buscar materiales de tipo ENVASE para packaging
     useEffect(() => {
-        const searchMaterials = async () => {
+        const searchPackagingMaterials = async () => {
             if (!packagingSearchTerm.trim()) {
                 setPackagingMaterials([])
                 return
@@ -56,20 +57,21 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                 })
                 setPackagingMaterials(materialsList)
             } catch (error) {
-                console.error('Error al buscar materiales de envasado:', error)
+                console.error('Error al buscar materiales de envase:', error)
                 setPackagingMaterials([])
             } finally {
                 setLoadingPackagingMaterials(false)
             }
         }
 
-        const timeoutId = setTimeout(searchMaterials, 300)
+        // Debounce la búsqueda
+        const timeoutId = setTimeout(searchPackagingMaterials, 300)
         return () => clearTimeout(timeoutId)
     }, [packagingSearchTerm])
 
-    // Buscar materiales de tipo ETIQUETADO cuando cambie el término de búsqueda
+    // Buscar materiales de tipo ETIQUETADO para labeling
     useEffect(() => {
-        const searchMaterials = async () => {
+        const searchLabelingMaterials = async () => {
             if (!labelingSearchTerm.trim()) {
                 setLabelingMaterials([])
                 return
@@ -91,7 +93,8 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
             }
         }
 
-        const timeoutId = setTimeout(searchMaterials, 300)
+        // Debounce la búsqueda
+        const timeoutId = setTimeout(searchLabelingMaterials, 300)
         return () => clearTimeout(timeoutId)
     }, [labelingSearchTerm])
 
@@ -143,11 +146,13 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
         }
     }
 
+    // Handlers para material de envasado
     const handlePackagingMaterialSelect = (material: MaterialIdName) => {
         setFormData(prev => ({ ...prev, packagingMaterialId: material.id.toString() }))
         setPackagingSearchTerm(material.name)
         setShowPackagingDropdown(false)
         setSelectedPackagingMaterial(material)
+        // Limpiar error si existe
         if (errors.packagingMaterialId) {
             setErrors(prev => ({ ...prev, packagingMaterialId: "" }))
         }
@@ -156,17 +161,20 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
     const handlePackagingSearchChange = (value: string) => {
         setPackagingSearchTerm(value)
         setShowPackagingDropdown(true)
+        // Si el usuario está escribiendo, limpiar la selección
         if (value !== packagingSearchTerm && formData.packagingMaterialId) {
             setFormData(prev => ({ ...prev, packagingMaterialId: "" }))
             setSelectedPackagingMaterial(null)
         }
     }
 
+    // Handlers para material de etiquetado
     const handleLabelingMaterialSelect = (material: MaterialIdName) => {
         setFormData(prev => ({ ...prev, labelingMaterialId: material.id.toString() }))
         setLabelingSearchTerm(material.name)
         setShowLabelingDropdown(false)
         setSelectedLabelingMaterial(material)
+        // Limpiar error si existe
         if (errors.labelingMaterialId) {
             setErrors(prev => ({ ...prev, labelingMaterialId: "" }))
         }
@@ -175,6 +183,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
     const handleLabelingSearchChange = (value: string) => {
         setLabelingSearchTerm(value)
         setShowLabelingDropdown(true)
+        // Si el usuario está escribiendo, limpiar la selección
         if (value !== labelingSearchTerm && formData.labelingMaterialId) {
             setFormData(prev => ({ ...prev, labelingMaterialId: "" }))
             setSelectedLabelingMaterial(null)
@@ -183,7 +192,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-6">
                 {/* Nombre */}
                 <div>
                     <label className="block text-sm font-medium text-primary-900 mb-2">
@@ -207,6 +216,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                         Material de Envasado *
                     </label>
                     
+                    {/* Campo de búsqueda */}
                     <div className="relative">
                         <input
                             type="text"
@@ -225,8 +235,9 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                         )}
                     </div>
 
+                    {/* Dropdown de resultados */}
                     {showPackagingDropdown && packagingSearchTerm && (
-                        <div className="absolute z-50 w-76 mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
+                        <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
                             {packagingMaterials.length === 0 && !loadingPackagingMaterials ? (
                                 <div className="px-3 py-2 text-sm text-gray-500">
                                     No se encontraron materiales de envasado
@@ -247,6 +258,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                         </div>
                     )}
 
+                    {/* Overlay para cerrar dropdown */}
                     {showPackagingDropdown && (
                         <div 
                             className="fixed inset-0 z-40" 
@@ -256,12 +268,17 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
 
                     {errors.packagingMaterialId && <p className="text-red-500 text-sm mt-1">{errors.packagingMaterialId}</p>}
                     
+                    {/* Información del material seleccionado */}
                     {selectedPackagingMaterial && (
                         <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <h4 className="text-sm font-medium text-blue-800 mb-1">Material Seleccionado</h4>
+                            <h4 className="text-sm font-medium text-blue-800 mb-1">Material de Envasado Seleccionado</h4>
                             <div className="text-sm text-blue-700">
-                                <div><span className="font-medium">Nombre:</span> {selectedPackagingMaterial.name}</div>
-                                <div><span className="font-medium">Código:</span> {selectedPackagingMaterial.code}</div>
+                                <div>
+                                    <span className="font-medium">Nombre:</span> {selectedPackagingMaterial.name}
+                                </div>
+                                <div>
+                                    <span className="font-medium">Código:</span> {selectedPackagingMaterial.code}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -273,6 +290,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                         Material de Etiquetado *
                     </label>
                     
+                    {/* Campo de búsqueda */}
                     <div className="relative">
                         <input
                             type="text"
@@ -291,8 +309,9 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                         )}
                     </div>
 
+                    {/* Dropdown de resultados */}
                     {showLabelingDropdown && labelingSearchTerm && (
-                        <div className="absolute z-50 w-76 mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
+                        <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
                             {labelingMaterials.length === 0 && !loadingLabelingMaterials ? (
                                 <div className="px-3 py-2 text-sm text-gray-500">
                                     No se encontraron materiales de etiquetado
@@ -313,6 +332,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                         </div>
                     )}
 
+                    {/* Overlay para cerrar dropdown */}
                     {showLabelingDropdown && (
                         <div 
                             className="fixed inset-0 z-40" 
@@ -322,17 +342,23 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
 
                     {errors.labelingMaterialId && <p className="text-red-500 text-sm mt-1">{errors.labelingMaterialId}</p>}
                     
+                    {/* Información del material seleccionado */}
                     {selectedLabelingMaterial && (
                         <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <h4 className="text-sm font-medium text-green-800 mb-1">Material Seleccionado</h4>
+                            <h4 className="text-sm font-medium text-green-800 mb-1">Material de Etiquetado Seleccionado</h4>
                             <div className="text-sm text-green-700">
-                                <div><span className="font-medium">Nombre:</span> {selectedLabelingMaterial.name}</div>
-                                <div><span className="font-medium">Código:</span> {selectedLabelingMaterial.code}</div>
+                                <div>
+                                    <span className="font-medium">Nombre:</span> {selectedLabelingMaterial.name}
+                                </div>
+                                <div>
+                                    <span className="font-medium">Código:</span> {selectedLabelingMaterial.code}
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Unidad de Medida */}
                 <div>
                     <label className="block text-sm font-medium text-primary-900 mb-2">
@@ -371,6 +397,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                         placeholder="Ej: 100.50"
                     />
                     {errors.quantity && <p className="text-red-500 text-sm mt-1">{errors.quantity}</p>}
+                </div>
                 </div>
             </div>
             {/* Botones */}

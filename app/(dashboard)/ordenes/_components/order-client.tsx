@@ -5,7 +5,7 @@
  * Incluye modales para crear/editar y confirmaciones para acciones
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { OrdersCards } from "./orders-cards"
 import { OrderForm } from "./order-form"
@@ -28,14 +28,25 @@ interface OrderClientProps {
     first: boolean
     last: boolean
   }
+  autoOpenId?: string
 }
 
-export function OrderClient({ orders }: OrderClientProps) {
+export function OrderClient({ orders, autoOpenId }: OrderClientProps) {
   const router = useRouter()
   const [selectedOrder, setSelectedOrder] = useState<ProductionOrderResponse | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [isViewing, setIsViewing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+
+  // Auto-abrir modal si se proporciona autoOpenId
+  useEffect(() => {
+    if (autoOpenId && orders.length > 0) {
+      const targetOrder = orders.find(o => o.id === autoOpenId)
+      if (targetOrder) {
+        handleViewDetails(targetOrder)
+      }
+    }
+  }, [autoOpenId, orders])
 
   const handleApprove = async (order: ProductionOrderResponse) => {
     setIsLoading(true)

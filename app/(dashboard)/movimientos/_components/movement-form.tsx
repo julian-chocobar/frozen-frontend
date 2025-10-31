@@ -258,7 +258,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
         </div>
 
         {/* Ubicación */}
-        <div className="md:col-span-2">
+        <div>
           <label className="block text-sm font-medium text-primary-900 mb-2">
             Ubicación *
           </label>
@@ -269,7 +269,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
               errors.location ? "border-red-500" : "border-stroke"
             }`}
-            placeholder="Ej: Almacén A, Estante 3, Cuarto frío"
+            placeholder="Ej: Almacén Principal, Zona de Producción"
           />
           {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
         </div>

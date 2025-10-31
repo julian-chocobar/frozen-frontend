@@ -44,6 +44,7 @@ export default function OrdenesPage() {
   const page = parseInt(searchParams.get('page') || '0')
   const status = searchParams.get('status') as ProductionOrderStatus | undefined
   const productId = searchParams.get('productId') || undefined
+  const autoOpenId = searchParams.get('id') || undefined // Para abrir modal automáticamente
 
   // Escuchar cambios de navegación para forzar refresh
   useEffect(() => {
@@ -205,6 +206,7 @@ export default function OrdenesPage() {
             <OrderClient
               orders={ordersData.productionOrders}
               pagination={ordersData.pagination}
+              autoOpenId={autoOpenId}
             />
             
             {/* Contador de resultados y paginación */}

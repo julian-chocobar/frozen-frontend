@@ -92,19 +92,11 @@ export function MaterialDetails({
             <div className="space-y-4">
               <h4 className="font-medium text-primary-900">Información de Stock</h4>
               
-              {/* Stock Total */}
-              <div>
-                <label className="text-sm text-primary-700">Stock Total</label>
-                <p className="text-lg font-bold text-primary-900">
-                  {material.totalStock} {getUnitLabel(material.unitMeasurement)}
-                </p>
-              </div>
-
               {/* Stock Disponible */}
               <div>
                 <label className="text-sm text-primary-700">Stock Disponible</label>
                 <p className="text-lg font-bold text-green-600">
-                  {material.availableStock ?? material.totalStock ?? 0} {getUnitLabel(material.unitMeasurement)}
+                  {material.availableStock ?? 0} {getUnitLabel(material.unitMeasurement)}
                 </p>
               </div>
 
@@ -157,7 +149,7 @@ export function MaterialDetails({
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h5 className="font-medium text-red-800 mb-2">⚠️ Alerta de Stock</h5>
               <p className="text-sm text-red-700">
-                El stock disponible ({(material.availableStock ?? material.totalStock ?? 0)} {getUnitLabel(material.unitMeasurement)}) está por debajo del umbral mínimo 
+                El stock disponible ({material.availableStock ?? 0} {getUnitLabel(material.unitMeasurement)}) está por debajo del umbral mínimo 
                 ({material.threshold} {getUnitLabel(material.unitMeasurement)}). Se recomienda realizar un pedido.
               </p>
             </div>

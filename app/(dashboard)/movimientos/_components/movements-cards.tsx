@@ -3,24 +3,21 @@
  * Transforma la tabla en cards apiladas para pantallas pequeñas
  */
 
-import { ArrowUp, ArrowDown, Calendar, Package, Play, CheckCircle, Pause } from "lucide-react"
+import { ArrowUp, ArrowDown, Calendar, Package } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataCards, type CardField, type CardLayout, type TableActions } from "@/components/ui/data-cards"
 import type { MovementResponse } from "@/types"
 import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
+import { getStatusLabel } from "@/lib/movements-api"
 
 interface MovementsCardsProps {
   movements: MovementResponse[]
   onViewDetails?: (movement: MovementResponse) => void
-  onToggleInProgress?: (movement: MovementResponse) => void
-  onCompleteMovement?: (movement: MovementResponse) => void
 }
 
 export function MovementsCards({ 
   movements, 
-  onViewDetails,
-  onToggleInProgress,
-  onCompleteMovement
+  onViewDetails 
 }: MovementsCardsProps) {
   const layout: CardLayout<MovementResponse> = {
     header: [
@@ -76,8 +73,8 @@ export function MovementsCards({
         )
       },
       {
-        key: 'realizationDate',
-        label: 'Fecha',
+        key: 'creationDate',
+        label: 'Fecha Creación',
         render: (value) => (
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-primary-600" />
@@ -97,14 +94,11 @@ export function MovementsCards({
         render: (value) => (
           <span className={cn(
             "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
-            {
-              'bg-yellow-100 text-yellow-800': value === 'PENDIENTE',
-              'bg-blue-100 text-blue-800': value === 'EN_PROCESO', 
-              'bg-green-100 text-green-800': value === 'COMPLETADO'
-            }
+            value === 'PENDIENTE' && "bg-yellow-100 text-yellow-800",
+            value === 'EN_PROCESO' && "bg-blue-100 text-blue-800", 
+            value === 'COMPLETADO' && "bg-green-100 text-green-800"
           )}>
-            {value === 'PENDIENTE' ? 'Pendiente' : 
-             value === 'EN_PROCESO' ? 'En Proceso' : 'Completado'}
+            {getStatusLabel(value)}
           </span>
         )
       },
@@ -112,7 +106,7 @@ export function MovementsCards({
         key: 'reason',
         label: 'Motivo',
         render: (value) => (
-          <span className="text-sm text-primary-800 line-clamp-2">{value || 'Sin motivo'}</span>
+          <span className="text-sm text-primary-800 line-clamp-2">{value}</span>
         )
       }
     ],
@@ -145,31 +139,8 @@ export function MovementsCards({
     ]
   }
 
-  const getCustomActions = (movement: MovementResponse) => {
-    const actions = []
-    
-    if (movement.status === 'PENDIENTE' || movement.status === 'EN_PROCESO') {
-      actions.push({
-        label: movement.status === 'PENDIENTE' ? 'Marcar En Proceso' : 'Marcar Pendiente',
-        onClick: () => onToggleInProgress?.(movement),
-        icon: movement.status === 'PENDIENTE' ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />
-      })
-    }
-    
-    if (movement.status === 'PENDIENTE' || movement.status === 'EN_PROCESO') {
-      actions.push({
-        label: 'Completar',
-        onClick: () => onCompleteMovement?.(movement),
-        icon: <CheckCircle className="w-4 h-4 text-green-600" />
-      })
-    }
-    
-    return actions
-  }
-
   const actions: TableActions<MovementResponse> = {
     onView: onViewDetails,
-    customActions: getCustomActions
   }
 
   return (

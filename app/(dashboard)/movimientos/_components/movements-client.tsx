@@ -25,24 +25,24 @@ interface MovementsClientProps {
     first: boolean
     last: boolean
   }
-  autoOpenDetailId?: string
+  autoOpenId?: string
 }
 
-export function MovementsClient({ movements, autoOpenDetailId }: MovementsClientProps) {
+export function MovementsClient({ movements, autoOpenId }: MovementsClientProps) {
   const [selectedMovement, setSelectedMovement] = useState<MovementDetailResponse | null>(null)
   const [isViewing, setIsViewing] = useState(false)
   const [loadingDetails, setLoadingDetails] = useState(false)
-  const [processingAction, setProcessingAction] = useState<string | null>(null)
+  const [isLoadingAction, setIsLoadingAction] = useState(false)
 
-  // Auto-abrir modal si se proporciona un ID
+  // Auto-abrir modal si se proporciona autoOpenId
   useEffect(() => {
-    if (autoOpenDetailId && !isViewing) {
-      const movement = movements.find(m => m.id === autoOpenDetailId)
-      if (movement) {
-        handleViewDetails(movement)
+    if (autoOpenId && movements.length > 0) {
+      const targetMovement = movements.find(m => m.id === autoOpenId)
+      if (targetMovement) {
+        handleViewDetails(targetMovement)
       }
     }
-  }, [autoOpenDetailId, movements, isViewing])
+  }, [autoOpenId, movements])
 
   const handleViewDetails = async (movement: MovementResponse) => {
     setLoadingDetails(true)
@@ -61,43 +61,45 @@ export function MovementsClient({ movements, autoOpenDetailId }: MovementsClient
     }
   }
 
-  const handleToggleInProgress = async (movement: MovementResponse) => {
-    if (processingAction) return
-    
-    setProcessingAction(movement.id)
+  const handleToggleInProgress = async (id: string) => {
+    if (!selectedMovement) return
+
+    setIsLoadingAction(true)
     try {
-      await toggleMovementInProgress(movement.id)
-      showSuccess(
-        movement.status === 'PENDIENTE' 
-          ? 'Movimiento marcado como en proceso'
-          : 'Movimiento marcado como pendiente'
-      )
-      // Recargar página para actualizar los datos
-      window.location.reload()
+      await toggleMovementInProgress(id)
+      
+      // Refresh movement details
+      const updatedMovement = await getMovementById(id)
+      setSelectedMovement(updatedMovement as unknown as MovementDetailResponse)
+      
+      showSuccess('Estado del movimiento actualizado')
     } catch (error) {
       handleError(error, {
-        title: 'Error al cambiar estado del movimiento'
+        title: 'Error al actualizar estado del movimiento'
       })
     } finally {
-      setProcessingAction(null)
+      setIsLoadingAction(false)
     }
   }
 
-  const handleCompleteMovement = async (movement: MovementResponse) => {
-    if (processingAction) return
-    
-    setProcessingAction(movement.id)
+  const handleComplete = async (id: string) => {
+    if (!selectedMovement) return
+
+    setIsLoadingAction(true)
     try {
-      await completeMovement(movement.id)
+      await completeMovement(id)
+      
+      // Refresh movement details
+      const updatedMovement = await getMovementById(id)
+      setSelectedMovement(updatedMovement as unknown as MovementDetailResponse)
+      
       showSuccess('Movimiento completado exitosamente')
-      // Recargar página para actualizar los datos
-      window.location.reload()
     } catch (error) {
       handleError(error, {
         title: 'Error al completar movimiento'
       })
     } finally {
-      setProcessingAction(null)
+      setIsLoadingAction(false)
     }
   }
 
@@ -105,14 +107,10 @@ export function MovementsClient({ movements, autoOpenDetailId }: MovementsClient
     <div>
       <MovementsTable 
         movements={movements} 
-        onViewDetails={handleViewDetails}
-        onToggleInProgress={handleToggleInProgress}
-        onCompleteMovement={handleCompleteMovement} />
+        onViewDetails={handleViewDetails} />
       <MovementsCards 
         movements={movements} 
-        onViewDetails={handleViewDetails}
-        onToggleInProgress={handleToggleInProgress}
-        onCompleteMovement={handleCompleteMovement} />
+        onViewDetails={handleViewDetails} />
 
       {/* Modal para ver detalles */}
       {isViewing && (
@@ -138,6 +136,9 @@ export function MovementsClient({ movements, autoOpenDetailId }: MovementsClient
                     setIsViewing(false)
                     setSelectedMovement(null)
                   }}
+                  onToggleInProgress={handleToggleInProgress}
+                  onComplete={handleComplete}
+                  isLoading={isLoadingAction}
                 />
               ) : (
                 <div className="text-center py-8">

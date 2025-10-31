@@ -24,6 +24,8 @@ export interface Material {
   supplier: string
   value: number
   totalStock: number
+  reservedStock: number
+  availableStock: number
   unitMeasurement: UnitMeasurement
   threshold: number
   isBelowThreshold: boolean
@@ -97,31 +99,40 @@ export interface MaterialsFilters {
 // MOVIMIENTOS
 // ============================================
 export type MovementType = "INGRESO" | "EGRESO"
-export type MovementStatus = "PENDIENTE" | "COMPLETO" | "EN_PROCESO"
+export type MovementStatus = "PENDIENTE" | "EN_PROCESO" | "COMPLETADO"
 
 export interface MovementResponse {
   id: string
   type: MovementType
+  status: MovementStatus
   materialType: MaterialType
   stock: number
   materialName: string
-  realizationDate: string
+  creationDate: string
+  realizationDate?: string
   unitMeasurement: UnitMeasurement
-  status: MovementStatus
-  
+  reason?: string
+  location?: string
 }
 
 export interface MovementDetailResponse {
   id: string
   type: MovementType
-  realizationDate: string // ISO date
+  status: MovementStatus
+  creationDate: string
+  realizationDate?: string
+  createdByUserId?: string
+  completedByUserId?: string
+  inProgressByUserId?: string
+  takenAt?: string
   stock: number
   unitMeasurement: UnitMeasurement
   materialType: MaterialType
   materialCode: string
   materialName: string
   materialId: string
-  reason: string
+  reason?: string
+  location: string
 }
 
 export interface MovementCreateRequest {
@@ -129,12 +140,14 @@ export interface MovementCreateRequest {
   materialId: string
   stock: number
   reason?: string
+  location: string
 }
 
 export interface MovementsFilters {
   page?: number
   size?: number
   type?: MovementType
+  status?: MovementStatus
   materialId?: string
   dateFrom?: string
   dateTo?: string
@@ -158,7 +171,8 @@ export interface MovementsPageResponse {
 export interface PackagingResponse {
   id: string
   name: string
-  materialName: string 
+  packagingMaterialName: string 
+  labelingMaterialName: string
   unitMeasurement: UnitMeasurement
   quantity: number
   isActive: boolean 
@@ -174,7 +188,8 @@ export interface PackagingCreateRequest {
 
 export interface PackagingUpdateRequest {
   name?: string
-  materialID?: number
+  packagingMaterialId?: string
+  labelingMaterialId?: string
   unitMeasurement?: UnitMeasurement
   quantity?: number
 }

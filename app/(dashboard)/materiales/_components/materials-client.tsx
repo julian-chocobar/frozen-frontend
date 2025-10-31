@@ -28,9 +28,10 @@ interface MaterialsClientProps {
     first: boolean
     last: boolean
   }
+  autoOpenId?: string
 }
 
-export function MaterialsClient({ materials }: MaterialsClientProps) {
+export function MaterialsClient({ materials, autoOpenId }: MaterialsClientProps) {
   const router = useRouter()
   const [localMaterials, setLocalMaterials] = useState<Material[]>(materials)
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null)
@@ -42,6 +43,16 @@ export function MaterialsClient({ materials }: MaterialsClientProps) {
   useEffect(() => {
     setLocalMaterials(materials)
   }, [materials])
+
+  // Auto-abrir modal si se proporciona autoOpenId
+  useEffect(() => {
+    if (autoOpenId && materials.length > 0) {
+      const targetMaterial = materials.find(m => m.id === autoOpenId)
+      if (targetMaterial) {
+        handleViewDetails(targetMaterial)
+      }
+    }
+  }, [autoOpenId, materials])
 
   const handleEdit = async (id: string, data: MaterialUpdateRequest) => {
     setIsLoading(true)
