@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bell, RefreshCw, TestTube } from 'lucide-react';
 import { useNotifications } from '@/hooks/use-notifications';
 import { cn } from '@/lib/utils';
+import { notificationsApi } from '@/lib/notifications-api';
+import type { ConnectionsInfo } from '@/types';
 
 /**
  * Componente de debug para notificaciones
@@ -11,6 +13,9 @@ import { cn } from '@/lib/utils';
  */
 export function NotificationsDebug() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [connectionsInfo, setConnectionsInfo] = useState<ConnectionsInfo | null>(null);
+  const [connectionsLoading, setConnectionsLoading] = useState(false);
+  const [connectionsError, setConnectionsError] = useState<string | null>(null);
   const {
     notifications,
     stats,
@@ -19,6 +24,36 @@ export function NotificationsDebug() {
     error,
     refresh,
   } = useNotifications();
+
+  const loadConnectionsInfo = async () => {
+    try {
+      setConnectionsLoading(true);
+      setConnectionsError(null);
+      const info = await notificationsApi.getConnectionsInfo();
+      setConnectionsInfo(info);
+    } catch (err) {
+      console.error('Error obteniendo conexiones SSE:', err);
+      setConnectionsError('No se pudo obtener conexiones');
+    } finally {
+      setConnectionsLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      refresh(),
+      loadConnectionsInfo(),
+    ]);
+  };
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    void loadConnectionsInfo();
+    const id = setInterval(() => {
+      void loadConnectionsInfo();
+    }, 10000);
+    return () => clearInterval(id);
+  }, [isExpanded]);
 
   // Solo mostrar en desarrollo
   if (process.env.NODE_ENV !== 'development') {
@@ -64,6 +99,21 @@ export function NotificationsDebug() {
             <div><strong>En memoria:</strong> {notifications.length}</div>
           </div>
 
+          {/* Conexiones SSE (backend) */}
+          <div className="mb-3 text-xs">
+            <div className="font-medium">Conexiones SSE</div>
+            {connectionsError && (
+              <div className="mt-1 p-1.5 rounded bg-red-50 text-red-700">{connectionsError}</div>
+            )}
+            {connectionsInfo && (
+              <div className="mt-1 grid grid-cols-1 gap-1">
+                <div><strong>Del usuario:</strong> {connectionsInfo.activeConnections}</div>
+                <div><strong>Usuarios activos:</strong> {connectionsInfo.activeConnections}</div>
+                <div><strong>Total sistema:</strong> {connectionsInfo.totalSystemConnections}</div>
+              </div>
+            )}
+          </div>
+
           {/* Error */}
           {error && (
             <div className="mb-3 p-2 bg-red-50 text-red-700 text-xs rounded">
@@ -98,11 +148,14 @@ export function NotificationsDebug() {
           {/* Acciones */}
           <div className="flex gap-2">
             <button
-              onClick={refresh}
-              disabled={isLoading}
+              onClick={handleRefresh}
+              disabled={isLoading || connectionsLoading}
               className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
             >
-              Refresh
+              <span className="inline-flex items-center gap-1">
+                <RefreshCw className={cn('w-3 h-3', (isLoading || connectionsLoading) && 'animate-spin')} />
+                Refresh
+              </span>
             </button>
           </div>
         </div>
