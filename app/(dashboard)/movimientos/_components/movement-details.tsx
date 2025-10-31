@@ -95,8 +95,32 @@ export function MovementDetails({
               </div>
 
               <div>
+                <label className="text-sm text-primary-700">Estado</label>
+                <div className="mt-1">
+                  <span className={cn(
+                    "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                    {
+                      'bg-yellow-100 text-yellow-800': movement.status === 'PENDIENTE',
+                      'bg-blue-100 text-blue-800': movement.status === 'EN_PROCESO', 
+                      'bg-green-100 text-green-800': movement.status === 'COMPLETADO'
+                    }
+                  )}>
+                    {movement.status === 'PENDIENTE' ? 'Pendiente' : 
+                     movement.status === 'EN_PROCESO' ? 'En Proceso' : 'Completado'}
+                  </span>
+                </div>
+              </div>
+
+              {movement.location && (
+                <div>
+                  <label className="text-sm text-primary-700">Ubicación</label>
+                  <p className="text-sm font-medium text-primary-900">{movement.location}</p>
+                </div>
+              )}
+
+              <div>
                 <label className="text-sm text-primary-700">Motivo</label>
-                <p className="text-sm font-medium text-primary-900">{movement.reason}</p>
+                <p className="text-sm font-medium text-primary-900">{movement.reason || 'Sin motivo especificado'}</p>
               </div>
             </div>
 
@@ -129,17 +153,17 @@ export function MovementDetails({
             </div>
           </div>
 
-          {/* Información de fechas */}
+          {/* Información de fechas y usuarios */}
           <div className="pt-4 border-t border-stroke">
-            <h4 className="font-medium text-primary-900 mb-4">Información de Fechas</h4>
+            <h4 className="font-medium text-primary-900 mb-4">Información de Fechas y Usuarios</h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-primary-700">Fecha de Realización</label>
+                <label className="text-sm text-primary-700">Fecha de Creación</label>
                 <div className="flex items-center gap-2 mt-1">
                   <Calendar className="w-4 h-4 text-primary-600" />
                   <p className="text-sm font-medium text-primary-900">
-                    {new Date(movement.realizationDate).toLocaleDateString('es-ES', {
+                    {new Date(movement.creationDate).toLocaleDateString('es-ES', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
@@ -150,19 +174,62 @@ export function MovementDetails({
                 </div>
               </div>
               
-              <div>
-                <label className="text-sm text-primary-700">Hora de Registro</label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Clock className="w-4 h-4 text-primary-600" />
-                  <p className="text-sm font-medium text-primary-900">
-                    {new Date(movement.realizationDate).toLocaleTimeString('es-ES', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit'
-                    })}
-                  </p>
+              {movement.realizationDate && (
+                <div>
+                  <label className="text-sm text-primary-700">Fecha de Realización</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Clock className="w-4 h-4 text-primary-600" />
+                    <p className="text-sm font-medium text-primary-900">
+                      {new Date(movement.realizationDate).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {movement.takenAt && (
+                <div>
+                  <label className="text-sm text-primary-700">Tomado el</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Clock className="w-4 h-4 text-primary-600" />
+                    <p className="text-sm font-medium text-primary-900">
+                      {new Date(movement.takenAt).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {movement.createdByUserId && (
+                <div>
+                  <label className="text-sm text-primary-700">Creado por Usuario ID</label>
+                  <p className="text-sm font-medium text-primary-900 font-mono">#{movement.createdByUserId}</p>
+                </div>
+              )}
+
+              {movement.inProgressByUserId && (
+                <div>
+                  <label className="text-sm text-primary-700">En proceso por Usuario ID</label>
+                  <p className="text-sm font-medium text-primary-900 font-mono">#{movement.inProgressByUserId}</p>
+                </div>
+              )}
+
+              {movement.completedByUserId && (
+                <div>
+                  <label className="text-sm text-primary-700">Completado por Usuario ID</label>
+                  <p className="text-sm font-medium text-primary-900 font-mono">#{movement.completedByUserId}</p>
+                </div>
+              )}
             </div>
           </div>
 

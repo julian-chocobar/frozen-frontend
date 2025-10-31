@@ -3,7 +3,7 @@
  * Muestra todos los movimientos en formato tabla para desktop
  */
 
-import { ArrowUp, ArrowDown, Calendar, Package } from "lucide-react"
+import { ArrowUp, ArrowDown, Calendar, Package, Play, CheckCircle, Pause } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
 import type { MovementResponse } from "@/types"
@@ -12,11 +12,15 @@ import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
 interface MovementsTableProps {
   movements: MovementResponse[]
   onViewDetails?: (movement: MovementResponse) => void
+  onToggleInProgress?: (movement: MovementResponse) => void
+  onCompleteMovement?: (movement: MovementResponse) => void
 }
 
 export function MovementsTable({ 
   movements, 
-  onViewDetails 
+  onViewDetails,
+  onToggleInProgress,
+  onCompleteMovement
 }: MovementsTableProps) {
   const columns: ColumnDef<MovementResponse>[] = [
     {
@@ -62,23 +66,23 @@ export function MovementsTable({
       )
     },
     {
-      key: 'stock',
-      label: 'Cantidad',
-      render: (value, movement) => (
-        <div>
-          <p className="text-sm font-bold text-primary-900">
-            {value} {getUnitLabel(movement.unitMeasurement)}
-          </p>
-        </div>
-      )
-    },
-    {
       key: 'materialName',
       label: 'Material',
       render: (value) => (
         <span className="text-sm text-primary-800 max-w-xs truncate" title={value}>
           {value}
         </span>
+      )
+    },
+    {
+      key: 'stock',
+      label: 'Stock y Unidad',
+      render: (value, movement) => (
+        <div>
+          <p className="text-sm font-bold text-primary-900">
+            {value} {getUnitLabel(movement.unitMeasurement)}
+          </p>
+        </div>
       )
     },
     {
@@ -90,11 +94,51 @@ export function MovementsTable({
           <span className="text-sm text-primary-600">{getTypeLabel(value)}</span>
         </div>
       )
+    },
+    {
+      key: 'status',
+      label: 'Estado',
+      render: (value) => (
+        <span className={cn(
+          "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+          {
+            'bg-yellow-100 text-yellow-800': value === 'PENDIENTE',
+            'bg-blue-100 text-blue-800': value === 'EN_PROCESO', 
+            'bg-green-100 text-green-800': value === 'COMPLETADO'
+          }
+        )}>
+          {value === 'PENDIENTE' ? 'Pendiente' : 
+           value === 'EN_PROCESO' ? 'En Proceso' : 'Completado'}
+        </span>
+      )
     }
   ]
 
+  const getCustomActions = (movement: MovementResponse) => {
+    const actions = []
+    
+    if (movement.status === 'PENDIENTE' || movement.status === 'EN_PROCESO') {
+      actions.push({
+        label: movement.status === 'PENDIENTE' ? 'Marcar En Proceso' : 'Marcar Pendiente',
+        onClick: () => onToggleInProgress?.(movement),
+        icon: movement.status === 'PENDIENTE' ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />
+      })
+    }
+    
+    if (movement.status === 'PENDIENTE' || movement.status === 'EN_PROCESO') {
+      actions.push({
+        label: 'Completar',
+        onClick: () => onCompleteMovement?.(movement),
+        icon: <CheckCircle className="w-4 h-4 text-green-600" />
+      })
+    }
+    
+    return actions
+  }
+
   const actions: TableActions<MovementResponse> = {
     onView: onViewDetails,
+    customActions: getCustomActions
   }
 
   return (

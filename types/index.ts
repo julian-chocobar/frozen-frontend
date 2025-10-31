@@ -8,7 +8,7 @@ import { StringifyOptions } from "querystring"
 // ============================================
 // MATERIAS PRIMAS
 // ============================================
-export type MaterialType = "MALTA" | "LUPULO" | "AGUA" | "LEVADURA" | "ENVASE" | "OTROS"
+export type MaterialType = "MALTA" | "LUPULO" | "AGUA" | "LEVADURA" | "ENVASE" | "ETIQUETADO" | "OTROS"
 export type UnitMeasurement = "KG" | "LT" | "UNIDAD"
 
 export type MaterialStatus = "Activo" | "Inactivo"
@@ -97,6 +97,7 @@ export interface MaterialsFilters {
 // MOVIMIENTOS
 // ============================================
 export type MovementType = "INGRESO" | "EGRESO"
+export type MovementStatus = "PENDIENTE" | "COMPLETO" | "EN_PROCESO"
 
 export interface MovementResponse {
   id: string
@@ -106,6 +107,8 @@ export interface MovementResponse {
   materialName: string
   realizationDate: string
   unitMeasurement: UnitMeasurement
+  status: MovementStatus
+  
 }
 
 export interface MovementDetailResponse {
@@ -163,7 +166,8 @@ export interface PackagingResponse {
 
 export interface PackagingCreateRequest {
   name: string
-  materialId?: string
+  packagingMaterialId: string
+  labelingMaterialId: string
   unitMeasurement: UnitMeasurement
   quantity: number  
 }

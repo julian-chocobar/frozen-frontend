@@ -17,46 +17,83 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
     const isEditing = !!packaging
     const [formData, setFormData] = useState({
         name: packaging?.name || "",
-        materialId: "",
+        packagingMaterialId: "",
+        labelingMaterialId: "",
         unitMeasurement: packaging?.unitMeasurement || "UNIDAD" as UnitMeasurement,
         quantity: packaging?.quantity || "",
     })
     const [errors, setErrors] = useState<Record<string, string>>({})
-    const [materials, setMaterials] = useState<MaterialIdName[]>([])
-    const [loadingMaterials, setLoadingMaterials] = useState(false)
-    const [searchTerm, setSearchTerm] = useState("")
-    const [showDropdown, setShowDropdown] = useState(false)
-    const [selectedMaterial, setSelectedMaterial] = useState<MaterialIdName | null>(null)
+    
+    // Para material de envasado
+    const [packagingMaterials, setPackagingMaterials] = useState<MaterialIdName[]>([])
+    const [loadingPackagingMaterials, setLoadingPackagingMaterials] = useState(false)
+    const [packagingSearchTerm, setPackagingSearchTerm] = useState("")
+    const [showPackagingDropdown, setShowPackagingDropdown] = useState(false)
+    const [selectedPackagingMaterial, setSelectedPackagingMaterial] = useState<MaterialIdName | null>(null)
+    
+    // Para material de etiquetado
+    const [labelingMaterials, setLabelingMaterials] = useState<MaterialIdName[]>([])
+    const [loadingLabelingMaterials, setLoadingLabelingMaterials] = useState(false)
+    const [labelingSearchTerm, setLabelingSearchTerm] = useState("")
+    const [showLabelingDropdown, setShowLabelingDropdown] = useState(false)
+    const [selectedLabelingMaterial, setSelectedLabelingMaterial] = useState<MaterialIdName | null>(null)
     const unitMeasurements = getUnitMeasurements()
 
-    // Buscar materiales de tipo ENVASADO cuando cambie el término de búsqueda
+    // Buscar materiales de tipo ENVASE cuando cambie el término de búsqueda
     useEffect(() => {
         const searchMaterials = async () => {
-            if (!searchTerm.trim()) {
-                setMaterials([])
+            if (!packagingSearchTerm.trim()) {
+                setPackagingMaterials([])
                 return
             }
 
-            setLoadingMaterials(true)
+            setLoadingPackagingMaterials(true)
             try {
                 const materialsList = await getMaterialsIdNameList({
-                    name: searchTerm,
+                    name: packagingSearchTerm,
                     active: true,
-                    phase: "ENVASADO"
+                    type: "ENVASE"
                 })
-                setMaterials(materialsList)
+                setPackagingMaterials(materialsList)
             } catch (error) {
-                console.error('Error al buscar materiales:', error)
-                setMaterials([])
+                console.error('Error al buscar materiales de envasado:', error)
+                setPackagingMaterials([])
             } finally {
-                setLoadingMaterials(false)
+                setLoadingPackagingMaterials(false)
             }
         }
 
-        // Debounce la búsqueda
         const timeoutId = setTimeout(searchMaterials, 300)
         return () => clearTimeout(timeoutId)
-    }, [searchTerm])
+    }, [packagingSearchTerm])
+
+    // Buscar materiales de tipo ETIQUETADO cuando cambie el término de búsqueda
+    useEffect(() => {
+        const searchMaterials = async () => {
+            if (!labelingSearchTerm.trim()) {
+                setLabelingMaterials([])
+                return
+            }
+
+            setLoadingLabelingMaterials(true)
+            try {
+                const materialsList = await getMaterialsIdNameList({
+                    name: labelingSearchTerm,
+                    active: true,
+                    type: "ETIQUETADO"
+                })
+                setLabelingMaterials(materialsList)
+            } catch (error) {
+                console.error('Error al buscar materiales de etiquetado:', error)
+                setLabelingMaterials([])
+            } finally {
+                setLoadingLabelingMaterials(false)
+            }
+        }
+
+        const timeoutId = setTimeout(searchMaterials, 300)
+        return () => clearTimeout(timeoutId)
+    }, [labelingSearchTerm])
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {}
@@ -64,8 +101,11 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
         if (!formData.name.trim()) {
             newErrors.name = "El nombre es requerido"
         }
-        if (!formData.materialId) {
-            newErrors.materialId = "El material es requerido"
+        if (!formData.packagingMaterialId) {
+            newErrors.packagingMaterialId = "El material de envasado es requerido"
+        }
+        if (!formData.labelingMaterialId) {
+            newErrors.labelingMaterialId = "El material de etiquetado es requerido"
         }
 
         if (!formData.unitMeasurement) {
@@ -86,7 +126,8 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
         if (validateForm()) {
             const createData: PackagingCreateRequest = {
                 name: formData.name,
-                materialId: formData.materialId,
+                packagingMaterialId: formData.packagingMaterialId,
+                labelingMaterialId: formData.labelingMaterialId,
                 unitMeasurement: formData.unitMeasurement,
                 quantity: Number(formData.quantity),
             }
@@ -102,24 +143,41 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
         }
     }
 
-    const handleMaterialSelect = (material: MaterialIdName) => {
-        setFormData(prev => ({ ...prev, materialId: material.id.toString() }))
-        setSearchTerm(material.name)
-        setShowDropdown(false)
-        setSelectedMaterial(material)
-        // Limpiar error si existe
-        if (errors.materialId) {
-            setErrors(prev => ({ ...prev, materialId: "" }))
+    const handlePackagingMaterialSelect = (material: MaterialIdName) => {
+        setFormData(prev => ({ ...prev, packagingMaterialId: material.id.toString() }))
+        setPackagingSearchTerm(material.name)
+        setShowPackagingDropdown(false)
+        setSelectedPackagingMaterial(material)
+        if (errors.packagingMaterialId) {
+            setErrors(prev => ({ ...prev, packagingMaterialId: "" }))
         }
     }
 
-    const handleSearchChange = (value: string) => {
-        setSearchTerm(value)
-        setShowDropdown(true)
-        // Si el usuario está escribiendo, limpiar la selección
-        if (value !== searchTerm && formData.materialId) {
-            setFormData(prev => ({ ...prev, materialId: "" }))
-            setSelectedMaterial(null)
+    const handlePackagingSearchChange = (value: string) => {
+        setPackagingSearchTerm(value)
+        setShowPackagingDropdown(true)
+        if (value !== packagingSearchTerm && formData.packagingMaterialId) {
+            setFormData(prev => ({ ...prev, packagingMaterialId: "" }))
+            setSelectedPackagingMaterial(null)
+        }
+    }
+
+    const handleLabelingMaterialSelect = (material: MaterialIdName) => {
+        setFormData(prev => ({ ...prev, labelingMaterialId: material.id.toString() }))
+        setLabelingSearchTerm(material.name)
+        setShowLabelingDropdown(false)
+        setSelectedLabelingMaterial(material)
+        if (errors.labelingMaterialId) {
+            setErrors(prev => ({ ...prev, labelingMaterialId: "" }))
+        }
+    }
+
+    const handleLabelingSearchChange = (value: string) => {
+        setLabelingSearchTerm(value)
+        setShowLabelingDropdown(true)
+        if (value !== labelingSearchTerm && formData.labelingMaterialId) {
+            setFormData(prev => ({ ...prev, labelingMaterialId: "" }))
+            setSelectedLabelingMaterial(null)
         }
     }
 
@@ -143,44 +201,42 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                     {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                 </div>
 
-                {/* Material */}
+                {/* Material de Envasado */}
                 <div>
                     <label className="block text-sm font-medium text-primary-900 mb-2">
                         Material de Envasado *
                     </label>
                     
-                    {/* Campo de búsqueda */}
                     <div className="relative">
                         <input
                             type="text"
-                            value={searchTerm}
-                            onChange={(e) => handleSearchChange(e.target.value)}
-                            onFocus={() => setShowDropdown(true)}
+                            value={packagingSearchTerm}
+                            onChange={(e) => handlePackagingSearchChange(e.target.value)}
+                            onFocus={() => setShowPackagingDropdown(true)}
                             placeholder="Buscar material de envasado..."
                             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                                errors.materialId ? "border-red-500" : "border-stroke"
+                                errors.packagingMaterialId ? "border-red-500" : "border-stroke"
                             }`}
                         />
-                        {loadingMaterials && (
+                        {loadingPackagingMaterials && (
                             <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                 <div className="w-4 h-4 border-2 border-primary-300 border-t-primary-600 rounded-full animate-spin"></div>
                             </div>
                         )}
                     </div>
 
-                    {/* Dropdown de resultados */}
-                    {showDropdown && searchTerm && (
+                    {showPackagingDropdown && packagingSearchTerm && (
                         <div className="absolute z-50 w-76 mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
-                            {materials.length === 0 && !loadingMaterials ? (
+                            {packagingMaterials.length === 0 && !loadingPackagingMaterials ? (
                                 <div className="px-3 py-2 text-sm text-gray-500">
                                     No se encontraron materiales de envasado
                                 </div>
                             ) : (
-                                materials.map((material) => (
+                                packagingMaterials.map((material) => (
                                     <button
                                         key={material.id}
                                         type="button"
-                                        onClick={() => handleMaterialSelect(material)}
+                                        onClick={() => handlePackagingMaterialSelect(material)}
                                         className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-gray-100 last:border-b-0"
                                     >
                                         <div className="font-medium text-primary-900 text-sm">{material.name}</div>
@@ -191,30 +247,87 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                         </div>
                     )}
 
-                    {/* Overlay para cerrar dropdown */}
-                    {showDropdown && (
+                    {showPackagingDropdown && (
                         <div 
                             className="fixed inset-0 z-40" 
-                            onClick={() => setShowDropdown(false)}
+                            onClick={() => setShowPackagingDropdown(false)}
                         />
                     )}
 
-                    {errors.materialId && <p className="text-red-500 text-sm mt-1">{errors.materialId}</p>}
+                    {errors.packagingMaterialId && <p className="text-red-500 text-sm mt-1">{errors.packagingMaterialId}</p>}
                     
-                    {/* Información del material seleccionado */}
-                    {selectedMaterial && (
+                    {selectedPackagingMaterial && (
                         <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                             <h4 className="text-sm font-medium text-blue-800 mb-1">Material Seleccionado</h4>
                             <div className="text-sm text-blue-700">
-                                <div>
-                                    <span className="font-medium">Nombre:</span> {selectedMaterial.name}
+                                <div><span className="font-medium">Nombre:</span> {selectedPackagingMaterial.name}</div>
+                                <div><span className="font-medium">Código:</span> {selectedPackagingMaterial.code}</div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Material de Etiquetado */}
+                <div>
+                    <label className="block text-sm font-medium text-primary-900 mb-2">
+                        Material de Etiquetado *
+                    </label>
+                    
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={labelingSearchTerm}
+                            onChange={(e) => handleLabelingSearchChange(e.target.value)}
+                            onFocus={() => setShowLabelingDropdown(true)}
+                            placeholder="Buscar material de etiquetado..."
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+                                errors.labelingMaterialId ? "border-red-500" : "border-stroke"
+                            }`}
+                        />
+                        {loadingLabelingMaterials && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <div className="w-4 h-4 border-2 border-primary-300 border-t-primary-600 rounded-full animate-spin"></div>
+                            </div>
+                        )}
+                    </div>
+
+                    {showLabelingDropdown && labelingSearchTerm && (
+                        <div className="absolute z-50 w-76 mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
+                            {labelingMaterials.length === 0 && !loadingLabelingMaterials ? (
+                                <div className="px-3 py-2 text-sm text-gray-500">
+                                    No se encontraron materiales de etiquetado
                                 </div>
-                                <div>
-                                    <span className="font-medium">Código:</span> {selectedMaterial.code}
-                                </div>
-                                <div>
-                                    <span className="font-medium">ID:</span> {selectedMaterial.id}
-                                </div>
+                            ) : (
+                                labelingMaterials.map((material) => (
+                                    <button
+                                        key={material.id}
+                                        type="button"
+                                        onClick={() => handleLabelingMaterialSelect(material)}
+                                        className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-gray-100 last:border-b-0"
+                                    >
+                                        <div className="font-medium text-primary-900 text-sm">{material.name}</div>
+                                        <div className="text-xs text-primary-600">Código: {material.code}</div>
+                                    </button>
+                                ))
+                            )}
+                        </div>
+                    )}
+
+                    {showLabelingDropdown && (
+                        <div 
+                            className="fixed inset-0 z-40" 
+                            onClick={() => setShowLabelingDropdown(false)}
+                        />
+                    )}
+
+                    {errors.labelingMaterialId && <p className="text-red-500 text-sm mt-1">{errors.labelingMaterialId}</p>}
+                    
+                    {selectedLabelingMaterial && (
+                        <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <h4 className="text-sm font-medium text-green-800 mb-1">Material Seleccionado</h4>
+                            <div className="text-sm text-green-700">
+                                <div><span className="font-medium">Nombre:</span> {selectedLabelingMaterial.name}</div>
+                                <div><span className="font-medium">Código:</span> {selectedLabelingMaterial.code}</div>
                             </div>
                         </div>
                     )}

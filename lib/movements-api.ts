@@ -28,6 +28,7 @@ function formatDateToOffsetDateTime(dateString: string): string {
 
 function mapFiltersToAPI(filters: {
   type?: string
+  status?: string
   materialId?: string
   dateFrom?: string
   dateTo?: string
@@ -40,6 +41,9 @@ function mapFiltersToAPI(filters: {
   }
   if (filters.type) {
     apiFilters.type = filters.type as MovementType
+  }
+  if (filters.status) {
+    apiFilters.status = filters.status as import('@/types').MovementStatus
   }
   if (filters.materialId) {
     apiFilters.materialId = filters.materialId
@@ -61,6 +65,7 @@ function mapFiltersToAPI(filters: {
  */
 export async function getMovements(filters: {
   type?: string
+  status?: string
   materialId?: string
   dateFrom?: string
   dateTo?: string
@@ -75,6 +80,7 @@ export async function getMovements(filters: {
   if (apiFilters.page !== undefined) urlParams.page = apiFilters.page.toString()
   if (apiFilters.size !== undefined) urlParams.size = apiFilters.size.toString()
   if (apiFilters.type) urlParams.type = apiFilters.type
+  if (apiFilters.status) urlParams.status = apiFilters.status
   if (apiFilters.materialId) urlParams.materialId = apiFilters.materialId
   // El backend espera startDate y endDate para las fechas
   if (apiFilters.dateFrom) urlParams.startDate = apiFilters.dateFrom
@@ -111,6 +117,22 @@ export async function createMovement(data: MovementCreateRequest) {
   return movement
 }
 
+
+/**
+ * Cambia el estado de un movimiento entre PENDIENTE y EN_PROCESO
+ */
+export async function toggleMovementInProgress(id: string) {
+  const movement = await api.patch<MovementResponse>(`/api/movements/${id}/in-progress`)
+  return movement
+}
+
+/**
+ * Completa un movimiento (cambia estado a COMPLETADO)
+ */
+export async function completeMovement(id: string) {
+  const movement = await api.patch<MovementResponse>(`/api/movements/${id}/complete`)
+  return movement
+}
 
 /**
  * Obtiene el label en español para un tipo de movimiento

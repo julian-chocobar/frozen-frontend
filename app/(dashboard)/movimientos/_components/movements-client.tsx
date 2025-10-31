@@ -5,11 +5,11 @@
  * Incluye modales para crear/editar y confirmaciones para eliminar
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { MovementsTable } from "./movements-table"
 import { MovementsCards } from "./movements-cards"
 import { MovementDetails } from "./movement-details"
-import { getMovementById } from "@/lib/movements-api"
+import { getMovementById, toggleMovementInProgress, completeMovement } from "@/lib/movements-api"
 import { handleError, showSuccess } from "@/lib/error-handler"
 
 
@@ -24,13 +24,25 @@ interface MovementsClientProps {
     size: number
     first: boolean
     last: boolean
-  } 
+  }
+  autoOpenDetailId?: string
 }
 
-export function MovementsClient({ movements }: MovementsClientProps) {
+export function MovementsClient({ movements, autoOpenDetailId }: MovementsClientProps) {
   const [selectedMovement, setSelectedMovement] = useState<MovementDetailResponse | null>(null)
   const [isViewing, setIsViewing] = useState(false)
   const [loadingDetails, setLoadingDetails] = useState(false)
+  const [processingAction, setProcessingAction] = useState<string | null>(null)
+
+  // Auto-abrir modal si se proporciona un ID
+  useEffect(() => {
+    if (autoOpenDetailId && !isViewing) {
+      const movement = movements.find(m => m.id === autoOpenDetailId)
+      if (movement) {
+        handleViewDetails(movement)
+      }
+    }
+  }, [autoOpenDetailId, movements, isViewing])
 
   const handleViewDetails = async (movement: MovementResponse) => {
     setLoadingDetails(true)
@@ -49,14 +61,58 @@ export function MovementsClient({ movements }: MovementsClientProps) {
     }
   }
 
+  const handleToggleInProgress = async (movement: MovementResponse) => {
+    if (processingAction) return
+    
+    setProcessingAction(movement.id)
+    try {
+      await toggleMovementInProgress(movement.id)
+      showSuccess(
+        movement.status === 'PENDIENTE' 
+          ? 'Movimiento marcado como en proceso'
+          : 'Movimiento marcado como pendiente'
+      )
+      // Recargar página para actualizar los datos
+      window.location.reload()
+    } catch (error) {
+      handleError(error, {
+        title: 'Error al cambiar estado del movimiento'
+      })
+    } finally {
+      setProcessingAction(null)
+    }
+  }
+
+  const handleCompleteMovement = async (movement: MovementResponse) => {
+    if (processingAction) return
+    
+    setProcessingAction(movement.id)
+    try {
+      await completeMovement(movement.id)
+      showSuccess('Movimiento completado exitosamente')
+      // Recargar página para actualizar los datos
+      window.location.reload()
+    } catch (error) {
+      handleError(error, {
+        title: 'Error al completar movimiento'
+      })
+    } finally {
+      setProcessingAction(null)
+    }
+  }
+
   return (
     <div>
       <MovementsTable 
         movements={movements} 
-        onViewDetails={handleViewDetails} />
+        onViewDetails={handleViewDetails}
+        onToggleInProgress={handleToggleInProgress}
+        onCompleteMovement={handleCompleteMovement} />
       <MovementsCards 
         movements={movements} 
-        onViewDetails={handleViewDetails} />
+        onViewDetails={handleViewDetails}
+        onToggleInProgress={handleToggleInProgress}
+        onCompleteMovement={handleCompleteMovement} />
 
       {/* Modal para ver detalles */}
       {isViewing && (

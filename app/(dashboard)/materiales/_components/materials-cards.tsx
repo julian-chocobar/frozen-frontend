@@ -57,8 +57,8 @@ export function MaterialsCards({
         )
       },
       {
-        key: 'totalStock',
-        label: 'Stock',
+        key: 'availableStock',
+        label: 'Stock Disponible',
         render: (value, material) => (
           <div>
             <p className="text-sm font-bold text-primary-900">
@@ -66,6 +66,17 @@ export function MaterialsCards({
             </p>
             <p className="text-xs text-primary-700">
               Mín: {material.threshold} {getUnitLabel(material.unitMeasurement)}
+            </p>
+          </div>
+        )
+      },
+      {
+        key: 'reservedStock',
+        label: 'Stock Reservado',
+        render: (value, material) => (
+          <div>
+            <p className="text-sm font-medium text-orange-900">
+              {value} {getUnitLabel(material.unitMeasurement)}
             </p>
           </div>
         )

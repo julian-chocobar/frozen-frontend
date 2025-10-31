@@ -83,11 +83,14 @@ function getNotificationUrl(notification: NotificationResponseDTO): string | nul
     case 'PRODUCTION_ORDER_PENDING':
     case 'PRODUCTION_ORDER_APPROVED':
     case 'PRODUCTION_ORDER_REJECTED':
-      return relatedEntityId ? `/ordenes?id=${relatedEntityId}` : '/ordenes';
+      // Dirigir al modal de detalle de orden para aprobar/rechazar
+      return relatedEntityId ? `/ordenes?detail=${relatedEntityId}` : '/ordenes';
     case 'PENDING_MOVEMENT':
-      return relatedEntityId ? `/movimientos?id=${relatedEntityId}` : '/movimientos';
+      // Dirigir al modal de detalle de movimiento para marcar como en proceso/completo
+      return relatedEntityId ? `/movimientos?detail=${relatedEntityId}` : '/movimientos';
     case 'LOW_STOCK_ALERT':
-      return relatedEntityId ? `/materiales?id=${relatedEntityId}` : '/materiales';
+      // Dirigir al modal de detalle de material para ver información de stock
+      return relatedEntityId ? `/materiales?detail=${relatedEntityId}` : '/materiales';
     default:
       return null;
   }

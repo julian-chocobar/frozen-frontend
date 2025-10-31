@@ -21,6 +21,7 @@ const TYPE_LABELS: Record<MaterialType, string> = {
   'AGUA': 'Agua',
   'LEVADURA': 'Levaduras',
   'ENVASE': 'Envases',
+  'ETIQUETADO': 'Etiquetados',
   'OTROS': 'Otros'
 }
 

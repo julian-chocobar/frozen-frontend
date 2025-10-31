@@ -21,7 +21,8 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
     materialId: "",
     type: "INGRESO" as MovementType,
     stock: "",
-    reason: ""
+    reason: "",
+    location: ""
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -71,7 +72,9 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
       newErrors.stock = "La cantidad debe ser mayor a 0"
     }
 
-    // El campo reason ahora es opcional, no validamos si está vacío
+    if (!formData.location.trim()) {
+      newErrors.location = "La ubicación es requerida"
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -85,7 +88,8 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
         materialId: formData.materialId,
         type: formData.type,
         stock: Number(formData.stock),
-        reason: formData.reason.trim() || undefined
+        reason: formData.reason.trim() || undefined,
+        location: formData.location.trim()
       }
       
       onSubmit(createData)
@@ -251,6 +255,23 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
             placeholder="0.00"
           />
           {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
+        </div>
+
+        {/* Ubicación */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-primary-900 mb-2">
+            Ubicación *
+          </label>
+          <input
+            type="text"
+            value={formData.location}
+            onChange={(e) => handleChange("location", e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+              errors.location ? "border-red-500" : "border-stroke"
+            }`}
+            placeholder="Ej: Almacén A, Estante 3, Cuarto frío"
+          />
+          {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
         </div>
 
         {/* Motivo */}

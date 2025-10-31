@@ -31,8 +31,15 @@ export function PackagingsTable({
             )
         },
         {
-            key: 'materialName',
-            label: 'Material',
+            key: 'packagingMaterialName',
+            label: 'Material de Envasado',
+            render: (value) => (
+                <span className="text-sm text-primary-600">{value || 'Sin material'}</span>
+            )
+        },
+        {
+            key: 'labelingMaterialName',
+            label: 'Material de Etiquetado',
             render: (value) => (
                 <span className="text-sm text-primary-600">{value || 'Sin material'}</span>
             )

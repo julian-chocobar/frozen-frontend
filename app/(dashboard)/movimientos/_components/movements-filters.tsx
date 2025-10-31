@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { CompactFilters, type CompactFilterField } from "@/components/ui/compact-filters"
 import { MaterialSearchFilter } from "./material-search-filter"
 import { getTypeLabel } from "@/lib/movements-api"
-import type { MovementType } from "@/types"
+import type { MovementType, MovementStatus } from "@/types"
 
 interface MovementsFiltersProps {
     onFilterChange?: (filters: FilterState) => void
@@ -15,12 +15,14 @@ interface MovementsFiltersProps {
 
 interface FilterState {
     type: MovementType | "Todas"
+    status: MovementStatus | "Todos"
     materialId: string
     dateFrom: string
     dateTo: string
 }
 
 const tipos: (MovementType | "Todas")[] = ["Todas", "INGRESO", "EGRESO"]
+const estados: (MovementStatus | "Todos")[] = ["Todos", "PENDIENTE", "EN_PROCESO", "COMPLETADO"]
 
 export function MovementsFilters({ onFilterChange }: MovementsFiltersProps) {
     const router = useRouter()
@@ -28,6 +30,7 @@ export function MovementsFilters({ onFilterChange }: MovementsFiltersProps) {
     
     const [filters, setFilters] = useState<FilterState>({
         type: (searchParams.get('type') as MovementType | "Todas") || "Todas",
+        status: (searchParams.get('status') as MovementStatus | "Todos") || "Todos",
         materialId: searchParams.get('materialId') || "",
         dateFrom: searchParams.get('dateFrom') || "",
         dateTo: searchParams.get('dateTo') || ""
@@ -86,6 +89,18 @@ export function MovementsFilters({ onFilterChange }: MovementsFiltersProps) {
             className: 'min-w-32'
         },
         {
+            key: 'status',
+            type: 'select',
+            label: 'Estado',
+            options: estados.map(estado => ({
+                value: estado,
+                label: estado === "Todos" ? "Todos los estados" : 
+                       estado === "PENDIENTE" ? "Pendiente" :
+                       estado === "EN_PROCESO" ? "En Proceso" : "Completado"
+            })),
+            className: 'min-w-32'
+        },
+        {
             key: 'dateFrom',
             type: 'date',
             label: 'Fecha desde',
@@ -107,6 +122,7 @@ export function MovementsFilters({ onFilterChange }: MovementsFiltersProps) {
     const handleClear = () => {
         const clearedFilters: FilterState = {
             type: "Todas",
+            status: "Todos",
             materialId: "",
             dateFrom: "",
             dateTo: ""
@@ -123,6 +139,7 @@ export function MovementsFilters({ onFilterChange }: MovementsFiltersProps) {
             fields={fields}
             values={{
                 type: filters.type,
+                status: filters.status,
                 materialId: filters.materialId,
                 dateFrom: filters.dateFrom,
                 dateTo: filters.dateTo
