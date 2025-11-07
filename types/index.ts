@@ -21,15 +21,23 @@ export interface Material {
   code: string
   name: string
   type: MaterialType
-  supplier: string
-  value: number
-  totalStock: number
-  reservedStock: number
-  availableStock: number
+  supplier?: string
+  value?: number
+  totalStock?: number
+  reservedStock?: number
+  availableStock?: number
   unitMeasurement: UnitMeasurement
   threshold: number
   isBelowThreshold: boolean
   isActive: boolean
+  minimumStock?: number
+  maximumStock?: number
+  currentStock?: number
+  warehouseZone?: string
+  warehouseSection?: string | number
+  warehouseLevel?: number
+  warehouseX?: number
+  warehouseY?: number
 }
 
 // Tipo para crear material (coincide con POST /api/materials)
@@ -41,6 +49,11 @@ export interface MaterialCreateRequest {
   supplier?: string // Opcional
   value?: number // Opcional, debe ser > 0
   stock?: number // Opcional, debe ser > 0
+  warehouseZone?: string
+  warehouseSection?: string | number
+  warehouseLevel?: number
+  warehouseX?: number
+  warehouseY?: number
 }
 
 // Tipo para actualizar material (coincide con PATCH /api/materials/{id})
@@ -51,6 +64,11 @@ export interface MaterialUpdateRequest {
   value?: number // Debe ser > 0
   unitMeasurement?: UnitMeasurement
   threshold?: number // Debe ser > 0
+  warehouseZone?: string
+  warehouseSection?: string | number
+  warehouseLevel?: number
+  warehouseX?: number
+  warehouseY?: number
 }
 
 // Respuesta paginada de la API (estructura real del backend)
@@ -72,17 +90,25 @@ export interface MaterialDetailResponse {
   code: string
   name: string
   type: MaterialType
-  supplier: string
-  value: number
-  totalStock: number
-  availableStock: number
-  reservedStock: number
+  supplier?: string
+  value?: number
+  totalStock?: number
+  availableStock?: number
+  reservedStock?: number
   unitMeasurement: UnitMeasurement
   threshold: number
   isBelowThreshold: boolean
   isActive: boolean
   creationDate: string
   lastUpdateDate: string
+  minimumStock?: number
+  maximumStock?: number
+  currentStock?: number
+  warehouseZone?: string
+  warehouseSection?: string | number
+  warehouseLevel?: number
+  warehouseX?: number
+  warehouseY?: number
 }
 
 // Filtros para la API (coincide con los parámetros del backend)
@@ -93,6 +119,150 @@ export interface MaterialsFilters {
   supplier?: string
   type?: MaterialType
   isActive?: boolean
+}
+
+// ============================================
+// WAREHOUSE
+// ============================================
+
+export interface WarehouseDimensions {
+  width: number
+  height: number
+  unit: string
+}
+
+export interface WarehouseBounds {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export interface WarehouseSectionDimensions {
+  width: number
+  height: number
+}
+
+export interface WarehouseSpacing {
+  x: number
+  y: number
+}
+
+export interface WarehouseZoneConfig {
+  bounds: WarehouseBounds
+  sectionSize: WarehouseSectionDimensions
+  sectionSpacing: WarehouseSpacing
+  maxSectionsPerRow: number
+  maxRows: number
+  priority: number
+  description: string
+}
+
+export interface WarehouseConfigResponse {
+  dimensions: WarehouseDimensions
+  zones: Record<string, WarehouseZoneConfig>
+  walkways: unknown[]
+  doors: unknown[]
+}
+
+export interface WarehouseLocationValidationRequest {
+  zone: string
+  section: string
+}
+
+export interface WarehouseLocationValidationResponse {
+  isValid: boolean
+  coordinates?: {
+    x: number
+    y: number
+  }
+  message?: string
+}
+
+export interface WarehouseZoneSections {
+  zone: string
+  sections: string[]
+  totalSections: number
+  layout: string
+}
+
+export interface WarehouseZoneConfigUpdateRequest {
+  maxSectionsPerRow: number
+  maxRows: number
+  sectionWidth: number
+  sectionHeight: number
+  spacingX: number
+  spacingY: number
+  description: string
+}
+
+export interface WarehouseZoneConfigUpdateResponse {
+  bounds: WarehouseBounds
+  sectionSize: WarehouseSectionDimensions
+  sectionSpacing: WarehouseSpacing
+  maxSectionsPerRow: number
+  maxRows: number
+  priority: number
+  description: string
+}
+
+export interface MaterialWarehouseLocation {
+  id?: number
+  materialId?: number
+  code?: string
+  materialCode?: string
+  name?: string
+  materialName?: string
+  type?: MaterialType
+  materialType?: MaterialType
+  stock?: number
+  currentStock?: number
+  reservedStock?: number
+  threshold?: number
+  minimumStock?: number
+  isBelowThreshold?: boolean
+  warehouseX?: number
+  warehouseY?: number
+  warehouseZone?: string
+  warehouseSection?: string | number
+  warehouseLevel?: number
+}
+
+export interface MaterialWarehouseLocationUpdateRequest {
+  warehouseX: number
+  warehouseY: number
+  warehouseZone: string
+  warehouseSection: string
+  warehouseLevel: number
+}
+
+export interface WarehouseSuggestedLocation {
+  zone: string
+  section: string
+  x: number
+  y: number
+  level: number
+}
+
+export type WarehouseAvailableZone =
+  | string
+  | {
+      name: string
+      totalSections?: number
+      occupiedSections?: number
+      recommendedForTypes?: string[]
+    }
+
+export type WarehouseSectionsByZone =
+  | Record<string, string[]>
+  | Array<{ zone: string; sections: string[] }>
+
+export interface WarehouseInfoResponse {
+  availableZones: WarehouseAvailableZone[]
+  sectionsByZone: WarehouseSectionsByZone
+  suggestedLocation?: WarehouseSuggestedLocation
+  totalMaterials?: number
+  materialsByZone?: Record<string, number>
 }
 
 // ============================================

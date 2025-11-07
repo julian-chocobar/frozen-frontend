@@ -395,3 +395,75 @@ h6 {
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
 }
+
+/* Leaflet map theming */
+.warehouse-map-container .leaflet-container {
+  font-family: var(--font-sans);
+  background: transparent;
+  border-radius: var(--radius-lg);
+}
+
+.warehouse-map-container .leaflet-pane.leaflet-tile-pane,
+.warehouse-map-container .leaflet-pane.leaflet-overlay-pane,
+.warehouse-map-container .leaflet-pane.leaflet-marker-pane {
+  mix-blend-mode: normal;
+}
+
+.leaflet-tooltip.warehouse-tooltip {
+  background-color: var(--color-sidebar);
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.warehouse-map-container .leaflet-image-layer {
+  border-radius: var(--radius-lg);
+  filter: drop-shadow(0 24px 36px rgba(15, 23, 42, 0.18));
+}
+
+@media (max-width: 767px) {
+  .warehouse-map-container {
+    height: 320px !important;
+  }
+}
+
+.warehouse-marker {
+  --marker-color: var(--color-primary-600);
+  --marker-ring: rgba(37, 99, 235, 0.22);
+  --marker-shadow: rgba(15, 23, 42, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warehouse-marker--legend {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.55rem 0.2rem 0.4rem;
+  box-shadow: 0 10px 20px var(--marker-shadow, rgba(15, 23, 42, 0.12));
+}
+
+.warehouse-marker--legend .warehouse-marker__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: var(--marker-color);
+  box-shadow: 0 0 0 2px var(--marker-ring, rgba(37, 99, 235, 0.18));
+}
+
+.warehouse-marker--pin-active svg {
+  filter: drop-shadow(0 10px 16px rgba(37, 99, 235, 0.35));
+}
+
+.leaflet-tooltip.warehouse-tooltip::before {
+  display: none;
+}
+
+.leaflet-tooltip .warehouse-tooltip-content strong {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.25rem;
+}

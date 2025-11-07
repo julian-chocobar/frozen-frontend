@@ -46,40 +46,21 @@ export function MaterialsTable({
     },
     {
       key: 'availableStock',
-      label: 'Stock Disponible',
-      render: (value, material) => (
-        <div>
-          <p className="text-sm font-bold text-green-900">
-            {value || 0} {getUnitLabel(material.unitMeasurement)}
+      label: 'Stock',
+      render: (_, material) => (
+        <div className="space-y-1 text-xs">
+          <p className="font-semibold text-green-700">
+            Disp. <span className="font-bold">{material.availableStock ?? 0}</span> {getUnitLabel(material.unitMeasurement).slice(0, 1)}
           </p>
-          <p className="text-xs text-primary-700">
-            Mín: {material.threshold} {getUnitLabel(material.unitMeasurement)}
+          <p className="text-orange-600">
+            Res. <span className="font-semibold">{material.reservedStock ?? 0}</span>
           </p>
-        </div>
-      )
-    },
-    {
-      key: 'reservedStock',
-      label: 'Stock Reservado',
-      render: (value, material) => (
-        <div>
-          <p className="text-sm font-bold text-orange-900">
-            {value || 0} {getUnitLabel(material.unitMeasurement)}
+          <p className="text-blue-700">
+            Tot. <span className="font-semibold">{material.totalStock ?? 0}</span>
           </p>
         </div>
       )
     },
-    {
-      key: 'totalStock',
-      label: 'Stock Total',
-      render: (value, material) => (
-        <div>
-          <p className="text-sm font-bold text-blue-900">
-            {value || 0} {getUnitLabel(material.unitMeasurement)}
-          </p>
-        </div>
-      )
-    },  
     {
       key: 'supplier',
       label: 'Proveedor',

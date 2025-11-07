@@ -123,6 +123,12 @@ export const api = {
       body: JSON.stringify(data) 
     }),
 
+  put: <T>(endpoint: string, data?: unknown) =>
+    fetcher<T>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    }),
+
   patch: <T>(endpoint: string, data?: unknown) =>
     fetcher<T>(endpoint, { 
       method: 'PATCH', 

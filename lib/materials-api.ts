@@ -12,7 +12,8 @@ import type {
   MaterialsFilters,
   MaterialType,
   UnitMeasurement, 
-  Phase
+  Phase,
+  MaterialDetailResponse,
 } from '@/types'
 
 const TYPE_LABELS: Record<MaterialType, string> = {
@@ -111,8 +112,8 @@ export async function getMaterials(filters: {
 /**
  * Obtiene un material por ID
  */
-export async function getMaterialById(id: string) {
-  const material = await api.get<Material>(`/api/materials/${id}`)
+export async function getMaterialDetail(id: string) {
+  const material = await api.get<MaterialDetailResponse>(`/api/materials/${id}`)
   return material
 }
 

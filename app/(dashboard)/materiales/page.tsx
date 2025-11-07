@@ -11,6 +11,7 @@ import { MaterialsClient } from "./_components/materials-client"
 import { PaginationClient } from "./_components/pagination-client"
 import { ErrorState } from "@/components/ui/error-state"
 import { MaterialCreateButton } from "./_components/create-button"
+import { MaterialsWarehousePanel } from "./_components/warehouse-panel"
 import { getMaterials } from "@/lib/materials-api"
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -35,6 +36,8 @@ export default function MaterialesPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(null)
+  const [externalViewId, setExternalViewId] = useState<string | null>(null)
 
 
   // Obtener parámetros de búsqueda
@@ -103,43 +106,64 @@ export default function MaterialesPage() {
       <div className="p-4 md:p-6 space-y-6">
         {/* Filtros */}
         <MaterialsFilters />
-    
-        <div className="card border-2 border-primary-600 overflow-hidden">
-          <div className="p-6 border-b border-stroke">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-primary-солют900 mb-1">Materias Primas</h2>
-                <p className="text-sm text-primary-600">Gestiona maltas, lúpulos, levaduras y otros insumos</p>
+ 
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="order-2 lg:order-1 lg:flex-1">
+            <div className="card border-2 border-primary-600 overflow-hidden">
+              <div className="p-6 border-b border-stroke">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-primary-900 mb-1">Materias Primas</h2>
+                    <p className="text-sm text-primary-600">Gestiona maltas, lúpulos, levaduras y otros insumos</p>
+                  </div>
+                  {!loading && materialsData && (
+                    <MaterialCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+                  )}
+                </div>
               </div>
-              {!loading && materialsData && (
-                <MaterialCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
-              )}
+
+              {error ? (
+                <ErrorState error={error} />
+              ) : loading ? (
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                  <p className="mt-4 text-primary-600">Cargando materiales...</p>
+                </div>
+              ) : materialsData ? (
+                <MaterialsClient 
+                  materials={materialsData.materials} 
+                  pagination={materialsData.pagination}
+                  autoOpenId={autoOpenId}
+                  onMaterialSelect={(materialId) => {
+                    setSelectedMaterialId(materialId)
+                    if (materialId === null) {
+                      setExternalViewId(null)
+                    }
+                  }}
+                  externalViewId={externalViewId}
+                />
+              ) : null}
             </div>
           </div>
-          
-          {error ? (
-            <ErrorState error={error} />
-          ) : loading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-4 text-primary-600">Cargando materiales...</p>
-            </div>
-          ) : materialsData ? (
-            <MaterialsClient 
-              materials={materialsData.materials} 
-              pagination={materialsData.pagination}
-              autoOpenId={autoOpenId}
-            />
-          ) : null}
-        </div>
 
+          <div className="order-1 lg:order-2 lg:flex-none">
+            <MaterialsWarehousePanel
+              selectedMaterialId={selectedMaterialId}
+              onSelectMaterial={(materialId) => {
+                setSelectedMaterialId(materialId)
+                setExternalViewId(materialId)
+              }}
+            />
+          </div>
+        </div>
+ 
         {/* Contador de resultados y paginación */}
         {materialsData && (
           <div className="text-center space-y-4">
             <p className="text-sm text-primary-700">
               Mostrando {materialsData.materials.length} materiales de {materialsData.pagination.totalElements} totales
             </p>
-            
+ 
             {/* Paginación funcional */}
             <PaginationClient 
               currentPage={materialsData.pagination.currentPage}

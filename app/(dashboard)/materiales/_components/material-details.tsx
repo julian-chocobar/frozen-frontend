@@ -3,16 +3,16 @@
  * Componente para mostrar detalles completos de un material
  */
 
-import { Edit, Trash2, Power, PowerOff, X } from "lucide-react"
+import { Edit, MapPin, Power, PowerOff, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MaterialDetailResponse } from "@/types"
 import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
 
-interface MaterialDetailsProps {
-  material: MaterialDetailResponse
-  onClose: () => void
-  onEdit: () => void
-  onToggleActive: () => void
+const normalizeZoneName = (zone?: string | null) => {
+  if (!zone) return null
+  const cleaned = zone.replace(/^ZONA[_-]?/i, '').replace(/_/g, ' ').trim()
+  if (!cleaned) return zone
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase()
 }
 
 export function MaterialDetails({ 
@@ -21,6 +21,16 @@ export function MaterialDetails({
   onEdit,  
   onToggleActive 
 }: MaterialDetailsProps) {
+  const supplier = material.supplier || '—'
+  const value = material.value ?? '—'
+  const zone = normalizeZoneName(material.warehouseZone) ?? '—'
+  const section = material.warehouseSection ?? '—'
+  const level = material.warehouseLevel ?? '—'
+  const coordinateX = material.warehouseX ?? '—'
+  const coordinateY = material.warehouseY ?? '—'
+  const currentStock = material.availableStock ?? material.totalStock ?? 0
+  const reservedStock = material.reservedStock ?? 0
+
   return (
     <div 
       className="fixed inset-0 flex items-center justify-center p-4 z-50"
@@ -60,7 +70,7 @@ export function MaterialDetails({
 
               <div>
                 <label className="text-sm text-primary-700">Proveedor</label>
-                <p className="text-sm font-medium text-primary-900">{material.supplier}</p>
+                <p className="text-sm font-medium text-primary-900">{supplier}</p>
               </div>
 
               <div>
@@ -96,7 +106,7 @@ export function MaterialDetails({
               <div>
                 <label className="text-sm text-primary-700">Stock Disponible</label>
                 <p className="text-lg font-bold text-green-600">
-                  {material.availableStock ?? 0} {getUnitLabel(material.unitMeasurement)}
+                  {currentStock} {getUnitLabel(material.unitMeasurement)}
                 </p>
               </div>
 
@@ -104,7 +114,7 @@ export function MaterialDetails({
               <div>
                 <label className="text-sm text-primary-700">Stock Reservado</label>
                 <p className="text-lg font-bold text-orange-600">
-                  {material.reservedStock ?? 0} {getUnitLabel(material.unitMeasurement)}
+                  {reservedStock} {getUnitLabel(material.unitMeasurement)}
                 </p>
               </div>
 
@@ -119,7 +129,7 @@ export function MaterialDetails({
               {/* Costo Unitario */}
               <div>
                 <label className="text-sm text-primary-700">Costo Unitario</label>
-                <p className="text-sm font-medium text-primary-900">${material.value}</p>
+                <p className="text-sm font-medium text-primary-900">${value}</p>
               </div>
             </div>
           </div>
@@ -144,12 +154,45 @@ export function MaterialDetails({
             </div>
           </div>
 
+          {/* Ubicación en almacén */}
+          <div className="pt-4 border-t border-stroke">
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="w-4 h-4 text-primary-600" />
+              <h4 className="font-medium text-primary-900">Ubicación en el almacén</h4>
+            </div>
+
+            {material.warehouseZone ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-muted">Zona</label>
+                  <p className="font-semibold text-primary-900">{zone}</p>
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-muted">Sección</label>
+                  <p className="font-semibold text-primary-900">{section}</p>
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-muted">Nivel</label>
+                  <p className="font-semibold text-primary-900">{level}</p>
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-muted">Coordenadas</label>
+                  <p className="font-semibold text-primary-900">
+                    {coordinateX}, {coordinateY}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted">Este material no tiene una ubicación asignada actualmente.</p>
+            )}
+          </div>
+
           {/* Alertas de stock */}
           {material.isBelowThreshold && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h5 className="font-medium text-red-800 mb-2">⚠️ Alerta de Stock</h5>
               <p className="text-sm text-red-700">
-                El stock disponible ({material.availableStock ?? 0} {getUnitLabel(material.unitMeasurement)}) está por debajo del umbral mínimo 
+                El stock disponible ({currentStock} {getUnitLabel(material.unitMeasurement)}) está por debajo del umbral mínimo 
                 ({material.threshold} {getUnitLabel(material.unitMeasurement)}). Se recomienda realizar un pedido.
               </p>
             </div>
