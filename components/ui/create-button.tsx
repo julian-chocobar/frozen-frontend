@@ -63,7 +63,7 @@ export function CreateButton({
       {/* Modal */}
       {isOpen && (
         <div 
-          className="fixed inset-0 flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 flex items-center justify-center p-4 z-[60]"
           style={{ 
             backgroundColor: 'rgba(0, 0, 0, 0.1)',
             backdropFilter: 'blur(8px)',
@@ -71,7 +71,7 @@ export function CreateButton({
           }}
         >
           <div className={`bg-background rounded-lg ${maxWidthClasses[maxWidth]} w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 ${modalClassName}`}>
-            <div className="p-6">
+            <div className="p-6 pb-8 sm:pb-6">
               <h2 className="text-xl font-semibold mb-4">{modalTitle}</h2>
               {children}
             </div>

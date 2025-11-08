@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Lock, User, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import { Eye, EyeOff, Lock, User } from "lucide-react"
 import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context" // Asegúrate de crear este contexto
 
@@ -58,16 +57,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      {/* Botón de regreso */}
-      <div className="absolute top-4 left-4 md:top-6 md:left-6">
-        <Link href="/">
-          <Button variant="outline" className="border-primary-300 text-primary-600 hover:bg-primary-50">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a inicio
-          </Button>
-        </Link>
-      </div>
-
       {/* Contenedor principal */}
       <div className="w-full max-w-md">
         {/* Logo y título */}

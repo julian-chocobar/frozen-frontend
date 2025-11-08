@@ -132,7 +132,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
   const isDevuelto = formData.type === 'DEVUELTO'
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 pb-24 sm:pb-0">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Material */}
         <div className="md:col-span-2">
@@ -297,11 +297,11 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
       </div>
 
       {/* Botones */}
-      <div className="flex justify-end gap-3 pt-6 border-t border-stroke">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-stroke mt-6">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-primary-600 bg-white border border-stroke rounded-lg hover:bg-primary-50 transition-colors"
+          className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm font-medium text-primary-600 bg-white border border-stroke rounded-lg hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={isLoading}
         >
           Cancelar
@@ -309,7 +309,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
         <button
           type="submit"
           disabled={isLoading || loadingMaterials}
-          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? "Guardando..." : "Crear Movimiento"}
         </button>

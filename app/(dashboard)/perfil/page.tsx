@@ -156,27 +156,27 @@ export default function PerfilPage() {
 
   return (
     <div className="flex justify-center pb-20 md:pb-6">
-      <div className="w-full max-w-3xl">
+      <div className="w-full max-w-3xl relative">
+        {/* Botón de regreso - Desktop: arriba a la izquierda */}
+        <div className="hidden md:block absolute -left-[115px] top-16">
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="border-primary-300 text-primary-600 hover:bg-primary-50"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver
+          </Button>
+        </div>
+
         {/* Header */}
         <div className="mb-0 px-4 md:px-0">
           <h1 className="text-2xl md:text-3xl font-bold text-primary-800">Mi Perfil</h1>
           <p className="text-sm text-muted mt-1">Administra tu información personal y preferencias</p>
         </div>
 
-        {/* Card principal con botón de regreso */}
-        <div className="relative bottom-5 mb-[-18px]">
-          {/* Botón de regreso - Volver a página anterior */}
-          <div className="relative left-[-115px] bottom-[-40px]">
-            <button
-              onClick={() => router.back()}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Volver</span>
-            </button>
-          </div>
-
-          <div className="bg-surface border-2 border-border rounded-lg p-6 md:p-8 shadow-card">
+        {/* Card principal */}
+        <div className="bg-surface border-2 border-border rounded-lg p-6 md:p-8 shadow-card">
         <div className="space-y-8">
           {/* Avatar fijo */}
           <div>
@@ -432,14 +432,25 @@ export default function PerfilPage() {
             </Button>
           </div>
         </div>
-          </div>
         </div>
 
         {/* Card de información adicional */}
-        <div className="bg-primary-50 border-2 border-primary-200 rounded-lg p-4">
+        <div className="bg-primary-50 border-2 border-primary-200 rounded-lg p-4 mb-4">
           <p className="text-sm text-primary-800">
             <strong>Nota:</strong> Si necesitas cambiar tu correo electrónico o rol, por favor contacta con el administrador del sistema.
           </p>
+        </div>
+
+        {/* Botón de regreso - Mobile: abajo de todo */}
+        <div className="md:hidden px-4 pb-4">
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="w-full border-primary-300 text-primary-600 hover:bg-primary-50"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver
+          </Button>
         </div>
       </div>
     </div>
