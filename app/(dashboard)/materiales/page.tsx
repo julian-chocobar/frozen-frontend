@@ -130,18 +130,31 @@ export default function MaterialesPage() {
                   <p className="mt-4 text-primary-600">Cargando materiales...</p>
                 </div>
               ) : materialsData ? (
-                <MaterialsClient 
-                  materials={materialsData.materials} 
-                  pagination={materialsData.pagination}
-                  autoOpenId={autoOpenId}
-                  onMaterialSelect={(materialId) => {
-                    setSelectedMaterialId(materialId)
-                    if (materialId === null) {
-                      setExternalViewId(null)
-                    }
-                  }}
-                  externalViewId={externalViewId}
-                />
+                <>
+                  <MaterialsClient
+                    materials={materialsData.materials}
+                    pagination={materialsData.pagination}
+                    autoOpenId={autoOpenId}
+                    onMaterialSelect={(materialId) => {
+                      setSelectedMaterialId(materialId)
+                      if (materialId === null) {
+                        setExternalViewId(null)
+                      }
+                    }}
+                    externalViewId={externalViewId}
+                  />
+                  <div className="border-t border-stroke bg-primary-50/40 px-6 py-4">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <p className="text-sm text-primary-700">
+                        Mostrando {materialsData.materials.length} materiales de {materialsData.pagination.totalElements} totales
+                      </p>
+                      <PaginationClient
+                        currentPage={materialsData.pagination.currentPage}
+                        totalPages={materialsData.pagination.totalPages}
+                      />
+                    </div>
+                  </div>
+                </>
               ) : null}
             </div>
           </div>
@@ -156,21 +169,6 @@ export default function MaterialesPage() {
             />
           </div>
         </div>
- 
-        {/* Contador de resultados y paginación */}
-        {materialsData && (
-          <div className="text-center space-y-4">
-            <p className="text-sm text-primary-700">
-              Mostrando {materialsData.materials.length} materiales de {materialsData.pagination.totalElements} totales
-            </p>
- 
-            {/* Paginación funcional */}
-            <PaginationClient 
-              currentPage={materialsData.pagination.currentPage}
-              totalPages={materialsData.pagination.totalPages}
-            />
-          </div>
-        )}
       </div>
     </>
   )

@@ -4,12 +4,13 @@ import 'leaflet/dist/leaflet.css'
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import L, { type ImageOverlay, type Map as LeafletMap, type Marker } from 'leaflet'
-import { ChevronLeft, ChevronRight, MapPinned, RefreshCcw, Search, ZoomIn, ZoomOut } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Crosshair, MapPinned, RefreshCcw, Search, ZoomIn, ZoomOut } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
   getDynamicWarehouseLayout,
@@ -30,30 +31,32 @@ const warehouseBounds: L.LatLngBoundsExpression = [
   [WAREHOUSE_HEIGHT, WAREHOUSE_WIDTH],
 ]
 
-const zonePalette: Record<string, string> = {
+const zonePalette: Record<string, string> = { 
   ZONA_MALTA: '#2563eb',
   MALTA: '#2563eb',
+
   ZONA_LUPULO: '#7c3aed',
   LUPULO: '#7c3aed',
-  ZONA_LEVADURA: '#0ea5e9',
-  LEVADURA: '#0ea5e9',
-  ZONA_AGUA: '#60a5fa',
-  AGUA: '#60a5fa',
-  ZONA_ENVASE: '#f97316',
-  ENVASE: '#f97316',
-  ZONA_ETIQUETADO: '#facc15',
-  ETIQUETADO: '#facc15',
-  ZONA_OTROS: '#10b981',
-  OTROS: '#10b981',
-  ZONA_FERMENTACION: '#ef4444',
-  FERMENTACION: '#ef4444',
-  ZONA_MADURACION: '#14b8a6',
-  MADURACION: '#14b8a6',
-  ZONA_ENVASADO: '#6366f1',
-  ENVASADO: '#6366f1',
+
+  ZONA_LEVADURA: '#f43f5e',
+  LEVADURA: '#f43f5e',
+
+  ZONA_AGUA: '#38bdf8',
+  AGUA: '#38bdf8',
+
+  ZONA_ENVASE: '#22c55e',
+  ENVASE: '#22c55e',
+
+  ZONA_ETIQUETADO: '#fb923c',
+  ETIQUETADO: '#fb923c',
+
+  ZONA_OTROS: '#94a3b8',
+  OTROS: '#94a3b8',
 }
 
 const fallbackZoneColor = '#2563eb'
+
+let markerIconGradientId = 0
 
 const normalizeZoneKey = (zone?: string | null) => zone?.replace(/\s+/g, '_').toUpperCase() ?? ''
 
@@ -101,15 +104,26 @@ const projectPoint = (x?: number | null, y?: number | null) => {
 const buildMarkerIcon = (color: string, isSelected: boolean) => {
   const ring = hexToRgba(color, 0.18)
   const shadow = hexToRgba(color, 0.24)
+  const gradientId = `warehouse-marker-gradient-${markerIconGradientId++}`
   return L.divIcon({
     className: 'warehouse-marker-icon',
     html: `
       <span class="warehouse-marker warehouse-marker--pin ${isSelected ? 'warehouse-marker--pin-active' : ''}"
         style="--marker-color:${color}; --marker-ring:${ring}; --marker-shadow:${shadow};">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C8.13401 2 5 5.13401 5 9C5 13.7822 10.4026 20.4523 11.3408 21.5686C11.7054 22.0018 12.2946 22.0018 12.6592 21.5686C13.5974 20.4523 19 13.7822 19 9C19 5.13401 15.866 2 12 2Z" fill="${color}" stroke="rgba(15,23,42,0.25)" stroke-width="1.5"/>
-          <circle cx="12" cy="9" r="3.4" fill="white" />
-        </svg>
+        <span class="warehouse-marker__glow"></span>
+        <span class="warehouse-marker__sheen"></span>
+        <span class="warehouse-marker__body">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="${gradientId}" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="${color}" stop-opacity="0.95" />
+                <stop offset="1" stop-color="${color}" stop-opacity="0.65" />
+              </linearGradient>
+            </defs>
+            <path d="M12 2C8.13401 2 5 5.13401 5 9C5 13.7822 10.4026 20.4523 11.3408 21.5686C11.7054 22.0018 12.2946 22.0018 12.6592 21.5686C13.5974 20.4523 19 13.7822 19 9C19 5.13401 15.866 2 12 2Z" fill="url(#${gradientId})" stroke="rgba(15,23,42,0.28)" stroke-width="1.4"/>
+            <circle cx="12" cy="9" r="3.4" fill="white" />
+          </svg>
+        </span>
       </span>
     `,
     iconSize: [28, 34],
@@ -131,7 +145,6 @@ interface MaterialsWarehousePanelProps {
 
 export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }: MaterialsWarehousePanelProps) {
   const [isOpen, setIsOpen] = useState(true)
-  const [mapMode, setMapMode] = useState<'static' | 'dynamic'>('static')
   const [loadingLayout, setLoadingLayout] = useState(false)
   const [loadingMaterials, setLoadingMaterials] = useState(false)
   const [layoutSvg, setLayoutSvg] = useState<string>('')
@@ -147,6 +160,11 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
   const overlayRef = useRef<ImageOverlay | null>(null)
   const overlayUrlRef = useRef<string | null>(null)
   const markersRef = useRef<Map<string, { marker: Marker; material: MaterialWarehouseLocation }>>(new Map())
+  const selectedMarkerIdRef = useRef<string | null>(selectedMaterialId ?? null)
+
+  useEffect(() => {
+    selectedMarkerIdRef.current = selectedMaterialId ?? null
+  }, [selectedMaterialId])
 
   const initializeMap = useCallback(() => {
     if (mapRef.current || !mapContainerRef.current) return
@@ -208,7 +226,7 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
     try {
       setLoadingLayout(true)
       setIsRefreshing(true)
-      const svg = mapMode === 'dynamic' ? await getDynamicWarehouseLayout() : await getWarehouseLayout()
+      const svg = await getDynamicWarehouseLayout()
       setLayoutSvg(svg)
     } catch (error) {
       console.error('Error al cargar layout del almacén', error)
@@ -216,7 +234,7 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
       setLoadingLayout(false)
       setIsRefreshing(false)
     }
-  }, [isOpen, mapMode])
+  }, [isOpen])
 
   useEffect(() => {
     if (isOpen) {
@@ -358,6 +376,8 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
         riseOnHover: true,
       })
 
+      marker.setZIndexOffset(isSelected ? 1400 : 0)
+
       const materialZone = material.warehouseZone || 'Sin zona'
       const materialSection = material.warehouseSection ?? '—'
       const materialLevel = material.warehouseLevel ?? '—'
@@ -373,8 +393,37 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
       `
 
       marker
+        .on('add', () => {
+          const element = marker.getElement()
+          if (element) {
+            element.classList.add('warehouse-marker--interactive')
+          }
+        })
+        .on('mouseover', () => {
+          marker.setZIndexOffset(2000)
+          const element = marker.getElement()
+          if (element) {
+            element.classList.add('warehouse-marker--hover')
+          }
+        })
+        .on('mouseout', () => {
+          const element = marker.getElement()
+          if (element) {
+            element.classList.remove('warehouse-marker--hover')
+          }
+          const shouldStayRaised = selectedMarkerIdRef.current === markerKey
+          marker.setZIndexOffset(shouldStayRaised ? 1600 : 0)
+        })
         .on('click', () => {
           onSelectMaterial?.(markerKey)
+          const element = marker.getElement()
+          if (element) {
+            element.classList.add('warehouse-marker--pop')
+            setTimeout(() => {
+              element.classList.remove('warehouse-marker--pop')
+            }, 220)
+          }
+          marker.setZIndexOffset(1600)
         })
         .bindTooltip(tooltipHtml, {
           direction: 'top',
@@ -396,6 +445,7 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
       const zoneColor = getZoneColor(material.warehouseZone as string | undefined)
       const isSelected = selectedMaterialId ? key === selectedMaterialId : false
       marker.setIcon(buildMarkerIcon(zoneColor, isSelected))
+      marker.setZIndexOffset(isSelected ? 1600 : 0)
     })
   }, [selectedMaterialId])
 
@@ -445,10 +495,40 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
 
   const legendOptions = useMemo(() => zoneOptions, [zoneOptions])
 
+  const selectedZoneSummary = useMemo(() => {
+    if (zoneSummaries.length === 0) {
+      return null
+    }
+    const matching = zoneSummaries.find(
+      (summary) => normalizeZoneKey(summary.zone) === normalizeZoneKey(zoneFilter)
+    )
+
+    if (matching) {
+      return {
+        label: matching.zone,
+        total: matching.total,
+        occupied: matching.occupied,
+        free: matching.free,
+      }
+    }
+
+    return null
+  }, [zoneFilter, zoneSummaries])
+
   const handleZoom = useCallback((direction: 'in' | 'out') => {
     const map = mapRef.current
     if (!map) return
     direction === 'in' ? map.zoomIn() : map.zoomOut()
+  }, [])
+
+  const handleFitToView = useCallback(() => {
+    const map = mapRef.current
+    if (!map) return
+    map.flyToBounds(warehouseBounds, {
+      maxZoom: INITIAL_ZOOM + 0.5,
+      duration: 0.35,
+      easeLinearity: 0.18,
+    })
   }, [])
 
   const containerClasses = cn(
@@ -487,15 +567,6 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Select value={mapMode} onValueChange={(value: 'static' | 'dynamic') => setMapMode(value)}>
-              <SelectTrigger className="h-9 w-[150px] border border-stroke bg-background text-sm text-primary-600 focus:ring-2 focus:ring-primary-300 focus:border-primary-600">
-                <SelectValue placeholder="Modo de mapa" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="static">Diseño base</SelectItem>
-                <SelectItem value="dynamic">Diseño dinámico</SelectItem>
-              </SelectContent>
-            </Select>
             <Button
               variant="outline"
               size="sm"
@@ -540,15 +611,51 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
                 />
               </div>
 
-              <div className="flex items-center gap-2 ml-auto">
-                <Button variant="outline" size="icon" className="border border-stroke bg-background hover:bg-primary-50/70" onClick={() => handleZoom('out')}>
+              <div className="ml-auto flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border border-stroke bg-background transition-all hover:-translate-y-0.5 hover:bg-primary-50/70"
+                  onClick={handleFitToView}
+                  aria-label="Ajustar vista"
+                >
+                  <Crosshair className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border border-stroke bg-background transition-all hover:-translate-y-0.5 hover:bg-primary-50/70"
+                  onClick={() => handleZoom('out')}
+                  aria-label="Alejar"
+                >
                   <ZoomOut className="size-4" />
                 </Button>
-                <Button variant="outline" size="icon" className="border border-stroke bg-background hover:bg-primary-50/70" onClick={() => handleZoom('in')}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border border-stroke bg-background transition-all hover:-translate-y-0.5 hover:bg-primary-50/70"
+                  onClick={() => handleZoom('in')}
+                  aria-label="Acercar"
+                >
                   <ZoomIn className="size-4" />
                 </Button>
               </div>
             </div>
+
+            {selectedZoneSummary && (
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary-100 bg-white/70 p-3 shadow-sm shadow-primary-900/5">
+                <Badge className="bg-primary-100 text-primary-800">{selectedZoneSummary.label}</Badge>
+                <Badge variant="outline" className="border-primary-100 bg-primary-50/60 text-primary-700">
+                  Capacidad {selectedZoneSummary.total}
+                </Badge>
+                <Badge variant="outline" className="border-primary-100 bg-orange-50/80 text-orange-700">
+                  Ocupado {selectedZoneSummary.occupied}
+                </Badge>
+                <Badge variant="outline" className="border-primary-100 bg-emerald-50/80 text-emerald-700">
+                  Libre {selectedZoneSummary.free}
+                </Badge>
+              </div>
+            )}
 
             <div className="warehouse-map-container relative h-[260px] w-full overflow-hidden rounded-2xl border border-primary-100 bg-surface shadow-md md:h-[360px]">
               <div className="absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_20%_25%,rgba(37,99,235,0.12),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(30,64,175,0.12),transparent_60%)]" />
