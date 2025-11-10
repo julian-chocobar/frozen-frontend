@@ -1,25 +1,26 @@
 'use client'
 
+/**
+ * Panel de visualización del almacén con Leaflet.js
+ * Muestra materiales en sus ubicaciones reales usando coordenadas del warehouse
+ */
+
 import 'leaflet/dist/leaflet.css'
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import L, { type ImageOverlay, type Map as LeafletMap, type Marker } from 'leaflet'
-import { ChevronLeft, ChevronRight, Crosshair, MapPinned, RefreshCcw, Search, ZoomIn, ZoomOut } from 'lucide-react'
-
+import { ChevronLeft, ChevronRight, MapPinned, RefreshCcw, Search, Crosshair, ZoomIn, ZoomOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import {
-  getDynamicWarehouseLayout,
-  getMaterialsWarehouseMap,
-  getWarehouseInfo,
-  getWarehouseLayout,
-} from '@/lib/warehouse-api'
-import type { MaterialWarehouseLocation, WarehouseInfoResponse } from '@/types'
+import { getWarehouseZones, getSectionsForZone } from '@/lib/materials-api'
+import { getWarehouseLayout, getMaterialsWarehouseMap, getWarehouseInfo } from '@/lib/warehouse-api'
+import type { MaterialType, WarehouseZone, MaterialWarehouseLocation, WarehouseInfoResponse } from '@/types'
 
+// Configuración del mapa
 const WAREHOUSE_WIDTH = 1000
 const WAREHOUSE_HEIGHT = 600
 const INITIAL_ZOOM = 0
@@ -31,25 +32,20 @@ const warehouseBounds: L.LatLngBoundsExpression = [
   [WAREHOUSE_HEIGHT, WAREHOUSE_WIDTH],
 ]
 
-const zonePalette: Record<string, string> = { 
+// Colores para cada zona del almacén
+const zonePalette: Record<string, string> = {
   ZONA_MALTA: '#2563eb',
   MALTA: '#2563eb',
-
   ZONA_LUPULO: '#7c3aed',
   LUPULO: '#7c3aed',
-
   ZONA_LEVADURA: '#f43f5e',
   LEVADURA: '#f43f5e',
-
   ZONA_AGUA: '#38bdf8',
   AGUA: '#38bdf8',
-
   ZONA_ENVASE: '#22c55e',
   ENVASE: '#22c55e',
-
   ZONA_ETIQUETADO: '#fb923c',
   ETIQUETADO: '#fb923c',
-
   ZONA_OTROS: '#94a3b8',
   OTROS: '#94a3b8',
 }
@@ -154,7 +150,7 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
   const [warehouseInfo, setWarehouseInfo] = useState<WarehouseInfoResponse | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [zoneSummaries, setZoneSummaries] = useState<Array<{ zone: string; total: number; occupied: number; free: number }>>([])
-
+  
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<LeafletMap | null>(null)
   const overlayRef = useRef<ImageOverlay | null>(null)
@@ -166,6 +162,7 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
     selectedMarkerIdRef.current = selectedMaterialId ?? null
   }, [selectedMaterialId])
 
+  // Inicializar mapa de Leaflet
   const initializeMap = useCallback(() => {
     if (mapRef.current || !mapContainerRef.current) return
 
@@ -221,15 +218,16 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
     }
   }, [])
 
+  // Cargar layout del almacén desde el backend
   const loadLayout = useCallback(async () => {
     if (!isOpen) return
     try {
       setLoadingLayout(true)
       setIsRefreshing(true)
-      const svg = await getDynamicWarehouseLayout()
+      const svg = await getWarehouseLayout()
       setLayoutSvg(svg)
     } catch (error) {
-      console.error('Error al cargar layout del almacén', error)
+      console.error('Error al cargar layout del almacén:', error)
     } finally {
       setLoadingLayout(false)
       setIsRefreshing(false)
@@ -264,17 +262,19 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
     setTimeout(() => map.invalidateSize(), 100)
   }, [isOpen, layoutSvg])
 
+  // Cargar materiales del warehouse
   const loadMaterials = useCallback(async () => {
     if (!isOpen) return
     try {
       setLoadingMaterials(true)
       const materials = await getMaterialsWarehouseMap({
         zone: zoneFilter === 'all' ? undefined : zoneFilter,
-        activeOnly: undefined,
+        activeOnly: true,
       })
       setAllMaterials(materials)
     } catch (error) {
-      console.error('Error al cargar materiales del almacén', error)
+      console.error('Error al cargar materiales del almacén:', error)
+      setAllMaterials([])
     } finally {
       setLoadingMaterials(false)
     }
@@ -286,19 +286,20 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
     }
   }, [isOpen, loadMaterials])
 
+  // Cargar información del warehouse
   useEffect(() => {
-    const fetchWarehouseContext = async () => {
+    const fetchWarehouseInfo = async () => {
       try {
         const info = await getWarehouseInfo()
         setWarehouseInfo(info)
       } catch (error) {
-        console.error('Error al obtener información del almacén', error)
+        console.error('Error al obtener información del almacén:', error)
       }
     }
-
-    fetchWarehouseContext()
+    fetchWarehouseInfo()
   }, [])
 
+  // Opciones de zonas para el filtro
   const zoneOptions = useMemo<ZoneOption[]>(() => {
     if (!warehouseInfo?.availableZones) return []
     return warehouseInfo.availableZones
@@ -317,6 +318,7 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
 
   const normalizedSearch = searchTerm.trim().toLowerCase()
 
+  // Filtrar materiales por búsqueda
   const filteredMaterials = useMemo(() => {
     return allMaterials.filter((material) => {
       const materialName = (material.name ?? material.materialName ?? '').toLowerCase()
@@ -354,6 +356,7 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
     setZoneSummaries(summaries)
   }, [filteredMaterials, warehouseInfo?.sectionsByZone])
 
+  // Poblar marcadores en el mapa
   const populateMarkers = useCallback(() => {
     const map = mapRef.current
     if (!map) return
@@ -438,6 +441,7 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
     })
   }, [filteredMaterials, onSelectMaterial, selectedMaterialId])
 
+  // Actualizar íconos de marcadores
   const updateMarkerIcons = useCallback(() => {
     const map = mapRef.current
     if (!map || markersRef.current.size === 0) return
@@ -660,7 +664,6 @@ export function MaterialsWarehousePanel({ selectedMaterialId, onSelectMaterial }
             <div className="warehouse-map-container relative h-[260px] w-full overflow-hidden rounded-2xl border border-primary-100 bg-surface shadow-md md:h-[360px]">
               <div className="absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_20%_25%,rgba(37,99,235,0.12),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(30,64,175,0.12),transparent_60%)]" />
               <div ref={mapContainerRef} className="absolute inset-0 z-[1] overflow-hidden rounded-[inherit]" />
-
               {(loadingLayout || loadingMaterials) && (
                 <div className="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-3 bg-secondary/80 backdrop-blur-sm">
                   <LoadingSpinner />

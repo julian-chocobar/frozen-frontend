@@ -1,12 +1,17 @@
 "use client"
 
 /**
- * Formulario para crear y editar materiales
+ * Formulario para crear y editar materiales con sistema de almacén simplificado
  */
 
-import { useEffect, useMemo, useState } from "react"
-import { getMaterialTypes, getUnitMeasurements } from "@/lib/materials-api"
-import { getWarehouseInfo } from "@/lib/warehouse-api"
+import { useState, useMemo } from "react"
+import { 
+  getMaterialTypes, 
+  getUnitMeasurements, 
+  getWarehouseZones, 
+  getSectionsForZone, 
+  getWarehouseLevels 
+} from "@/lib/materials-api"
 import type {
   Material,
   MaterialDetailResponse,
@@ -14,7 +19,8 @@ import type {
   UnitMeasurement,
   MaterialCreateRequest,
   MaterialUpdateRequest,
-  WarehouseInfoResponse,
+  WarehouseZone,
+  WarehouseLevel
 } from "@/types"
 
 interface MaterialFormProps {
@@ -38,68 +44,27 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
     unitMeasurement: material?.unitMeasurement || "KG" as UnitMeasurement,
     threshold: material?.threshold ?? "",
     warehouseZone: material?.warehouseZone || "",
-    warehouseSection: material?.warehouseSection ? String(material.warehouseSection) : "",
+    warehouseSection: material?.warehouseSection || "",
     warehouseLevel: material?.warehouseLevel != null ? String(material.warehouseLevel) : "",
-    warehouseX: material?.warehouseX !== undefined && material?.warehouseX !== null ? String(material.warehouseX) : "",
-    warehouseY: material?.warehouseY !== undefined && material?.warehouseY !== null ? String(material.warehouseY) : "",
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [warehouseInfo, setWarehouseInfo] = useState<WarehouseInfoResponse | null>(null)
-  const [loadingWarehouseInfo, setLoadingWarehouseInfo] = useState(false)
-  const [warehouseError, setWarehouseError] = useState<string | null>(null)
 
   const materialTypes = getMaterialTypes()
   const unitMeasurements = getUnitMeasurements()
+  const warehouseZones = getWarehouseZones()
+  const warehouseLevels = getWarehouseLevels()
 
-  useEffect(() => {
-    const fetchWarehouseInfo = async () => {
-      try {
-        setLoadingWarehouseInfo(true)
-        setWarehouseError(null)
-        const info = await getWarehouseInfo()
-        setWarehouseInfo(info)
-      } catch (error) {
-        console.error('Error al cargar información del almacén:', error)
-        setWarehouseError('No se pudo cargar la configuración del almacén')
-      } finally {
-        setLoadingWarehouseInfo(false)
-      }
-    }
-
-    fetchWarehouseInfo()
-  }, [])
-
-  const zoneOptions = useMemo(() => {
-    if (!warehouseInfo) return [] as string[]
-
-    if (Array.isArray(warehouseInfo.availableZones)) {
-      const raw = warehouseInfo.availableZones
-      if (raw.length > 0 && typeof raw[0] === 'string') {
-        return raw as string[]
-      }
-      // Si el backend devuelve objetos, extraer name
-      return (raw as Array<{ name: string }>).map((zone) => zone.name)
-    }
-
-    return []
-  }, [warehouseInfo])
-
-  const sectionsForZone = useMemo(() => {
-    if (!formData.warehouseZone || !warehouseInfo?.sectionsByZone) return []
-    const entries = warehouseInfo.sectionsByZone
-    if (Array.isArray(entries)) {
-      // Compatibilidad: algunas versiones devuelven [{ zone, sections }]
-      const found = entries.find((item: any) => item.zone === formData.warehouseZone)
-      return found?.sections || []
-    }
-    return warehouseInfo.sectionsByZone[formData.warehouseZone] || []
-  }, [formData.warehouseZone, warehouseInfo])
+  // Obtener las secciones disponibles para la zona seleccionada
+  const availableSections = useMemo(() => {
+    if (!formData.warehouseZone) return []
+    return getSectionsForZone(formData.warehouseZone as MaterialType)
+  }, [formData.warehouseZone])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    // Campos obligatorios para creación
+    // Campos obligatorios
     if (!formData.name.trim()) {
       newErrors.name = "El nombre es requerido"
     }
@@ -109,24 +74,25 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
     }
 
     // Validaciones para campos opcionales (solo si tienen valor)
-    if (formData.value && formData.value !== "" && Number(formData.value) < 0) {
-      newErrors.value = "El valor no puede ser menor a 0"
+    if (formData.value && Number(formData.value) <= 0) {
+      newErrors.value = "El valor debe ser mayor a 0"
     }
 
-    if (formData.stock && formData.stock !== "" && Number(formData.stock) < 0) {
-      newErrors.stock = "El stock no puede ser menor a 0"
+    if (allowStockEdit && formData.stock && Number(formData.stock) < 0) {
+      newErrors.stock = "El stock no puede ser negativo"
     }
 
-    if (formData.warehouseZone && !formData.warehouseSection) {
-      newErrors.warehouseSection = "Selecciona una sección"
-    }
-
-    if (formData.warehouseX && Number(formData.warehouseX) < 0) {
-      newErrors.warehouseX = "La coordenada X debe ser positiva"
-    }
-
-    if (formData.warehouseY && Number(formData.warehouseY) < 0) {
-      newErrors.warehouseY = "La coordenada Y debe ser positiva"
+    // Validaciones de ubicación del almacén (solo si se proporciona información completa)
+    if (formData.warehouseZone || formData.warehouseSection || formData.warehouseLevel) {
+      if (!formData.warehouseZone) {
+        newErrors.warehouseZone = "La zona es requerida si se especifica ubicación"
+      }
+      if (!formData.warehouseSection) {
+        newErrors.warehouseSection = "La sección es requerida si se especifica ubicación"
+      }
+      if (!formData.warehouseLevel) {
+        newErrors.warehouseLevel = "El nivel es requerido si se especifica ubicación"
+      }
     }
 
     setErrors(newErrors)
@@ -138,89 +104,97 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
     
     if (validateForm()) {
       if (isEditing) {
-        // Para edición, enviar solo campos que han cambiado y tienen valor
-        const updateData: MaterialUpdateRequest = {}
-        
-        if (formData.name !== material?.name) updateData.name = formData.name
-        if (formData.type !== material?.type) updateData.type = formData.type
-        if (formData.supplier !== material?.supplier) updateData.supplier = formData.supplier
-        if (formData.value !== material?.value && formData.value !== "" && Number(formData.value) >= 0) updateData.value = Number(formData.value)
-        if (formData.unitMeasurement !== material?.unitMeasurement) updateData.unitMeasurement = formData.unitMeasurement
-        if (formData.threshold !== material?.threshold && formData.threshold !== "" && Number(formData.threshold) > 0) updateData.threshold = Number(formData.threshold)
-        if (formData.warehouseZone !== (material?.warehouseZone || "")) updateData.warehouseZone = formData.warehouseZone || undefined
-        if (formData.warehouseSection !== (material?.warehouseSection ? String(material.warehouseSection) : "")) {
-          updateData.warehouseSection = formData.warehouseSection || undefined
+        // Para edición, enviar todos los campos necesarios
+        const updateData: MaterialUpdateRequest = {
+          // Campos obligatorios que siempre deben enviarse
+          name: formData.name,
+          type: formData.type,
+          unitMeasurement: formData.unitMeasurement,
+          threshold: Number(formData.threshold)
         }
-        if (formData.warehouseLevel !== (material?.warehouseLevel != null ? String(material.warehouseLevel) : "")) {
+        
+        // Campos opcionales
+        if (formData.supplier) {
+          updateData.supplier = formData.supplier
+        }
+        
+        if (formData.value) {
+          updateData.value = Number(formData.value)
+        }
+
+        // Campos de ubicación del almacén
+        if (formData.warehouseZone !== (material?.warehouseZone || "")) {
+          updateData.warehouseZone = formData.warehouseZone as WarehouseZone || undefined
+        }
+        if (formData.warehouseSection !== (material?.warehouseSection || "")) {
+          updateData.warehouseSection = formData.warehouseSection ? String(formData.warehouseSection) : undefined
+        }
+        if (formData.warehouseLevel) {
           const levelNumber = Number(formData.warehouseLevel)
-          if (!Number.isNaN(levelNumber) && levelNumber > 0) {
-            updateData.warehouseLevel = levelNumber
+          if (levelNumber !== material?.warehouseLevel) {
+            updateData.warehouseLevel = levelNumber as WarehouseLevel
           }
         }
-        if (formData.warehouseX !== (material?.warehouseX !== undefined ? String(material.warehouseX) : "")) {
-          updateData.warehouseX = formData.warehouseX !== "" ? Number(formData.warehouseX) : undefined
-        }
-        if (formData.warehouseY !== (material?.warehouseY !== undefined ? String(material.warehouseY) : "")) {
-          updateData.warehouseY = formData.warehouseY !== "" ? Number(formData.warehouseY) : undefined
-        }
-        
-        // Solo incluir stock si allowStockEdit es true (para casos especiales)
-        if (allowStockEdit && formData.stock !== material?.availableStock && Number(formData.stock) >= 0) {
-          // Nota: Esto requeriría extender MaterialUpdateRequest o crear un tipo especial
-          console.warn('Edición de stock no está soportada en MaterialUpdateRequest')
-        }
-        
+
         onSubmit(updateData)
       } else {
-        // Para creación, enviar campos obligatorios y opcionales con valor
+        // Para creación, enviar todos los campos
         const createData: MaterialCreateRequest = {
           name: formData.name,
           type: formData.type,
           unitMeasurement: formData.unitMeasurement,
           threshold: Number(formData.threshold),
         }
-        
-        // Agregar campos opcionales solo si tienen valor
-        if (formData.supplier.trim()) createData.supplier = formData.supplier
-        if (formData.value !== "" && Number(formData.value) >= 0) createData.value = Number(formData.value)
-        if (formData.stock !== "" && Number(formData.stock) >= 0) createData.stock = Number(formData.stock)
-        if (formData.warehouseZone) createData.warehouseZone = formData.warehouseZone
-        if (formData.warehouseSection) createData.warehouseSection = formData.warehouseSection
-        const levelNumber = Number(formData.warehouseLevel)
-        if (!Number.isNaN(levelNumber) && levelNumber > 0) {
-          createData.warehouseLevel = levelNumber
+
+        if (formData.supplier) createData.supplier = formData.supplier
+        if (formData.value) createData.value = Number(formData.value)
+        if (allowStockEdit && formData.stock) createData.stock = Number(formData.stock)
+
+        // Campos de ubicación del almacén
+        if (formData.warehouseZone) createData.warehouseZone = formData.warehouseZone as WarehouseZone
+        if (formData.warehouseSection) createData.warehouseSection = String(formData.warehouseSection)
+        if (formData.warehouseLevel) {
+          createData.warehouseLevel = Number(formData.warehouseLevel) as WarehouseLevel
         }
-        if (formData.warehouseX !== "") createData.warehouseX = Number(formData.warehouseX)
-        if (formData.warehouseY !== "") createData.warehouseY = Number(formData.warehouseY)
-        
+
         onSubmit(createData)
       }
     }
   }
 
-  const handleChange = (field: string, value: string | number) => {
+  const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    // Limpiar error del campo cuando el usuario empiece a escribir
+    
+    // Limpiar sección y nivel si cambia la zona
+    if (field === 'warehouseZone') {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value,
+        warehouseSection: "",
+        warehouseLevel: ""
+      }))
+    }
+    
+    // Limpiar errores del campo que se está editando
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }))
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-background p-4 rounded-lg">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Información básica */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Nombre */}
         <div>
           <label className="block text-sm font-medium text-primary-900 mb-2">
-            Nombre *
+            Nombre del Material *
           </label>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => handleChange("name", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-              errors.name ? "border-red-500" : "border-stroke"
-            }`}
+            className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500"
             placeholder="Ej: Malta Pilsen"
           />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
@@ -229,12 +203,12 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
         {/* Tipo */}
         <div>
           <label className="block text-sm font-medium text-primary-900 mb-2">
-            Tipo *
+            Tipo de Material *
           </label>
           <select
             value={formData.type}
-            onChange={(e) => handleChange("type", e.target.value as MaterialType)}
-            className="w-full px-3 py-2 border border-stroke rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
+            onChange={(e) => handleChange("type", e.target.value)}
+            className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500"
           >
             {materialTypes.map((type) => (
               <option key={type.value} value={type.value}>
@@ -242,6 +216,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
               </option>
             ))}
           </select>
+          {errors.type && <p className="text-red-500 text-sm mt-1">{errors.type}</p>}
         </div>
 
         {/* Proveedor */}
@@ -253,57 +228,10 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
             type="text"
             value={formData.supplier}
             onChange={(e) => handleChange("supplier", e.target.value)}
-            className="w-full px-3 py-2 border border-stroke rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
-            placeholder="Ej: Proveedor ABC (opcional)"
+            className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500"
+            placeholder="Ej: Maltería Santa Fe"
           />
-        </div>
-
-        {/* Valor */}
-        <div>
-          <label className="block text-sm font-medium text-primary-900 mb-2">
-            Valor Unitario
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={formData.value}
-            onChange={(e) => handleChange("value", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-              errors.value ? "border-red-500" : "border-stroke"
-            }`}
-            placeholder="0.00 (opcional)"
-          />
-          {errors.value && <p className="text-red-500 text-sm mt-1">{errors.value}</p>}
-        </div>
-
-        {/* Stock */}
-        <div>
-          <label className="block text-sm font-medium text-primary-900 mb-2">
-            Stock Actual
-            {isEditing && !allowStockEdit && (
-              <span className="text-xs text-gray-500 ml-2">(Solo lectura)</span>
-            )}
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={formData.stock}
-            onChange={(e) => handleChange("stock", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-              errors.stock ? "border-red-500" : "border-stroke"
-            } ${isEditing && !allowStockEdit ? "bg-gray-100 cursor-not-allowed" : ""}`}
-            placeholder="0.00 (opcional)"
-            disabled={isEditing && !allowStockEdit}
-            readOnly={isEditing && !allowStockEdit}
-          />
-          {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
-            {isEditing && !allowStockEdit && (
-              <p className="text-xs text-gray-500 mt-1">
-                Para modificar el stock, usa la sección de Movimientos
-              </p>
-            )}
+          {errors.supplier && <p className="text-red-500 text-sm mt-1">{errors.supplier}</p>}
         </div>
 
         {/* Unidad de Medida */}
@@ -313,8 +241,8 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
           </label>
           <select
             value={formData.unitMeasurement}
-            onChange={(e) => handleChange("unitMeasurement", e.target.value as UnitMeasurement)}
-            className="w-full px-3 py-2 border border-stroke rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
+            onChange={(e) => handleChange("unitMeasurement", e.target.value)}
+            className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500"
           >
             {unitMeasurements.map((unit) => (
               <option key={unit.value} value={unit.value}>
@@ -322,6 +250,24 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
               </option>
             ))}
           </select>
+          {errors.unitMeasurement && <p className="text-red-500 text-sm mt-1">{errors.unitMeasurement}</p>}
+        </div>
+
+        {/* Valor */}
+        <div>
+          <label className="block text-sm font-medium text-primary-900 mb-2">
+            Valor por Unidad ($)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.value}
+            onChange={(e) => handleChange("value", e.target.value)}
+            className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500"
+            placeholder="0.00"
+          />
+          {errors.value && <p className="text-red-500 text-sm mt-1">{errors.value}</p>}
         </div>
 
         {/* Umbral */}
@@ -331,110 +277,115 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
           </label>
           <input
             type="number"
+            min="1"
             step="0.01"
-            min="0"
             value={formData.threshold}
             onChange={(e) => handleChange("threshold", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-              errors.threshold ? "border-red-500" : "border-stroke"
-            }`}
-            placeholder="0.00"
+            className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500"
+            placeholder="100"
           />
           {errors.threshold && <p className="text-red-500 text-sm mt-1">{errors.threshold}</p>}
         </div>
+
+        {/* Stock inicial (solo en creación si se permite) */}
+        {allowStockEdit && (
+          <div>
+            <label className="block text-sm font-medium text-primary-900 mb-2">
+              Stock Inicial
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.stock}
+              onChange={(e) => handleChange("stock", e.target.value)}
+              className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500"
+              placeholder="0"
+            />
+            {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-stroke">
-        <div>
-          <label className="block text-sm font-medium text-primary-900 mb-2">
-            Zona de almacén
-          </label>
-          <select
-            value={formData.warehouseZone}
-            onChange={(e) => handleChange("warehouseZone", e.target.value)}
-            className="w-full px-3 py-2 border border-stroke rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
-          >
-            <option value="">Selecciona una zona</option>
-            {zoneOptions.map((zone) => (
-              <option key={zone} value={zone}>
-                {zone}
-              </option>
-            ))}
-          </select>
-          {loadingWarehouseInfo && <p className="text-xs text-muted mt-1">Cargando zonas...</p>}
-          {warehouseError && <p className="text-xs text-alert-600 mt-1">{warehouseError}</p>}
-        </div>
+      {/* Ubicación en el Almacén */}
+      <div className="border-t border-stroke pt-6">
+        <h3 className="text-lg font-medium text-primary-900 mb-4">Ubicación en el Almacén</h3>
+        <p className="text-sm text-primary-600 mb-4">
+          Especifica la ubicación del material en el almacén (opcional)
+        </p>
 
-        <div>
-          <label className="block text-sm font-medium text-primary-900 mb-2">
-            Sección
-          </label>
-          <select
-            value={formData.warehouseSection}
-            onChange={(e) => handleChange("warehouseSection", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-              errors.warehouseSection ? "border-red-500" : "border-stroke"
-            }`}
-            disabled={!formData.warehouseZone}
-          >
-            <option value="">{formData.warehouseZone ? "Selecciona una sección" : "Selecciona una zona primero"}</option>
-            {sectionsForZone.map((section: string) => (
-              <option key={section} value={section}>
-                {section}
-              </option>
-            ))}
-          </select>
-          {errors.warehouseSection && <p className="text-red-500 text-sm mt-1">{errors.warehouseSection}</p>}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-primary-900 mb-2">
-            Nivel
-          </label>
-          <input
-            type="number"
-            min="1"
-            value={formData.warehouseLevel}
-            onChange={(e) => handleChange("warehouseLevel", e.target.value)}
-            className="w-full px-3 py-2 border border-stroke rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
-            placeholder="1"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Zona */}
           <div>
             <label className="block text-sm font-medium text-primary-900 mb-2">
-              Coordenada X
+              Zona
             </label>
-            <input
-              type="number"
-              min="0"
-              value={formData.warehouseX}
-              onChange={(e) => handleChange("warehouseX", e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                errors.warehouseX ? "border-red-500" : "border-stroke"
-              }`}
-              placeholder="0"
-            />
-            {errors.warehouseX && <p className="text-red-500 text-sm mt-1">{errors.warehouseX}</p>}
+            <select
+              value={formData.warehouseZone}
+              onChange={(e) => handleChange("warehouseZone", e.target.value)}
+              className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="">Seleccionar zona</option>
+              {warehouseZones.map((zone) => (
+                <option key={zone.value} value={zone.value}>
+                  {zone.label}
+                </option>
+              ))}
+            </select>
+            {errors.warehouseZone && <p className="text-red-500 text-sm mt-1">{errors.warehouseZone}</p>}
           </div>
+
+          {/* Sección */}
           <div>
             <label className="block text-sm font-medium text-primary-900 mb-2">
-              Coordenada Y
+              Sección
             </label>
-            <input
-              type="number"
-              min="0"
-              value={formData.warehouseY}
-              onChange={(e) => handleChange("warehouseY", e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                errors.warehouseY ? "border-red-500" : "border-stroke"
-              }`}
-              placeholder="0"
-            />
-            {errors.warehouseY && <p className="text-red-500 text-sm mt-1">{errors.warehouseY}</p>}
+            <select
+              value={formData.warehouseSection}
+              onChange={(e) => handleChange("warehouseSection", e.target.value)}
+              disabled={!formData.warehouseZone}
+              className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
+            >
+              <option value="">Seleccionar sección</option>
+              {availableSections.map((section) => (
+                <option key={section} value={section}>
+                  {section}
+                </option>
+              ))}
+            </select>
+            {errors.warehouseSection && <p className="text-red-500 text-sm mt-1">{errors.warehouseSection}</p>}
+          </div>
+
+          {/* Nivel */}
+          <div>
+            <label className="block text-sm font-medium text-primary-900 mb-2">
+              Nivel
+            </label>
+            <select
+              value={formData.warehouseLevel}
+              onChange={(e) => handleChange("warehouseLevel", e.target.value)}
+              disabled={!formData.warehouseZone}
+              className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
+            >
+              <option value="">Seleccionar nivel</option>
+              {warehouseLevels.map((level) => (
+                <option key={level.value} value={level.value}>
+                  {level.label}
+                </option>
+              ))}
+            </select>
+            {errors.warehouseLevel && <p className="text-red-500 text-sm mt-1">{errors.warehouseLevel}</p>}
           </div>
         </div>
+
+        {/* Resumen de ubicación */}
+        {formData.warehouseZone && formData.warehouseSection && formData.warehouseLevel && (
+          <div className="mt-4 p-3 bg-primary-50 rounded-lg">
+            <p className="text-sm text-primary-700">
+              <span className="font-medium">Ubicación:</span> {formData.warehouseZone}-{formData.warehouseSection} (Nivel {formData.warehouseLevel})
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Botones */}
@@ -452,7 +403,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
           disabled={isLoading}
           className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? "Guardando..." : material ? "Actualizar" : "Crear"}
+          {isLoading ? "Guardando..." : isEditing ? "Actualizar Material" : "Crear Material"}
         </button>
       </div>
     </form>

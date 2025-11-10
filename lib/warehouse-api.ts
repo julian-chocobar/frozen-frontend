@@ -82,10 +82,6 @@ export async function getWarehouseLayout(params?: LayoutParams): Promise<string>
   return svg
 }
 
-export const getDynamicWarehouseLayout = (params?: LayoutParams) => {
-  return fetchSvg("/api/warehouse/layout/dynamic", params)
-}
-
 export const regenerateWarehouseLayout = async (): Promise<string> => {
   const svg = await fetchSvg("/api/warehouse/layout/regenerate")
   layoutCache.clear()

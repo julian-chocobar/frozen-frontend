@@ -40,6 +40,7 @@ export default function MaterialesPage() {
   const [externalViewId, setExternalViewId] = useState<string | null>(null)
 
 
+
   // Obtener parámetros de búsqueda
   const page = parseInt(searchParams.get('page') || '0')
   const type = searchParams.get('type') || undefined

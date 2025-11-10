@@ -8,6 +8,13 @@ import { cn } from "@/lib/utils"
 import type { MaterialDetailResponse } from "@/types"
 import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
 
+interface MaterialDetailsProps {
+  material: MaterialDetailResponse
+  onClose: () => void
+  onEdit: () => void
+  onToggleActive: () => void
+}
+
 const normalizeZoneName = (zone?: string | null) => {
   if (!zone) return null
   const cleaned = zone.replace(/^ZONA[_-]?/i, '').replace(/_/g, ' ').trim()
@@ -26,8 +33,6 @@ export function MaterialDetails({
   const zone = normalizeZoneName(material.warehouseZone) ?? '—'
   const section = material.warehouseSection ?? '—'
   const level = material.warehouseLevel ?? '—'
-  const coordinateX = material.warehouseX ?? '—'
-  const coordinateY = material.warehouseY ?? '—'
   const currentStock = material.availableStock ?? material.totalStock ?? 0
   const reservedStock = material.reservedStock ?? 0
 
@@ -162,7 +167,7 @@ export function MaterialDetails({
             </div>
 
             {material.warehouseZone ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
                   <label className="text-xs uppercase tracking-wide text-muted">Zona</label>
                   <p className="font-semibold text-primary-900">{zone}</p>
@@ -174,12 +179,6 @@ export function MaterialDetails({
                 <div>
                   <label className="text-xs uppercase tracking-wide text-muted">Nivel</label>
                   <p className="font-semibold text-primary-900">{level}</p>
-                </div>
-                <div>
-                  <label className="text-xs uppercase tracking-wide text-muted">Coordenadas</label>
-                  <p className="font-semibold text-primary-900">
-                    {coordinateX}, {coordinateY}
-                  </p>
                 </div>
               </div>
             ) : (

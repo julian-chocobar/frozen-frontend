@@ -26,6 +26,41 @@ const TYPE_LABELS: Record<MaterialType, string> = {
   'OTROS': 'Otros'
 }
 
+// ============================================
+// SISTEMA DE ALMACÉN SIMPLIFICADO
+// ============================================
+
+/**
+ * Configuración fija de zonas y secciones del almacén
+ */
+export const WAREHOUSE_ZONES_SECTIONS = {
+  MALTA: ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5', 'C1', 'C2', 'C3', 'C4', 'C5'],
+  LUPULO: ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5', 'C1', 'C2', 'C3', 'C4', 'C5'],
+  LEVADURA: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+  AGUA: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+  ENVASE: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+  ETIQUETADO: ['A1', 'A2', 'B1', 'B2'],
+  OTROS: ['A1', 'A2', 'B1', 'B2']
+} as const
+
+/**
+ * Niveles disponibles en el almacén
+ */
+export const WAREHOUSE_LEVELS = [1, 2, 3] as const
+
+/**
+ * Labels para las zonas del almacén
+ */
+export const WAREHOUSE_ZONE_LABELS = {
+  MALTA: 'Malta',
+  LUPULO: 'Lúpulo',
+  LEVADURA: 'Levadura',
+  AGUA: 'Agua',
+  ENVASE: 'Envase',
+  ETIQUETADO: 'Etiquetado',
+  OTROS: 'Otros'
+} as const
+
 const UNIT_LABELS: Record<UnitMeasurement, string> = {
   'KG': 'kg',
   'LT': 'L',
@@ -220,4 +255,53 @@ export async function getMaterialsIdNameList(params?: {
   }
   const materials = await api.get<MaterialIdName[]>('/api/materials/id-name-list', urlParams)
   return materials
+}
+
+// ============================================
+// FUNCIONES DEL SISTEMA DE ALMACÉN
+// ============================================
+
+/**
+ * Obtiene las secciones disponibles para una zona específica
+ */
+export function getSectionsForZone(zone: MaterialType): readonly string[] {
+  return WAREHOUSE_ZONES_SECTIONS[zone] || []
+}
+
+/**
+ * Obtiene todas las zonas disponibles con sus secciones
+ */
+export function getWarehouseZones() {
+  return Object.keys(WAREHOUSE_ZONES_SECTIONS).map(zone => ({
+    value: zone as MaterialType,
+    label: WAREHOUSE_ZONE_LABELS[zone as MaterialType],
+    sections: WAREHOUSE_ZONES_SECTIONS[zone as MaterialType]
+  }))
+}
+
+/**
+ * Obtiene los niveles disponibles
+ */
+export function getWarehouseLevels() {
+  return WAREHOUSE_LEVELS.map(level => ({
+    value: level,
+    label: `Nivel ${level}`
+  }))
+}
+
+/**
+ * Valida si una ubicación es válida
+ */
+export function validateWarehouseLocation(zone: MaterialType, section: string, level: number): boolean {
+  const validSections = getSectionsForZone(zone)
+  const validLevels = WAREHOUSE_LEVELS
+  
+  return validSections.includes(section) && validLevels.includes(level as any)
+}
+
+/**
+ * Obtiene el label de una zona
+ */
+export function getWarehouseZoneLabel(zone: MaterialType): string {
+  return WAREHOUSE_ZONE_LABELS[zone] || zone
 }

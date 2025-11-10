@@ -11,6 +11,29 @@ import { StringifyOptions } from "querystring"
 export type MaterialType = "MALTA" | "LUPULO" | "AGUA" | "LEVADURA" | "ENVASE" | "ETIQUETADO" | "OTROS"
 export type UnitMeasurement = "KG" | "LT" | "UNIDAD"
 
+// ============================================
+// SISTEMA DE ALMACÉN SIMPLIFICADO
+// ============================================
+export type WarehouseZone = "MALTA" | "LUPULO" | "LEVADURA" | "AGUA" | "ENVASE" | "ETIQUETADO" | "OTROS"
+export type WarehouseLevel = 1 | 2 | 3
+
+// Secciones disponibles por zona
+export interface WarehouseZoneSections {
+  MALTA: string[]
+  LUPULO: string[]
+  LEVADURA: string[]
+  AGUA: string[]
+  ENVASE: string[]
+  ETIQUETADO: string[]
+  OTROS: string[]
+}
+
+export interface WarehouseLocation {
+  zone: WarehouseZone
+  section: string
+  level: WarehouseLevel
+}
+
 export type MaterialStatus = "Activo" | "Inactivo"
 
 
@@ -33,9 +56,9 @@ export interface Material {
   minimumStock?: number
   maximumStock?: number
   currentStock?: number
-  warehouseZone?: string
-  warehouseSection?: string | number
-  warehouseLevel?: number
+  warehouseZone?: WarehouseZone
+  warehouseSection?: string
+  warehouseLevel?: WarehouseLevel
   warehouseX?: number
   warehouseY?: number
 }
@@ -49,9 +72,9 @@ export interface MaterialCreateRequest {
   supplier?: string // Opcional
   value?: number // Opcional, debe ser > 0
   stock?: number // Opcional, debe ser > 0
-  warehouseZone?: string
-  warehouseSection?: string | number
-  warehouseLevel?: number
+  warehouseZone?: WarehouseZone
+  warehouseSection?: string
+  warehouseLevel?: WarehouseLevel
   warehouseX?: number
   warehouseY?: number
 }
@@ -64,11 +87,9 @@ export interface MaterialUpdateRequest {
   value?: number // Debe ser > 0
   unitMeasurement?: UnitMeasurement
   threshold?: number // Debe ser > 0
-  warehouseZone?: string
-  warehouseSection?: string | number
-  warehouseLevel?: number
-  warehouseX?: number
-  warehouseY?: number
+  warehouseZone?: WarehouseZone
+  warehouseSection?: string
+  warehouseLevel?: WarehouseLevel
 }
 
 // Respuesta paginada de la API (estructura real del backend)
