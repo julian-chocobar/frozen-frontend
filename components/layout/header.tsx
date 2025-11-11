@@ -1,26 +1,33 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Bell, User, Menu, ChevronDown, LogOut, Users } from "lucide-react"
+import { useState, useRef, useEffect, useCallback } from "react"
+import { Bell, User, Menu, ChevronDown, LogOut, Users, ArrowLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MobileMenu } from "./mobile-menu"
 import { NotificationsPanel } from "./notifications-panel"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { useNotifications } from "@/hooks/use-notifications"
+import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   title: string
   subtitle?: string
   actionButton?: React.ReactNode
+  backButton?: {
+    href?: string
+    onClick?: () => void
+    label?: string
+  }
 }
 
-export function Header({ title, subtitle, actionButton }: HeaderProps) {
+export function Header({ title, subtitle, actionButton, backButton }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
   
   const { user, logout, isAuthenticated } = useAuth()
   const { stats, isConnected, notifications, error } = useNotifications()
@@ -48,12 +55,35 @@ export function Header({ title, subtitle, actionButton }: HeaderProps) {
     }
   }
 
+  const handleBackClick = useCallback(() => {
+    if (!backButton) return
+    if (backButton.onClick) {
+      backButton.onClick()
+      return
+    }
+    if (backButton.href) {
+      router.push(backButton.href)
+      return
+    }
+    router.back()
+  }, [backButton, router])
+
   // Si no está autenticado, no mostrar el header completo
   if (!isAuthenticated) {
     return (
       <header className="sticky top-0 z-40 bg-background border-b border-stroke">
         <div className="flex items-center justify-between h-16 px-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {backButton && (
+              <button
+                type="button"
+                onClick={handleBackClick}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-primary-200 text-primary-600 transition-colors hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-300"
+                aria-label={backButton.label ?? "Volver"}
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
             <h1 className="text-lg font-semibold text-primary-800">{title}</h1>
           </div>
         </div>
@@ -75,6 +105,17 @@ export function Header({ title, subtitle, actionButton }: HeaderProps) {
             >
               <Menu className="w-5 h-5 text-foreground" />
             </button>
+
+            {backButton && (
+              <button
+                type="button"
+                onClick={handleBackClick}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-primary-200 text-primary-600 transition-colors hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-300"
+                aria-label={backButton.label ?? "Volver"}
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
 
             <div className="min-w-0 flex-1">
               <h1 className="text-base md:text-lg lg:text-xl font-semibold text-primary-800 truncate">

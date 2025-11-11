@@ -132,7 +132,7 @@ export function ProductSearchFilter({
       {showDropdown && searchTerm && (
         <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
           {products.length === 0 && !loading ? (
-            <div className="px-3 py-2 text-sm text-gray-500">
+            <div className="px-3 py-2 text-sm text-primary-600">
               No se encontraron productos
             </div>
           ) : (
@@ -141,7 +141,7 @@ export function ProductSearchFilter({
                 key={product.id}
                 type="button"
                 onClick={() => handleProductSelect(product)}
-                className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-gray-100 last:border-b-0"
+                className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-primary-100 last:border-b-0"
               >
                 <div className="font-medium text-primary-900 text-sm">{product.name}</div>
               </button>

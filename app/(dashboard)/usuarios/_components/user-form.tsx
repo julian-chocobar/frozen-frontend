@@ -177,7 +177,7 @@ export function UserForm({ onSubmit, onCancel, isLoading = false }: UserFormProp
             placeholder="**********"
           />
           {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-primary-500 mt-1">
             La contraseña debe tener al menos 8 caracteres y al menos una letra mayúscula, una letra minúscula y un número.
           </p>
         </div>

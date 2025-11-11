@@ -34,7 +34,7 @@ export function ProductInfoCard({
                         <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${
                             product.isAlcoholic 
                                 ? "bg-purple-50 text-purple-700 border-purple-300" 
-                                : "bg-gray-50 text-gray-700 border-gray-300"
+                                : "bg-primary-50 text-primary-700 border-primary-200"
                         }`}>
                             <Wine className="w-3 h-3" />
                             {product.isAlcoholic ? "Alcohólico" : "No Alcohólico"}
@@ -62,8 +62,8 @@ export function ProductInfoCard({
                         {/* Badge Listo */}
                         <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${
                             product.isReady 
-                                ? "bg-blue-50 text-blue-700 border-blue-300" 
-                                : "bg-yellow-50 text-yellow-700 border-yellow-300"
+                                ? "bg-primary-100 text-primary-700 border-primary-300" 
+                                : "bg-primary-50 text-primary-700 border-primary-200"
                         }`}>
                             {product.isReady ? (
                                 <>
@@ -131,13 +131,13 @@ export function ProductInfoCard({
                             <div className="text-lg md:text-xl font-bold text-primary-600">{phasesCount}</div>
                             <div className="text-[10px] md:text-xs text-primary-600 leading-tight">Fases Totales</div>
                         </div>
-                        <div className="text-center p-2 md:p-3 bg-green-50 rounded-lg border border-green-200">
-                            <div className="text-lg md:text-xl font-bold text-green-600">{readyPhasesCount}</div>
-                            <div className="text-[10px] md:text-xs text-green-600 leading-tight">Fases Listas</div>
+                        <div className="text-center p-2 md:p-3 bg-primary-50 rounded-lg border border-primary-200">
+                            <div className="text-lg md:text-xl font-bold text-primary-600">{readyPhasesCount}</div>
+                            <div className="text-[10px] md:text-xs text-primary-600 leading-tight">Fases Listas</div>
                         </div>
-                        <div className="text-center p-2 md:p-3 bg-blue-50 rounded-lg border border-blue-200">
-                            <div className="text-lg md:text-xl font-bold text-blue-600">{recipesCount}</div>
-                            <div className="text-[10px] md:text-xs text-blue-600 leading-tight">Recetas Totales</div>
+                        <div className="text-center p-2 md:p-3 bg-primary-50 rounded-lg border border-primary-200">
+                            <div className="text-lg md:text-xl font-bold text-primary-600">{recipesCount}</div>
+                            <div className="text-[10px] md:text-xs text-primary-600 leading-tight">Recetas Totales</div>
                         </div>
                     </div>
                 </div>

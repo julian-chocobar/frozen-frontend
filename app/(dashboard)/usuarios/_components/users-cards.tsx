@@ -73,10 +73,10 @@ export function UsersCards({
         showLabel: false,
         render: (value, user) => (
           <span className={cn(
-            "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+            "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border",
             user.isActive
-              ? "bg-green-100 text-green-800" 
-              : "bg-gray-100 text-gray-800"
+              ? "bg-green-100 text-green-700 border-green-200" 
+              : "bg-primary-50 text-primary-700 border-primary-200"
           )}>
             {user.isActive ? (
               <>

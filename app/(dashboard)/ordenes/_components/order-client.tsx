@@ -8,7 +8,6 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { OrdersCards } from "./orders-cards"
-import { OrderForm } from "./order-form"
 import { OrderDetails } from "./order-details"
 import { 
   approveProductionOrder, 
@@ -16,7 +15,8 @@ import {
   cancelProductionOrder 
 } from "@/lib/production-orders-api"
 import { handleError, showSuccess } from "@/lib/error-handler"
-import type { ProductionOrderResponse, ProductionOrderCreateRequest } from "@/types"
+import type { ProductionOrderResponse } from "@/types"
+import { PaginationClient } from "@/components/ui/pagination-client"
 
 interface OrderClientProps {
   orders: ProductionOrderResponse[]
@@ -31,7 +31,7 @@ interface OrderClientProps {
   autoOpenId?: string
 }
 
-export function OrderClient({ orders, autoOpenId }: OrderClientProps) {
+export function OrderClient({ orders, pagination, autoOpenId }: OrderClientProps) {
   const router = useRouter()
   const [selectedOrder, setSelectedOrder] = useState<ProductionOrderResponse | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -119,12 +119,26 @@ export function OrderClient({ orders, autoOpenId }: OrderClientProps) {
         isLoading={isLoading}
       />
 
+      {pagination && (
+        <div className="mt-4 border-t border-stroke bg-primary-50/40 px-4 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-primary-700">
+            <p>
+              Mostrando {orders.length} órdenes de {pagination.totalElements} totales
+            </p>
+            <PaginationClient 
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Modal para ver detalles */}
       {isViewing && selectedOrder && (
         <div 
           className="fixed inset-0 flex items-center justify-center p-4 z-50"
           style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)'
           }}

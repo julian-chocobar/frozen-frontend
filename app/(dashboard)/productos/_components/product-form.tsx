@@ -123,9 +123,9 @@ const handleChange = (field: string, value: string | boolean | number) => {
                                 name="isAlcoholic"
                                 checked={formData.isAlcoholic === true}
                                 onChange={() => handleChange("isAlcoholic", true)}
-                                className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 focus:ring-2"
+                                className="w-4 h-4 text-primary-600 bg-primary-50 border-primary-200 focus:ring-primary-500 focus:ring-2"
                             />
-                            <span className="text-sm font-medium text-gray-700">Sí</span>
+                            <span className="text-sm font-medium text-primary-700">Sí</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -133,9 +133,9 @@ const handleChange = (field: string, value: string | boolean | number) => {
                                 name="isAlcoholic"
                                 checked={!formData.isAlcoholic}
                                 onChange={() => handleChange("isAlcoholic", false)}
-                                className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 focus:ring-2"
+                                className="w-4 h-4 text-primary-600 bg-primary-50 border-primary-200 focus:ring-primary-500 focus:ring-2"
                             />
-                            <span className="text-sm font-medium text-gray-700">No</span>
+                            <span className="text-sm font-medium text-primary-700">No</span>
                         </label>
                     </div>
                     {errors.isAlcoholic && <p className="text-red-500 text-sm mt-1">{errors.isAlcoholic}</p>}

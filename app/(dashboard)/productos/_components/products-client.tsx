@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ProductsTable } from "./products-table"
 import { ProductsCards } from "./products-cards"
 import { ProductForm } from "./product-form"
+import { PaginationClient } from "@/components/ui/pagination-client"
 import { 
     updateProduct,
     toggleProductActive,
@@ -25,7 +26,7 @@ interface ProductsClientProps {
     }
 }
 
-export function ProductsClient({ productos }: ProductsClientProps) {
+export function ProductsClient({ productos, pagination }: ProductsClientProps) {
     const router = useRouter()
     const [localProducts, setLocalProducts] = useState<ProductResponse[]>(productos)
     const [selectedProduct, setSelectedProduct] = useState<ProductResponse | null>(null)
@@ -144,19 +145,33 @@ export function ProductsClient({ productos }: ProductsClientProps) {
                 onViewDetails={handleViewDetails} 
             />
     
+            {pagination && (
+                <div className="mt-4 border-t border-stroke bg-primary-50/40 px-4 py-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-primary-700">
+                        <p>
+                            Mostrando {localProducts.length} productos de {pagination.totalElements} totales
+                        </p>
+                        <PaginationClient 
+                            currentPage={pagination.currentPage}
+                            totalPages={pagination.totalPages}
+                        />
+                    </div>
+                </div>
+            )}
+    
             {/* Modal para editar producto */}
             {isEditing && selectedProduct && (
                 <div 
                     className="fixed inset-0 flex items-center justify-center p-4 z-50"
                     style={{ 
-                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        backgroundColor: 'rgba(37, 99, 235, 0.08)',
                         backdropFilter: 'blur(8px)',
                         WebkitBackdropFilter: 'blur(8px)'
                     }}
                 >
-                    <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+                    <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-primary-200">
                         <div className="p-6">
-                            <h2 className="text-xl font-semibold mb-4">Editar Producto</h2>
+                            <h2 className="text-xl font-semibold text-primary-900 mb-4">Editar Producto</h2>
                             <ProductForm 
                                 product={selectedProduct} 
                                 onSubmit={(data) => handleEdit(selectedProduct.id, data as ProductUpdateRequest)} 

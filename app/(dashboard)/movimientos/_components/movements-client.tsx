@@ -11,6 +11,8 @@ import { MovementsCards } from "./movements-cards"
 import { MovementDetails } from "./movement-details"
 import { getMovementById, toggleMovementInProgress, completeMovement } from "@/lib/movements-api"
 import { handleError, showSuccess } from "@/lib/error-handler"
+import { PaginationClient } from "@/components/ui/pagination-client"
+import { Button } from "@/components/ui/button"
 
 
 import type { MovementResponse, MovementDetailResponse } from "@/types"
@@ -28,7 +30,7 @@ interface MovementsClientProps {
   autoOpenId?: string
 }
 
-export function MovementsClient({ movements, autoOpenId }: MovementsClientProps) {
+export function MovementsClient({ movements, pagination, autoOpenId }: MovementsClientProps) {
   const [localMovements, setLocalMovements] = useState<MovementResponse[]>(movements)
   const [selectedMovement, setSelectedMovement] = useState<MovementDetailResponse | null>(null)
   const [isViewing, setIsViewing] = useState(false)
@@ -148,17 +150,31 @@ export function MovementsClient({ movements, autoOpenId }: MovementsClientProps)
         movements={localMovements} 
         onViewDetails={handleViewDetails} />
 
+      {pagination && (
+        <div className="mt-4 border-t border-stroke bg-primary-50/40 px-4 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-primary-700">
+            <p>
+              Mostrando {localMovements.length} movimientos de {pagination.totalElements} totales
+            </p>
+            <PaginationClient 
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Modal para ver detalles */}
       {isViewing && (
         <div 
           className="fixed inset-0 flex items-center justify-center p-4 z-50"
           style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)'
           }}
         >
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-primary-200">
             <div className="p-6">
               {loadingDetails ? (
                 <div className="flex items-center justify-center py-8">
@@ -179,15 +195,16 @@ export function MovementsClient({ movements, autoOpenId }: MovementsClientProps)
               ) : (
                 <div className="text-center py-8">
                   <p className="text-red-600">Error al cargar los detalles del movimiento</p>
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setIsViewing(false)
                       setSelectedMovement(null)
                     }}
-                    className="mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                    className="mt-4 border-primary-300 text-primary-600 hover:bg-primary-50"
                   >
                     Cerrar
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>

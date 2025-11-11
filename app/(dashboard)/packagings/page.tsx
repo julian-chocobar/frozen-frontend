@@ -9,7 +9,6 @@ import { getPackagings } from "@/lib/packagings-api"
 import { PackagingsClient } from "./_components/packagings-client"
 import { PackagingCreateButton } from "./_components/create-button"
 import { ErrorState } from "@/components/ui/error-state"
-import { PaginationClient } from "@/components/ui/pagination-client"
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PackagingResponse } from "@/types"
@@ -103,18 +102,6 @@ export default function PackagingPage() {
                 />
               ) : null}
         </div>
-        {/* Contador de resultados y paginación */}
-        {packagingsData && (
-          <div className="text-center space-y-4">
-            <p className="text-sm text-primary-700">
-              Mostrando {packagingsData.packagings.length} packagings de {packagingsData.pagination.totalElements} totales
-            </p>
-            <PaginationClient 
-              currentPage={packagingsData.pagination.currentPage}
-              totalPages={packagingsData.pagination.totalPages}
-            />
-          </div>
-        )}
       </div>
     </>
   )

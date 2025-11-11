@@ -3,7 +3,6 @@
 import { Header } from "@/components/layout/header"
 import { ProductsClient } from "./_components/products-client"
 import { ProductsFilters } from "./_components/products-filters"
-import { PaginationClient } from "@/components/ui/pagination-client"
 import { ErrorState } from "@/components/ui/error-state"
 import { ProductCreateButton } from "./_components/create-button"
 import { getProducts } from "@/lib/products-api"
@@ -120,19 +119,6 @@ export default function ProductosPage() {
                     ) : null}
                 </div>
             </div>
-
-            {/* Contador de resultados y paginación */}
-            {productsData && (
-                <div className="text-center space-y-4">
-                    <p className="text-sm text-primary-700">
-                        Mostrando {productsData.products.length} productos de {productsData.pagination.totalElements} totales
-                    </p>
-                    <PaginationClient 
-                        currentPage={productsData.pagination.currentPage}
-                        totalPages={productsData.pagination.totalPages}
-                    />
-                </div>
-            )}
         </>
     )
 }

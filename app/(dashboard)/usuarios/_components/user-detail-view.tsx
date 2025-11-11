@@ -67,10 +67,10 @@ export function UserDetailView({
           </div>
         </div>
         <span className={cn(
-          "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold",
+          "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border",
           user.isActive
-            ? "bg-green-100 text-green-800"
-            : "bg-gray-100 text-gray-800"
+            ? "bg-green-100 text-green-700 border-green-200"
+            : "bg-primary-50 text-primary-700 border-primary-200"
         )}>
           {user.isActive ? (
             <>
@@ -90,7 +90,7 @@ export function UserDetailView({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Email */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted">
+          <div className="flex items-center gap-2 text-primary-600">
             <Mail className="w-4 h-4" />
             <span className="text-sm font-medium">Email</span>
           </div>
@@ -99,7 +99,7 @@ export function UserDetailView({
 
         {/* Teléfono */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted">
+          <div className="flex items-center gap-2 text-primary-600">
             <Phone className="w-4 h-4" />
             <span className="text-sm font-medium">Teléfono</span>
           </div>
@@ -108,7 +108,7 @@ export function UserDetailView({
 
         {/* Fecha de creación */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted">
+          <div className="flex items-center gap-2 text-primary-600">
             <Calendar className="w-4 h-4" />
             <span className="text-sm font-medium">Fecha de Creación</span>
           </div>
@@ -117,7 +117,7 @@ export function UserDetailView({
 
         {/* Último acceso */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted">
+          <div className="flex items-center gap-2 text-primary-600">
             <Activity className="w-4 h-4" />
             <span className="text-sm font-medium">Último Acceso</span>
           </div>

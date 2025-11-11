@@ -46,10 +46,10 @@ export default function LoginPage() {
 
   if (isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Redirigiendo...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto" />
+          <p className="text-primary-600">Redirigiendo...</p>
         </div>
       </div>
     )
@@ -57,8 +57,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      {/* Contenedor principal */}
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md space-y-6">
         {/* Logo y título */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -73,7 +72,7 @@ export default function LoginPage() {
           <h1 className="text-2xl md:text-3xl font-bold text-primary-800 mb-2">
             Bienvenido a Frozen
           </h1>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-primary-600">
             Sistema de Gestión de Producción Cervecera
           </p>
         </div>
@@ -83,18 +82,18 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Usuario (reemplaza Email) */}
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-sm font-semibold text-foreground">
+              <Label htmlFor="username" className="text-sm font-semibold text-primary-900">
                 Nombre de usuario
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-400" />
                 <Input
                   id="username"
                   type="text"
                   placeholder="Tu nombre de usuario"
                   value={username}
                   onChange={(e) => handleInputChange("username", e.target.value)}
-                  className="pl-10 h-11"
+                  className="pl-10 h-11 border-primary-300 text-primary-900 placeholder:text-primary-300 focus-visible:ring-primary-300 focus-visible:border-primary-500 disabled:bg-primary-50 disabled:text-primary-400"
                   required
                   disabled={isLoading}
                 />
@@ -103,25 +102,25 @@ export default function LoginPage() {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-semibold text-foreground">
+              <Label htmlFor="password" className="text-sm font-semibold text-primary-900">
                 Contraseña
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-400" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
-                  className="pl-10 pr-10 h-11"
+                  className="pl-10 pr-10 h-11 border-primary-300 text-primary-900 placeholder:text-primary-300 focus-visible:ring-primary-300 focus-visible:border-primary-500 disabled:bg-primary-50 disabled:text-primary-400"
                   required
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-500 hover:text-primary-700 transition-colors"
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   disabled={isLoading}
                 >
@@ -144,7 +143,8 @@ export default function LoginPage() {
             {/* Botón de inicio de sesión */}
             <Button
               type="submit"
-              className="w-full h-11 text-base font-semibold"
+              variant="outline"
+              className="w-full h-11 text-base font-semibold border-primary-300 text-primary-700 hover:bg-primary-50 disabled:opacity-50 disabled:text-primary-300 disabled:border-primary-200"
               disabled={isLoading}
             >
               {isLoading ? (

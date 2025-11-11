@@ -16,7 +16,6 @@ import { OrdersFilters } from "./_components/orders-filters"
 import { OrderCreateButton } from "./_components/create-button"
 import type { ProductionOrderResponse, ProductionOrderStatus } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
-import { PaginationClient } from "@/components/ui/pagination-client"
 import { ClipboardList, Clock, CheckCircle, XCircle, Ban, Package2 } from "lucide-react"
 import { useSearchParams } from 'next/navigation'
 
@@ -107,7 +106,7 @@ export default function OrdenesPage() {
         subtitle="Gestiona las órdenes de producción de cerveza"
       />
       
-      <div className="p-4 md:p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6 text-primary-900">
         {/* Tarjetas de estadísticas - Carrusel horizontal */}
         <StatsCarousel>
         <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
@@ -209,19 +208,6 @@ export default function OrdenesPage() {
               pagination={ordersData.pagination}
               autoOpenId={autoOpenId}
             />
-            
-            {/* Contador de resultados y paginación */}
-            <div className="text-center space-y-4">
-              <p className="text-sm text-primary-700">
-                Mostrando {ordersData.productionOrders.length} órdenes de {ordersData.pagination.totalElements} totales
-              </p>
-
-              {/* Paginación funcional */}
-              <PaginationClient 
-                currentPage={ordersData.pagination.currentPage}
-                totalPages={ordersData.pagination.totalPages}
-              />
-            </div>
           </>
         ) : null}
       </div>

@@ -20,10 +20,10 @@ interface OrdersCardsProps {
 }
 
 const statusStyles = {
-  Pendiente: "bg-blue-100 text-blue-700 border-blue-300",
+  Pendiente: "bg-primary-100 text-primary-700 border-primary-300",
   Aprobado: "bg-green-100 text-green-700 border-green-300",
   Rechazado: "bg-red-100 text-red-700 border-red-300",
-  Cancelada: "bg-gray-100 text-gray-700 border-gray-300",
+  Cancelada: "bg-primary-50 text-primary-700 border-primary-200",
 }
 
 export function OrdersCards({ 
@@ -58,7 +58,7 @@ export function OrdersCards({
         variant: "outline" as const, 
         label: "Cancelada", 
         icon: XCircle,
-        className: "bg-gray-100 text-gray-800 border-gray-300"
+        className: "bg-primary-50 text-primary-700 border-primary-200"
       }
     }
     
@@ -66,7 +66,7 @@ export function OrdersCards({
       variant: "secondary" as const, 
       label: status, 
       icon: Clock,
-      className: "bg-gray-100 text-gray-800 border-gray-300"
+      className: "bg-primary-50 text-primary-700 border-primary-200"
     }
     const Icon = config.icon
     
@@ -102,11 +102,11 @@ export function OrdersCards({
         {[...Array(3)].map((_, i) => (
           <div key={i} className="card p-6 border-2 border-primary-600 animate-pulse">
             <div className="space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-primary-100 rounded w-3/4"></div>
+              <div className="h-6 bg-primary-100 rounded w-1/2"></div>
               <div className="space-y-2">
-                <div className="h-3 bg-gray-200 rounded w-full"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                <div className="h-3 bg-primary-100 rounded w-full"></div>
+                <div className="h-3 bg-primary-100 rounded w-2/3"></div>
               </div>
             </div>
           </div>
@@ -118,9 +118,9 @@ export function OrdersCards({
   if (orders.length === 0) {
     return (
       <div className="card border-2 border-primary-600 p-12 text-center">
-        <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No hay órdenes de producción</h3>
-        <p className="text-gray-500">No se encontraron órdenes que coincidan con los filtros aplicados.</p>
+        <Package className="w-12 h-12 text-primary-300 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-primary-900 mb-2">No hay órdenes de producción</h3>
+        <p className="text-primary-600">No se encontraron órdenes que coincidan con los filtros aplicados.</p>
       </div>
     )
   }

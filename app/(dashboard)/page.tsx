@@ -16,7 +16,7 @@ export default function DashboardPage() {
   return (
     <>
       <Header title="Dashboard" subtitle="Monitorea tu producción en tiempo real" />
-      <div className="p-4 md:p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6 text-primary-900">
         {/* Tarjetas de estadísticas principales */}
         <StatsCarousel>
           <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">

@@ -8,7 +8,6 @@ import { MovementCreateButton } from "./_components/create-button"
 import { getMovements } from "@/lib/movements-api"
 import { MovementsFilters } from "./_components/movements-filters"
 import { MovementsClient } from "./_components/movements-client"
-import { PaginationClient } from "@/components/ui/pagination-client"
 import { ErrorState } from "@/components/ui/error-state"
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -131,21 +130,6 @@ export default function MovimientosPage() {
             />
           ) : null}
         </div>
-
-        {/* Contador de resultados y paginación */}
-        {movementsData && (
-          <div className="text-center space-y-4">
-            <p className="text-sm text-primary-700">
-              Mostrando {movementsData.movements.length} movimientos de {movementsData.pagination.totalElements} totales
-            </p>
-            
-            {/* Paginación funcional */}
-            <PaginationClient 
-              currentPage={movementsData.pagination.currentPage}
-              totalPages={movementsData.pagination.totalPages}
-            />
-          </div>
-        )}
       </div>
     </>
   )

@@ -40,12 +40,12 @@ export function MaterialDetails({
     <div 
       className="fixed inset-0 flex items-center justify-center p-4 z-50"
       style={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+        backgroundColor: 'rgba(37, 99, 235, 0.08)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)'
       }}
     >
-      <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+      <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-primary-200">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-start justify-between">
@@ -55,7 +55,7 @@ export function MaterialDetails({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-primary-50 rounded-lg transition-colors"
               aria-label="Cerrar"
             >
               <X className="w-5 h-5" />
@@ -82,10 +82,10 @@ export function MaterialDetails({
                 <label className="text-sm text-primary-700">Estado</label>
                 <div className="mt-1">
                   <span className={cn(
-                    "inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium",
+                    "inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border",
                     material.isActive
-                      ? "bg-green-100 text-green-800" 
-                      : "bg-gray-100 text-gray-800"
+                      ? "bg-green-100 text-green-700 border-green-200" 
+                      : "bg-primary-50 text-primary-700 border-primary-200"
                   )}>
                     {material.isActive ? (
                       <>
@@ -169,20 +169,20 @@ export function MaterialDetails({
             {material.warehouseZone ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <label className="text-xs uppercase tracking-wide text-muted">Zona</label>
+                  <label className="text-xs uppercase tracking-wide text-primary-600">Zona</label>
                   <p className="font-semibold text-primary-900">{zone}</p>
                 </div>
                 <div>
-                  <label className="text-xs uppercase tracking-wide text-muted">Sección</label>
+                  <label className="text-xs uppercase tracking-wide text-primary-600">Sección</label>
                   <p className="font-semibold text-primary-900">{section}</p>
                 </div>
                 <div>
-                  <label className="text-xs uppercase tracking-wide text-muted">Nivel</label>
+                  <label className="text-xs uppercase tracking-wide text-primary-600">Nivel</label>
                   <p className="font-semibold text-primary-900">{level}</p>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted">Este material no tiene una ubicación asignada actualmente.</p>
+              <p className="text-sm text-primary-600">Este material no tiene una ubicación asignada actualmente.</p>
             )}
           </div>
 

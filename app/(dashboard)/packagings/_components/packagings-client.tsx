@@ -11,6 +11,7 @@ import {
 } from "@/lib/packagings-api"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import type { PackagingResponse, PackagingUpdateRequest } from "@/types"
+import { PaginationClient } from "@/components/ui/pagination-client"
 
 interface PackagingsClientProps {
     packagings: PackagingResponse[]
@@ -104,19 +105,33 @@ export function PackagingsClient({ packagings, pagination }: PackagingsClientPro
                 onToggleActive={handleToggleActive}
             />
 
+            {pagination && (
+                <div className="mt-4 border-t border-stroke bg-primary-50/40 px-4 py-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-primary-700">
+                        <p>
+                            Mostrando {localPackagings.length} packagings de {pagination.totalElements} totales
+                        </p>
+                        <PaginationClient 
+                            currentPage={pagination.currentPage}
+                            totalPages={pagination.totalPages}
+                        />
+                    </div>
+                </div>
+            )}
+
             {/* Modal para editar packaging */}
             {isEditing && selectedPackaging && (
                 <div 
                     className="fixed inset-0 flex items-center justify-center p-4 z-50"
                     style={{ 
-                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        backgroundColor: 'rgba(37, 99, 235, 0.08)',
                         backdropFilter: 'blur(8px)',
                         WebkitBackdropFilter: 'blur(8px)'
                     }}
                 >
-                    <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+                    <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-primary-200">
                         <div className="p-6">
-                            <h2 className="text-xl font-semibold mb-4">Editar Packaging</h2>
+                            <h2 className="text-xl font-semibold text-primary-900 mb-4">Editar Packaging</h2>
                             <PackagingForm
                                 packaging={selectedPackaging}
                                 onSubmit={(data) => handleEdit(selectedPackaging.id, data as PackagingUpdateRequest)}

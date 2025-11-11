@@ -10,7 +10,6 @@
 
 import { Header } from "@/components/layout/header"
 import { UserCreateButton } from "./_components/create-button"
-import { PaginationClient } from "./_components/pagination-client"
 import { ErrorState } from "@/components/ui/error-state"
 import { UsersClient } from "./_components/users-client"
 import { getUsers } from "@/lib/users-api"
@@ -119,21 +118,6 @@ export default function UsuariosPage() {
             />
           ) : null}
         </div>
-
-        {/* Contador de resultados y paginación */}
-        {usersData && (
-          <div className="text-center space-y-4">
-            <p className="text-sm text-primary-700">
-              Mostrando {usersData.users.length} usuarios de {usersData.pagination.totalElements} totales
-            </p>
-            
-            {/* Paginación funcional */}
-            <PaginationClient 
-              currentPage={usersData.pagination.currentPage}
-              totalPages={usersData.pagination.totalPages}
-            />
-          </div>
-        )}
       </div>
     </>
   )

@@ -64,12 +64,12 @@ export function OrderDetails({
         variant: "outline" as const, 
         label: "Cancelada", 
         icon: XCircle,
-        color: "text-gray-600",
-        bgColor: "bg-gray-50"
+        color: "text-primary-700",
+        bgColor: "bg-primary-50"
       }
     }
     
-    const config = statusConfig[status] || { variant: "secondary" as const, label: status, icon: Clock, color: "text-gray-600", bgColor: "bg-gray-50" }
+    const config = statusConfig[status] || { variant: "secondary" as const, label: status, icon: Clock, color: "text-primary-700", bgColor: "bg-primary-50" }
     const Icon = config.icon
     
     return (
@@ -188,7 +188,7 @@ export function OrderDetails({
       return {
         message: "La orden ha sido cancelada",
         icon: XCircle,
-        color: "text-gray-600"
+        color: "text-primary-700"
       }
     }
     
@@ -225,7 +225,7 @@ export function OrderDetails({
 
       {/* Información de progreso */}
       {progressInfo && (
-        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center gap-3 p-4 bg-primary-50 rounded-lg border border-primary-200">
           <progressInfo.icon className={`w-5 h-5 ${progressInfo.color}`} />
           <p className={`font-medium ${progressInfo.color}`}>
             {progressInfo.message}

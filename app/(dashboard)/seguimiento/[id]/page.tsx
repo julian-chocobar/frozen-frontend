@@ -2,235 +2,177 @@
 
 /**
  * Página de detalle de lote
- * Muestra información completa de un lote específico
+ * Muestra información completa de un lote específico con sus fases y parámetros de calidad
  */
 
 import { Header } from "@/components/layout/header"
-import { mockLotes } from "@/lib/mock-data"
+import { BatchDetailClient } from "@/app/(dashboard)/seguimiento/_components/batch-detail-client"
+import { ErrorState } from "@/components/ui/error-state"
+import { getBatchById } from "@/lib/batches-api"
 import { notFound, useParams } from "next/navigation"
-import { ArrowLeft, Thermometer, Droplet, Calendar, User, Package, AlertCircle } from "lucide-react"
-import Link from "next/link"
-import { formatearFecha, cn } from "@/lib/utils"
 import { useEffect, useState } from 'react'
+import { BatchResponse } from "@/types"
 
-export default function LoteDetailPage() {
-  const params = useParams()
-  const id = params.id as string
-  const [lote, setLote] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+const statusStyles: Record<string, string> = {
+    "Completado": "bg-green-100 text-green-800 border border-green-200",
+    "En Producción": "bg-primary-100 text-primary-700 border border-primary-300",
+    "Pendiente": "bg-amber-100 text-amber-700 border border-amber-200",
+    "Cancelado": "bg-red-100 text-red-700 border border-red-200",
+    "En Espera": "bg-sky-100 text-sky-700 border border-sky-200",
+    default: "bg-primary-50 text-primary-700 border border-primary-200"
+}
 
-  useEffect(() => {
-    // Simular carga de datos
-    const foundLote = mockLotes.find((l) => l.id === id);
+export default function BatchDetailPage() {
+    const params = useParams()
+    const id = params.id as string
     
-    setTimeout(() => {
-      setLote(foundLote)
-      setLoading(false)
-    }, 100)
-  }, [id])
-  
-  if (loading) {
+    const [batch, setBatch] = useState<BatchResponse | null>(null)
+    const [error, setError] = useState<string | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const loadBatch = async () => {
+            setLoading(true)
+            setError(null)
+
+            try {
+                const data = await getBatchById(id)
+                setBatch(data)
+            } catch (err) {
+                console.error('Error al cargar lote:', err)
+
+                if (err instanceof Error) {
+                    if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
+                        setError('No se pudo conectar con el backend')
+                    } else if (err.message.includes('404') || err.message.includes('Not Found')) {
+                        notFound()
+                    } else {
+                        setError(err.message)
+                    }
+                } else {
+                    setError('No se pudo cargar el lote')
+                }
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        if (id) {
+            loadBatch()
+        }
+    }, [id])
+
+    if (loading) {
+        return (
+            <>
+                <Header 
+                    title="Cargando..." 
+                    subtitle="Obteniendo detalles del lote"
+                    backButton={{ href: "/seguimiento" }}
+                />
+                
+                <div className="p-4 md:p-6">
+                    <div className="text-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                        <p className="mt-4 text-primary-600">Cargando detalles del lote...</p>
+                    </div>
+                </div>
+            </>
+        )
+    }
+
+    if (error) {
+        return (
+            <>
+                <Header 
+                    title="Error" 
+                    subtitle="No se pudo cargar el lote"
+                    backButton={{ href: "/seguimiento" }}
+                />
+                
+                <div className="p-4 md:p-6">
+                    <ErrorState error={error} />
+                </div>
+            </>
+        )
+    }
+
+    if (!batch) {
+        return null
+    }
+
     return (
-      <>
-        <Header title="Cargando..." subtitle="Cargando detalles del lote" />
-        <div className="p-4 md:p-6">
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-4 text-primary-600">Cargando lote...</p>
-          </div>
-        </div>
-      </>
+        <>
+            <Header 
+                title={`Lote ${batch.code}`} 
+                subtitle={batch.productName}
+                backButton={{ href: "/seguimiento" }}
+            />
+            
+            <div className="p-4 md:p-6 space-y-6">
+                {/* Información básica del lote */}
+                <div className="card border-2 border-primary-600 p-6">
+                    <h2 className="text-xl font-semibold text-primary-900 mb-4">Información del Lote</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <p className="text-sm text-primary-600 font-medium">Código</p>
+                            <p className="text-lg font-bold font-mono text-primary-900">{batch.code}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-primary-600 font-medium">Orden de Producción</p>
+                            <p className="text-lg font-bold font-mono text-primary-900">{batch.orderId}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-primary-600 font-medium">Producto</p>
+                            <p className="text-lg font-semibold text-primary-900">{batch.productName}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-primary-600 font-medium">Empaque</p>
+                            <p className="text-lg text-primary-900">{batch.packagingName}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-primary-600 font-medium">Cantidad</p>
+                            <p className="text-lg font-bold text-primary-900">{batch.quantity} unidades</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-primary-600 font-medium">Estado</p>
+                            <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                                statusStyles[batch.status] ?? statusStyles.default
+                            }`}>
+                                {batch.status}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Fechas importantes */}
+                <div className="card border-2 border-primary-600 p-6">
+                    <h2 className="text-xl font-semibold text-primary-900 mb-4">Cronología</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div>
+                            <p className="text-sm text-primary-600 font-medium">Creación</p>
+                            <p className="text-lg text-primary-900">{new Date(batch.creationDate).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-primary-600 font-medium">Planificada</p>
+                            <p className="text-lg text-primary-900">{new Date(batch.plannedDate).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-primary-600 font-medium">Inicio</p>
+                            <p className="text-lg text-primary-900">{batch.startDate ? new Date(batch.startDate).toLocaleDateString() : "Pendiente"}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-primary-600 font-medium">Estimada Fin</p>
+                            <p className="text-lg text-primary-900">{new Date(batch.estimatedCompletedDate).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Componente para fases de producción y calidad */}
+                <BatchDetailClient batchId={batch.id} />
+            </div>
+        </>
     )
-  }
-
-  if (!lote) {
-    notFound()
-    return null
-  }
-
-  const hasAlerts = lote.alertas && lote.alertas.length > 0
-
-  return (
-    <>
-      <Header title={`Lote ${lote.codigo}`} subtitle={lote.nombreProducto} />
-      <div className="p-4 md:p-6">
-        {/* Botón volver */}
-        <Link
-          href="/seguimiento"
-          className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-700 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Volver a Seguimiento
-        </Link>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Columna principal */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Información general */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Información General</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted mb-1">Código de Lote</p>
-                  <p className="text-sm font-bold text-foreground font-mono">{lote.codigo}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted mb-1">Orden de Producción</p>
-                  <p className="text-sm font-bold text-foreground font-mono">{lote.ordenProduccionId}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted mb-1">Producto</p>
-                  <p className="text-sm font-medium text-foreground">{lote.nombreProducto}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted mb-1">Tipo</p>
-                  <p className="text-sm font-medium text-primary-700">{lote.tipoProducto}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted mb-1">Volumen Objetivo</p>
-                  <p className="text-sm font-bold text-foreground">{lote.volumenObjetivo}L</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted mb-1">Volumen Real</p>
-                  <p className="text-sm font-bold text-foreground">{lote.volumenReal || "-"}L</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Progreso */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Progreso de Producción</h3>
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-muted">Etapa: {lote.etapaActual}</p>
-                  <p className="text-sm font-bold text-primary-600">{lote.progreso}%</p>
-                </div>
-                <div className="w-full bg-surface-secondary rounded-full h-3 overflow-hidden">
-                  <div
-                    className="bg-primary-600 h-full rounded-full transition-all duration-300"
-                    style={{ width: `${lote.progreso}%` }}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-muted" />
-                  <div>
-                    <p className="text-xs text-muted">Fecha de Inicio</p>
-                    <p className="text-sm font-medium text-foreground">{formatearFecha(lote.fechaInicio)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-muted" />
-                  <div>
-                    <p className="text-xs text-muted">Fin Estimado</p>
-                    <p className="text-sm font-medium text-foreground">{formatearFecha(lote.fechaFinEstimada)}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Materiales utilizados */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Materiales Utilizados</h3>
-              <div className="space-y-3">
-                {lote.materiales.map((material, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Package className="w-5 h-5 text-primary-600" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{material.nombreMaterial}</p>
-                        <p className="text-xs text-muted">
-                          Planificado: {material.cantidadPlanificada} {material.unidad}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-foreground">
-                        {material.cantidadUsada || 0} {material.unidad}
-                      </p>
-                      <p className="text-xs text-muted">Usado</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Columna lateral */}
-          <div className="space-y-6">
-            {/* Estado */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Estado Actual</h3>
-              <span
-                className={cn(
-                  "badge text-base px-4 py-2",
-                  lote.estado === "Fermentación" && "badge-primary",
-                  lote.estado === "En Producción" && "badge-status",
-                )}
-              >
-                {lote.estado}
-              </span>
-            </div>
-
-            {/* Parámetros */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Parámetros Actuales</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                    <Thermometer className="w-5 h-5 text-primary-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted">Temperatura</p>
-                    <p className="text-lg font-bold text-foreground">{lote.temperatura}°C</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                    <Droplet className="w-5 h-5 text-primary-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted">pH</p>
-                    <p className="text-lg font-bold text-foreground">{lote.ph}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Responsable */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Responsable</h3>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                  <User className="w-6 h-6 text-primary-700" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{lote.responsable}</p>
-                  <p className="text-xs text-muted">Maestro Cervecero</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Alertas */}
-            {hasAlerts && (
-              <div className="card p-6 border-alert-300 bg-alert-50/30">
-                <div className="flex items-center gap-2 mb-4">
-                  <AlertCircle className="w-5 h-5 text-alert-600" />
-                  <h3 className="text-lg font-semibold text-foreground">Alertas</h3>
-                </div>
-                <div className="space-y-2">
-                  {lote.alertas!.map((alerta, idx) => (
-                    <div key={idx} className="p-3 bg-white border border-alert-200 rounded-lg">
-                      <p className="text-sm font-medium text-alert-700">{alerta}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </>
-  )
 }

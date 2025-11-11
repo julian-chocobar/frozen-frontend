@@ -12,6 +12,7 @@ import { MaterialsCards } from "./materials-cards"
 import { MaterialForm } from "./material-form"
 import { MaterialDetails } from "./material-details"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { PaginationClient } from "@/components/ui/pagination-client"
 import {
   updateMaterial,
   toggleMaterialActive,
@@ -35,7 +36,7 @@ interface MaterialsClientProps {
   externalViewId?: string | null
 }
 
-export function MaterialsClient({ materials, autoOpenId, onMaterialSelect, externalViewId }: MaterialsClientProps) {
+export function MaterialsClient({ materials, pagination, autoOpenId, onMaterialSelect, externalViewId }: MaterialsClientProps) {
   const router = useRouter()
   const [localMaterials, setLocalMaterials] = useState<Material[]>(materials)
   const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(null)
@@ -173,21 +174,35 @@ export function MaterialsClient({ materials, autoOpenId, onMaterialSelect, exter
         onViewDetails={handleViewDetails}
       />
 
+      {pagination && (
+        <div className="mt-4 border-t border-stroke bg-primary-50/40 px-4 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-primary-700">
+            <p>
+              Mostrando {localMaterials.length} materiales de {pagination.totalElements} totales
+            </p>
+            <PaginationClient 
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Modal para editar material */}
       {modalMode === 'edit' && selectedMaterialId && (
         <div
           className="fixed inset-0 flex items-center justify-center p-4 z-50"
           style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
           }}
         >
-          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-primary-200">
             <div className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Editar Material</h2>
+              <h2 className="text-xl font-semibold text-primary-900 mb-4">Editar Material</h2>
               {detailLoading || !selectedDetail ? (
-                <div className="py-10 flex flex-col items-center gap-3 text-sm text-muted">
+                <div className="py-10 flex flex-col items-center gap-3 text-sm text-primary-600">
                   <LoadingSpinner />
                   Cargando información…
                 </div>
@@ -209,16 +224,16 @@ export function MaterialsClient({ materials, autoOpenId, onMaterialSelect, exter
         <div
           className="fixed inset-0 flex items-center justify-center p-4 z-50"
           style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
           }}
         >
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-primary-200">
             <div className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Detalles del Material</h2>
+              <h2 className="text-xl font-semibold text-primary-900 mb-4">Detalles del Material</h2>
               {detailLoading || !selectedDetail ? (
-                <div className="py-10 flex flex-col items-center gap-3 text-sm text-muted">
+                <div className="py-10 flex flex-col items-center gap-3 text-sm text-primary-600">
                   <LoadingSpinner />
                   Cargando información…
                 </div>

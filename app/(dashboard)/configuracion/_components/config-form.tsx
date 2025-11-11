@@ -36,7 +36,7 @@ export function WorkingDayForm({ initial, onSubmit, onCancel, isLoading }: Worki
             <input
               value={form.dayOfWeek}
               disabled
-              className="w-full px-3 py-2 border border-stroke rounded-lg bg-muted/30"
+              className="w-full px-3 py-2 border border-primary-200 rounded-lg bg-primary-50 text-primary-700"
             />
           </div>
 
@@ -45,7 +45,7 @@ export function WorkingDayForm({ initial, onSubmit, onCancel, isLoading }: Worki
               type="checkbox"
               checked={form.isWorkingDay}
               onChange={(e) => handleChange("isWorkingDay", e.target.checked)}
-              className="w-6 h-6 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+              className="w-6 h-6 text-primary-600 bg-primary-50 border-primary-300 rounded focus:ring-primary-500 focus:ring-2"
             />
             <span className="text-sm font-medium text-primary-900">Día laborable</span>
           </div>
@@ -59,7 +59,7 @@ export function WorkingDayForm({ initial, onSubmit, onCancel, isLoading }: Worki
               type="time"
               value={form.openingHour}
               onChange={(e) => handleChange("openingHour", e.target.value)}
-              className="w-full px-3 py-2 border border-stroke rounded-lg"
+              className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
             />
           </div>
           <div>
@@ -68,20 +68,26 @@ export function WorkingDayForm({ initial, onSubmit, onCancel, isLoading }: Worki
               type="time"
               value={form.closingHour}
               onChange={(e) => handleChange("closingHour", e.target.value)}
-              className="w-full px-3 py-2 border border-stroke rounded-lg"
+              className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
             />
           </div>
         </div>
       </div>
 
       <div className="flex justify-end gap-3 pt-6 border-t border-stroke">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isLoading}
+          className="border-primary-300 text-primary-600 hover:bg-primary-50"
+        >
           Cancelar
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="gap-2"
         >
           {isLoading ? "Guardando..." : "Guardar"}
         </Button>

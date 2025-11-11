@@ -15,10 +15,10 @@ export function ConfigCards({ workingDays, onEdit }: ConfigCardsProps) {
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-base font-semibold text-primary-900">{wd.dayOfWeek}</h4>
             <span className={cn(
-              "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+              "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
               wd.isWorkingDay
-                ? "bg-green-100 text-green-800"
-                : "bg-gray-100 text-gray-800"
+                ? "bg-green-100 text-green-700 border-green-200"
+                : "bg-primary-50 text-primary-700 border-primary-200"
             )}>
               {wd.isWorkingDay ? 'Laborable' : 'No laborable'}
             </span>

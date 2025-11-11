@@ -5,9 +5,6 @@ import { ProductDetailClient } from "@/app/(dashboard)/productos/_components/pro
 import { ErrorState } from "@/components/ui/error-state"
 import { getProductById } from "@/lib/products-api"
 import { notFound, useParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
-import Link from "next/link"
 import { useEffect, useState } from 'react'
 import { ProductResponse } from "@/types"
 
@@ -57,6 +54,7 @@ export default function ProductDetailPage() {
                 <Header
                     title="Error"
                     subtitle="No se pudo cargar el producto"
+                    backButton={{ href: "/productos" }}
                 />
                 <div className="p-4 md:p-6">
                     <ErrorState error={error} />
@@ -71,6 +69,7 @@ export default function ProductDetailPage() {
                 <Header
                     title="Cargando..."
                     subtitle="Cargando detalles del producto"
+                    backButton={{ href: "/productos" }}
                 />
                 <div className="p-4 md:p-6">
                     <div className="text-center py-8">
@@ -92,16 +91,9 @@ export default function ProductDetailPage() {
             <Header
                 title={product.name}
                 subtitle={`Producto ${product.isAlcoholic ? 'Alcohólico' : 'No Alcohólico'} - ${product.isActive ? 'Activo' : 'Inactivo'}`}
+                backButton={{ href: "/productos" }}
             />
             <div className="p-4 md:p-6">
-                <div className="mb-6">
-                    <Link href="/productos">
-                        <Button variant="outline" className="border-primary-300 text-primary-600 hover:bg-primary-50">
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            Volver a Productos
-                        </Button>
-                    </Link>
-                </div>
                 <ProductDetailClient product={product} />
             </div>
         </>

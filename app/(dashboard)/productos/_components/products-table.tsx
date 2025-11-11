@@ -36,7 +36,7 @@ export function ProductsTable({
                     "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border",
                     value 
                         ? "bg-purple-50 text-purple-700 border-purple-300" 
-                        : "bg-gray-50 text-gray-700 border-gray-300"
+                        : "bg-primary-50 text-primary-700 border-primary-200"
                 )}>
                     <Wine className="w-3 h-3" />
                     {value ? "Sí" : "No"}
@@ -83,8 +83,8 @@ export function ProductsTable({
                 <span className={cn(
                     "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border",
                     value 
-                        ? "bg-blue-50 text-blue-700 border-blue-300" 
-                        : "bg-yellow-50 text-yellow-700 border-yellow-300"
+                        ? "bg-primary-100 text-primary-700 border-primary-300" 
+                        : "bg-primary-50 text-primary-700 border-primary-200"
                 )}>
                     {value ? (
                         <>
@@ -113,7 +113,7 @@ export function ProductsTable({
                 label: product.isReady ? 'Marcar como no listo' : 'Marcar como listo',
                 icon: product.isReady ? CircleX : Check,
                 onClick: () => onMarkAsReady!(product),
-                className: product.isReady ? 'text-yellow-600' : 'text-blue-600',
+                className: 'text-primary-600',
             }
         ]
     }

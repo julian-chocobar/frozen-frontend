@@ -65,3 +65,11 @@ export async function getBatchById(id: string) {
     const response = await api.get<BatchResponse>(`/api/batches/${id}`)
     return response
 }
+
+/**
+ * Forzar el inicio de producción de lotes programados para hoy
+ * Solo para GERENTE_DE_PLANTA
+ */
+export async function processBatchesToday() {
+    await api.post('/api/batches/process-today')
+}

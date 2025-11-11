@@ -239,7 +239,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                     {showPackagingDropdown && packagingSearchTerm && (
                         <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
                             {packagingMaterials.length === 0 && !loadingPackagingMaterials ? (
-                                <div className="px-3 py-2 text-sm text-gray-500">
+                                <div className="px-3 py-2 text-sm text-primary-600">
                                     No se encontraron materiales de envasado
                                 </div>
                             ) : (
@@ -248,7 +248,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                                         key={material.id}
                                         type="button"
                                         onClick={() => handlePackagingMaterialSelect(material)}
-                                        className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-gray-100 last:border-b-0"
+                                        className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-primary-100 last:border-b-0"
                                     >
                                         <div className="font-medium text-primary-900 text-sm">{material.name}</div>
                                         <div className="text-xs text-primary-600">Código: {material.code}</div>
@@ -270,9 +270,9 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                     
                     {/* Información del material seleccionado */}
                     {selectedPackagingMaterial && (
-                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <h4 className="text-sm font-medium text-blue-800 mb-1">Material de Envasado Seleccionado</h4>
-                            <div className="text-sm text-blue-700">
+                        <div className="mt-2 p-3 bg-primary-50 border border-primary-200 rounded-lg">
+                            <h4 className="text-sm font-medium text-primary-800 mb-1">Material de Envasado Seleccionado</h4>
+                            <div className="text-sm text-primary-700">
                                 <div>
                                     <span className="font-medium">Nombre:</span> {selectedPackagingMaterial.name}
                                 </div>
@@ -313,7 +313,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                     {showLabelingDropdown && labelingSearchTerm && (
                         <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
                             {labelingMaterials.length === 0 && !loadingLabelingMaterials ? (
-                                <div className="px-3 py-2 text-sm text-gray-500">
+                                <div className="px-3 py-2 text-sm text-primary-600">
                                     No se encontraron materiales de etiquetado
                                 </div>
                             ) : (
@@ -322,7 +322,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                                         key={material.id}
                                         type="button"
                                         onClick={() => handleLabelingMaterialSelect(material)}
-                                        className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-gray-100 last:border-b-0"
+                                        className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-primary-100 last:border-b-0"
                                     >
                                         <div className="font-medium text-primary-900 text-sm">{material.name}</div>
                                         <div className="text-xs text-primary-600">Código: {material.code}</div>
@@ -344,9 +344,9 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
                     
                     {/* Información del material seleccionado */}
                     {selectedLabelingMaterial && (
-                        <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <h4 className="text-sm font-medium text-green-800 mb-1">Material de Etiquetado Seleccionado</h4>
-                            <div className="text-sm text-green-700">
+                        <div className="mt-2 p-3 bg-primary-50 border border-primary-200 rounded-lg">
+                            <h4 className="text-sm font-medium text-primary-800 mb-1">Material de Etiquetado Seleccionado</h4>
+                            <div className="text-sm text-primary-700">
                                 <div>
                                     <span className="font-medium">Nombre:</span> {selectedLabelingMaterial.name}
                                 </div>

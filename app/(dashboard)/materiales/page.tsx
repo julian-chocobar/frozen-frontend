@@ -8,7 +8,6 @@
 import { Header } from "@/components/layout/header"
 import { MaterialsFilters } from "./_components/materials-filters"
 import { MaterialsClient } from "./_components/materials-client"
-import { PaginationClient } from "./_components/pagination-client"
 import { ErrorState } from "@/components/ui/error-state"
 import { MaterialCreateButton } from "./_components/create-button"
 import { MaterialsWarehousePanel } from "./_components/warehouse-panel"
@@ -144,17 +143,6 @@ export default function MaterialesPage() {
                     }}
                     externalViewId={externalViewId}
                   />
-                  <div className="border-t border-stroke bg-primary-50/40 px-6 py-4">
-                    <div className="flex flex-col items-center gap-3 text-center">
-                      <p className="text-sm text-primary-700">
-                        Mostrando {materialsData.materials.length} materiales de {materialsData.pagination.totalElements} totales
-                      </p>
-                      <PaginationClient
-                        currentPage={materialsData.pagination.currentPage}
-                        totalPages={materialsData.pagination.totalPages}
-                      />
-                    </div>
-                  </div>
                 </>
               ) : null}
             </div>

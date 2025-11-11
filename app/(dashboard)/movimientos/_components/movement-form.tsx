@@ -163,7 +163,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
           {showDropdown && searchTerm && (
             <div className="absolute z-50 w-155 mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
               {materials.length === 0 && !loadingMaterials ? (
-                <div className="px-3 py-2 text-sm text-gray-500">
+                <div className="px-3 py-2 text-sm text-primary-600">
                   No se encontraron materiales
                 </div>
               ) : (
@@ -172,7 +172,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
                     key={material.id}
                     type="button"
                     onClick={() => handleMaterialSelect(material)}
-                    className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-gray-100 last:border-b-0"
+                    className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-primary-100 last:border-b-0"
                   >
                     <div className="font-medium text-primary-900 text-sm">{material.name}</div>
                     <div className="text-xs text-primary-600">Código: {material.code}</div>
@@ -194,9 +194,9 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
           
           {/* Información del material seleccionado */}
           {selectedMaterial && (
-            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-800 mb-1">Material Seleccionado</h4>
-              <div className="text-sm text-blue-700">
+            <div className="mt-2 p-3 bg-primary-50 border border-primary-200 rounded-lg">
+              <h4 className="text-sm font-medium text-primary-800 mb-1">Material Seleccionado</h4>
+              <div className="text-sm text-primary-700">
                 <div>
                   <span className="font-medium">Nombre:</span> {selectedMaterial.name}
                 </div>
@@ -284,7 +284,7 @@ export function MovementForm({ onSubmit, onCancel, isLoading = false }: Movement
         {/* Motivo */}
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-primary-900 mb-2">
-            Motivo <span className="text-gray-500">(opcional)</span>
+            Motivo <span className="text-primary-500">(opcional)</span>
           </label>
           <textarea
             value={formData.reason}

@@ -82,12 +82,16 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
     if (!formData.plannedDate) {
       newErrors.plannedDate = "La fecha planificada es requerida"
     } else {
-      const plannedDate = new Date(formData.plannedDate)
+      // Parsear la fecha correctamente para evitar problemas de zona horaria
+      const [year, month, day] = formData.plannedDate.split('-').map(Number)
+      const plannedDate = new Date(year, month - 1, day) // month es 0-indexed
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
+
+      
       if (plannedDate < today) {
-        newErrors.plannedDate = "La fecha planificada no puede ser anterior a hoy"
+        newErrors.plannedDate = "La fecha de planificación debe ser una fecha futura o presente"
       }
     }
 
@@ -199,9 +203,9 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
               onFocus={() => setShowPackagingDropdown(true)}
               placeholder={formData.productId ? "Buscar empaque por nombre..." : "Primero selecciona un producto"}
               disabled={!formData.productId}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                errors.packagingId ? "border-red-500" : "border-stroke"
-              } ${!formData.productId ? "bg-gray-100 cursor-not-allowed" : ""}`}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+              errors.packagingId ? "border-red-500" : "border-stroke"
+            } ${!formData.productId ? "bg-primary-50 cursor-not-allowed" : ""}`}
             />
             {loadingPackagings && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -214,7 +218,7 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
           {showPackagingDropdown && packagingSearch && formData.productId && (
             <div className="absolute z-50 w-69 mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
               {packagings.length === 0 && !loadingPackagings ? (
-                <div className="px-3 py-2 text-sm text-gray-500">
+                <div className="px-3 py-2 text-sm text-primary-600">
                   No se encontraron empaques
                 </div>
               ) : (
@@ -223,7 +227,7 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
                     key={packaging.id}
                     type="button"
                     onClick={() => handlePackagingSelect(packaging)}
-                    className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-gray-100 last:border-b-0"
+                    className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-primary-100 last:border-b-0"
                   >
                     <div className="font-medium text-primary-900 text-sm">{packaging.name}</div>
                   </button>

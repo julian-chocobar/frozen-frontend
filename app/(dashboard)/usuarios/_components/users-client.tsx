@@ -19,6 +19,7 @@ import { handleError, showSuccess } from "@/lib/error-handler"
 import type { UserResponse, UserUpdateRequest, UpdateRoleRequest, UserDetail } from "@/types"
 import { UserDetailView } from "./user-detail-view"
 import { UserRoleUpdate } from "./user-role-update"
+import { PaginationClient } from "@/components/ui/pagination-client"
 
 interface UsersClientProps {
   users: UserResponse[]
@@ -32,7 +33,7 @@ interface UsersClientProps {
   }
 }
 
-export function UsersClient({ users }: UsersClientProps) {
+export function UsersClient({ users, pagination }: UsersClientProps) {
   const router = useRouter()
   const [localUsers, setLocalUsers] = useState<UserResponse[]>(users)
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null)
@@ -165,17 +166,31 @@ export function UsersClient({ users }: UsersClientProps) {
         onViewDetails={handleViewDetails}
       />
 
+      {pagination && (
+        <div className="mt-4 border-t border-stroke bg-primary-50/40 px-4 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-primary-700">
+            <p>
+              Mostrando {localUsers.length} usuarios de {pagination.totalElements} totales
+            </p>
+            <PaginationClient 
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Modal para ver detalles */}
       {isViewing && selectedUser && (
         <div 
           className="fixed inset-0 flex items-center justify-center p-4 z-50"
           style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)'
           }}
         >
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-primary-200">
             <div className="p-6">
               {isLoadingDetail ? (
                 <div className="flex items-center justify-center py-8">
@@ -203,12 +218,12 @@ export function UsersClient({ users }: UsersClientProps) {
         <div 
           className="fixed inset-0 flex items-center justify-center p-4 z-50"
           style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)'
           }}
         >
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-primary-200">
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4 text-primary-900">
                 Editar Roles de {userDetail.name}

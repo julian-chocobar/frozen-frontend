@@ -598,6 +598,74 @@ export interface BatchPageResponse {
 }
 
 // ============================================
+// PRODUCTION PHASES
+// ============================================
+
+export type ProductionPhaseStatus = 
+  | "PENDIENTE" 
+  | "EN_PROCESO" 
+  | "BAJO_REVISION" 
+  | "SIENDO_AJUSTADA" 
+  | "RECHAZADA" 
+  | "SUSPENDIDA" 
+  | "COMPLETADA"
+
+export interface ProductionPhaseResponse {
+  id: number
+  sectorId: number
+  batchId: number
+  batchCode: string
+  status: ProductionPhaseStatus
+  phase: Phase
+  input: number | null
+  standardInput: number
+  output: number | null
+  standardOutput: number
+  outputUnit: string
+  startDate: string | null
+  endDate: string | null
+}
+
+export interface ProductionPhaseUnderReviewRequest {
+  input: number
+  output: number
+}
+
+// ============================================
+// PRODUCTION PHASE QUALITY
+// ============================================
+
+export interface ProductionPhaseQualityResponse {
+  id: number
+  qualityParameterName: string
+  productionPhaseId: number
+  productionPhase: Phase
+  value: string
+  isApproved: boolean
+  realizationDate: string
+}
+
+export interface QualityParameterSimple {
+  id: number
+  name: string
+  phase: Phase
+  unit?: string
+  description?: string
+}
+
+export interface ProductionPhaseQualityCreateRequest {
+  qualityParameterId: number
+  productionPhaseId: number
+  value: string
+  isApproved: boolean
+}
+
+export interface ProductionPhaseQualityUpdateRequest {
+  value?: string
+  isApproved?: boolean
+}
+
+// ============================================
 // USUARIOS
 // ============================================
 export type Role = 

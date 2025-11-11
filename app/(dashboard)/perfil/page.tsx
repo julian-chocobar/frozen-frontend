@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Save, Eye, EyeOff, User as UserIcon, Mail, Shield, Lock, ArrowLeft } from "lucide-react"
+import { Header } from "@/components/layout/header"
+import { Save, Eye, EyeOff, User as UserIcon, Mail, Shield, Lock } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { getUserById, updateUser, updateUserPassword } from "@/lib/users-api"
 import { handleError, showSuccess } from "@/lib/error-handler"
@@ -140,44 +141,47 @@ export default function PerfilPage() {
 
   if (isLoadingData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-      </div>
+      <>
+        <Header
+          title="Mi Perfil"
+          subtitle="Administra tu información personal y preferencias"
+          backButton={{ onClick: () => router.back() }}
+        />
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        </div>
+      </>
     )
   }
 
   if (!userDetail) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-primary-600">No se pudieron cargar los datos del usuario</p>
-      </div>
+      <>
+        <Header
+          title="Mi Perfil"
+          subtitle="Administra tu información personal y preferencias"
+          backButton={{ onClick: () => router.back() }}
+        />
+        <div className="flex items-center justify-center h-[60vh] px-4">
+          <p className="text-primary-700 text-sm md:text-base">
+            No se pudieron cargar los datos del usuario
+          </p>
+        </div>
+      </>
     )
   }
 
   return (
-    <div className="flex justify-center pb-20 md:pb-6">
-      <div className="w-full max-w-3xl relative">
-        {/* Botón de regreso - Desktop: arriba a la izquierda */}
-        <div className="hidden md:block absolute -left-[115px] top-16">
-          <Button
-            variant="outline"
-            onClick={() => router.back()}
-            className="border-primary-300 text-primary-600 hover:bg-primary-50"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </Button>
-        </div>
-
-        {/* Header */}
-        <div className="mb-0 px-4 md:px-0">
-          <h1 className="text-2xl md:text-3xl font-bold text-primary-800">Mi Perfil</h1>
-          <p className="text-sm text-muted mt-1">Administra tu información personal y preferencias</p>
-        </div>
-
-        {/* Card principal */}
-        <div className="bg-surface border-2 border-border rounded-lg p-6 md:p-8 shadow-card">
-        <div className="space-y-8">
+    <>
+      <Header
+        title="Mi Perfil"
+        subtitle="Administra tu información personal y preferencias"
+        backButton={{ onClick: () => router.back() }}
+      />
+      <div className="px-4 md:px-6 pb-20 md:pb-10 flex justify-center">
+        <div className="w-full max-w-3xl space-y-6">
+          {/* Card principal */}
+          <div className="bg-surface border-2 border-border rounded-lg p-6 md:p-8 shadow-card space-y-8">
           {/* Avatar fijo */}
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-4">Identidad</h3>
@@ -206,7 +210,7 @@ export default function PerfilPage() {
                   Nombre completo *
                 </Label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-400" />
                   <Input
                     id="nombre"
                     type="text"
@@ -224,7 +228,7 @@ export default function PerfilPage() {
                   Correo electrónico
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-400" />
                   <Input
                     id="email"
                     type="email"
@@ -269,7 +273,7 @@ export default function PerfilPage() {
                     </span>
                   ))}
                 </div>
-                <p className="text-xs text-muted">Los roles son asignados por el administrador</p>
+                <p className="text-xs text-primary-600">Los roles son asignados por el administrador</p>
               </div>
             </div>
           </div>
@@ -278,10 +282,10 @@ export default function PerfilPage() {
 
           {/* Seguridad */}
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between gap-4 mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-foreground">Seguridad</h3>
-                <p className="text-sm text-muted">Administra tu contraseña y configuración de seguridad</p>
+                <p className="text-sm text-primary-600">Administra tu contraseña y configuración de seguridad</p>
               </div>
               {!showPasswordSection && (
                 <Button
@@ -289,21 +293,21 @@ export default function PerfilPage() {
                   onClick={() => setShowPasswordSection(true)}
                   className="border-primary-300 text-primary-600 hover:bg-primary-50"
                 >
-                  <Lock className="w-4 h-4 mr-2" />
-                  Cambiar contraseña
+                  <Lock className="w-4 h-4" />
+                  <span>Cambiar contraseña</span>
                 </Button>
               )}
             </div>
 
             {showPasswordSection && (
-              <div className="space-y-4 p-4 bg-surface-secondary rounded-lg">
+              <div className="space-y-4 p-4 bg-surface-secondary rounded-lg border border-primary-200">
                 {/* Contraseña actual */}
                 <div className="space-y-2">
                   <Label htmlFor="current-password" className="text-sm font-semibold text-foreground">
                     Contraseña actual
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-400" />
                     <Input
                       id="current-password"
                       type={showCurrentPassword ? "text" : "password"}
@@ -315,7 +319,7 @@ export default function PerfilPage() {
                     <button
                       type="button"
                       onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-500 hover:text-primary-700 transition-colors"
                     >
                       {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -328,11 +332,11 @@ export default function PerfilPage() {
                     Nueva contraseña
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-400" />
                     <Input
                       id="new-password"
                       type={showNewPassword ? "text" : "password"}
-                      placeholder="Mínimo 4 caracteres"
+                      placeholder="Mínimo 8 caracteres"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       className="pl-10 pr-10 h-11"
@@ -340,7 +344,7 @@ export default function PerfilPage() {
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-500 hover:text-primary-700 transition-colors"
                     >
                       {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -353,7 +357,7 @@ export default function PerfilPage() {
                     Confirmar nueva contraseña
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-400" />
                     <Input
                       id="confirm-password"
                       type={showConfirmPassword ? "text" : "password"}
@@ -365,7 +369,7 @@ export default function PerfilPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-500 hover:text-primary-700 transition-colors"
                     >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -373,7 +377,7 @@ export default function PerfilPage() {
                 </div>
 
                 {/* Botones de contraseña */}
-                <div className="flex gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <Button
                     onClick={handleChangePassword}
                     disabled={isLoading || !currentPassword || !newPassword || !confirmPassword}
@@ -386,8 +390,8 @@ export default function PerfilPage() {
                       </div>
                     ) : (
                       <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Guardar contraseña
+                        <Save className="w-4 h-4" />
+                        <span>Guardar contraseña</span>
                       </>
                     )}
                   </Button>
@@ -400,6 +404,7 @@ export default function PerfilPage() {
                       setConfirmPassword("")
                     }}
                     disabled={isLoading}
+                    className="border-primary-200 text-primary-600 hover:bg-primary-50"
                   >
                     Cancelar
                   </Button>
@@ -416,44 +421,33 @@ export default function PerfilPage() {
               onClick={handleSaveProfile}
               disabled={isLoading}
               size="lg"
-              className="min-w-[200px]"
+              variant="outline"
+              className="min-w-[200px] border-primary-300 text-primary-700 hover:bg-primary-50"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-primary-200 border-t-transparent rounded-full animate-spin" />
                   <span>Guardando...</span>
                 </div>
               ) : (
                 <>
-                  <Save className="w-5 h-5 mr-2" />
-                  Guardar cambios
+                  <Save className="w-5 h-5" />
+                  <span>Guardar cambios</span>
                 </>
               )}
             </Button>
           </div>
         </div>
-        </div>
 
-        {/* Card de información adicional */}
-        <div className="bg-primary-50 border-2 border-primary-200 rounded-lg p-4 mb-4">
-          <p className="text-sm text-primary-800">
-            <strong>Nota:</strong> Si necesitas cambiar tu correo electrónico o rol, por favor contacta con el administrador del sistema.
-          </p>
-        </div>
-
-        {/* Botón de regreso - Mobile: abajo de todo */}
-        <div className="md:hidden px-4 pb-4">
-          <Button
-            variant="outline"
-            onClick={() => router.back()}
-            className="w-full border-primary-300 text-primary-600 hover:bg-primary-50"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </Button>
+          {/* Card de información adicional */}
+          <div className="bg-primary-50 border-2 border-primary-200 rounded-lg p-4">
+            <p className="text-sm text-primary-800">
+              <strong>Nota:</strong> Si necesitas cambiar tu correo electrónico o rol, por favor contacta con el administrador del sistema.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

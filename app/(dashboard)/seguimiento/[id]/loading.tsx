@@ -13,7 +13,7 @@ export default function LoteDetailLoading() {
       <div className="p-4 md:p-6">
         {/* Botón volver skeleton */}
         <div className="inline-flex items-center gap-2 mb-6">
-          <ArrowLeft className="w-4 h-4 text-muted" />
+          <ArrowLeft className="w-4 h-4 text-primary-500" />
           <div className="h-5 w-40 bg-surface-secondary rounded animate-pulse" />
         </div>
 

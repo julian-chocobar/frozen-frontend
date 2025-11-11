@@ -14,7 +14,7 @@ export default function ReportesPage() {
       <div className="p-4 md:p-6">
         <div className="text-center py-20">
           <h2 className="text-2xl font-semibold text-foreground mb-2">Módulo de Reportes</h2>
-          <p className="text-muted">Los reportes y gráficos se implementarán próximamente</p>
+          <p className="text-primary-600">Los reportes y gráficos se implementarán próximamente</p>
         </div>
       </div>
     </>

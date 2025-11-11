@@ -81,7 +81,7 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
         <div 
             className="fixed inset-0 flex items-center justify-center p-4 z-50"
             style={{ 
-                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                backgroundColor: 'rgba(37, 99, 235, 0.08)',
                 backdropFilter: 'blur(8px)',
                 WebkitBackdropFilter: 'blur(8px)'
             }}
@@ -103,10 +103,10 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
                                 <label className="block text-sm font-medium text-primary-900 mb-2">
                                     Material
                                 </label>
-                                <div className="w-full px-3 py-2 border border-stroke rounded-lg bg-gray-50 text-gray-700">
+                                <div className="w-full px-3 py-2 border border-stroke rounded-lg bg-primary-50 text-primary-700">
                                     {recipe.materialName} ({recipe.materialCode})
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-primary-500 mt-1">
                                     Este campo no se puede modificar
                                 </p>
                             </div>

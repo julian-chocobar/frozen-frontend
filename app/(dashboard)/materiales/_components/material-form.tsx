@@ -344,7 +344,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
               value={formData.warehouseSection}
               onChange={(e) => handleChange("warehouseSection", e.target.value)}
               disabled={!formData.warehouseZone}
-              className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
+              className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500 disabled:bg-primary-50 disabled:text-primary-500"
             >
               <option value="">Seleccionar sección</option>
               {availableSections.map((section) => (
@@ -365,7 +365,7 @@ export function MaterialForm({ material, onSubmit, onCancel, isLoading = false, 
               value={formData.warehouseLevel}
               onChange={(e) => handleChange("warehouseLevel", e.target.value)}
               disabled={!formData.warehouseZone}
-              className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
+              className="w-full px-3 py-2 border border-stroke rounded-lg focus:ring-primary-500 focus:border-primary-500 disabled:bg-primary-50 disabled:text-primary-500"
             >
               <option value="">Seleccionar nivel</option>
               {warehouseLevels.map((level) => (
