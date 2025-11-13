@@ -8,29 +8,30 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { createPhaseQuality, updatePhaseQuality } from "@/lib/production-phases-api"
+import { approvePhaseQuality, createPhaseQuality, disapprovePhaseQuality, reviewPhase, updatePhaseQuality } from "@/lib/production-phases-api"
 import { getActiveQualityParameters } from "@/lib/quality-parameters-api"
 import type { ProductionPhaseQualityResponse, ProductionPhaseResponse, QualityParameterSimple } from "@/types"
-import { AlertCircle, CheckCircle, Edit, Plus, XCircle } from "lucide-react"
+import { AlertCircle, CheckCircle, Edit, History, Loader2, Plus, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface QualityParametersSectionProps {
   phase: ProductionPhaseResponse
   qualities: ProductionPhaseQualityResponse[]
-  canManage: boolean
+  canCreate: boolean
+  canReview: boolean
   onRefresh: () => Promise<void> | void
 }
 
 interface QualityParameterFormValues {
   qualityParameterId: string
   value: string
-  isApproved: boolean
 }
 
 export function QualityParametersSection({
   phase,
   qualities,
-  canManage,
+  canCreate,
+  canReview,
   onRefresh,
 }: QualityParametersSectionProps) {
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -39,11 +40,34 @@ export function QualityParametersSection({
   const [parametersError, setParametersError] = useState<string | null>(null)
   const [loadingParameters, setLoadingParameters] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [processingQualityId, setProcessingQualityId] = useState<number | null>(null)
+  const [isReviewingPhase, setIsReviewingPhase] = useState(false)
   const { toast } = useToast()
 
   const phaseKey = useMemo(() => phase.phase, [phase.phase])
-  const isPhaseInProduction = phase.status === "EN_PROCESO"
-  const canOpenCreate = canManage && isPhaseInProduction
+  const phaseAllowsRegistration = phase.status === "BAJO_REVISION"
+  const canOpenCreate = canCreate && phaseAllowsRegistration
+  const canTriggerReview = canReview && phase.status === "BAJO_REVISION"
+  const activeQualities = useMemo(
+    () => qualities.filter((quality) => quality.isActive),
+    [qualities]
+  )
+  const historicalQualities = useMemo(
+    () =>
+      qualities
+        .filter((quality) => !quality.isActive)
+        .sort((a, b) => b.version - a.version),
+    [qualities]
+  )
+  const groupedHistorical = useMemo(() => {
+    return historicalQualities.reduce<Record<number, ProductionPhaseQualityResponse[]>>((acc, quality) => {
+      if (!acc[quality.version]) {
+        acc[quality.version] = []
+      }
+      acc[quality.version].push(quality)
+      return acc
+    }, {})
+  }, [historicalQualities])
 
   useEffect(() => {
     if (!isAddOpen || !canOpenCreate) return
@@ -65,10 +89,10 @@ export function QualityParametersSection({
   }
 
   const handleCreate = async (formValues: QualityParameterFormValues) => {
-    if (!isPhaseInProduction) {
+    if (!phaseAllowsRegistration) {
       toast({
-        title: "La fase no está en producción",
-        description: "Solo puedes cargar parámetros cuando la fase está en producción.",
+        title: "La fase no está lista para mediciones",
+        description: "Solo puedes cargar parámetros cuando la fase está bajo revisión.",
         variant: "destructive",
       })
       return
@@ -80,7 +104,7 @@ export function QualityParametersSection({
         productionPhaseId: Number(phase.id),
         qualityParameterId: Number(formValues.qualityParameterId),
         value: formValues.value,
-        isApproved: formValues.isApproved,
+        isApproved: false,
       })
       toast({
         title: "Parámetro registrado",
@@ -100,13 +124,12 @@ export function QualityParametersSection({
     }
   }
 
-  const handleUpdate = async (formValues: Omit<QualityParameterFormValues, "qualityParameterId">) => {
+  const handleUpdate = async (formValues: Pick<QualityParameterFormValues, "value">) => {
     if (!editingQuality) return
     setIsSubmitting(true)
     try {
       await updatePhaseQuality(editingQuality.id.toString(), {
         value: formValues.value,
-        isApproved: formValues.isApproved,
       })
       toast({
         title: "Parámetro actualizado",
@@ -126,6 +149,100 @@ export function QualityParametersSection({
     }
   }
 
+  const handleApproval = async (quality: ProductionPhaseQualityResponse) => {
+    setProcessingQualityId(quality.id)
+    try {
+      await approvePhaseQuality(quality.id.toString())
+      toast({
+        title: "Parámetro aprobado",
+        description: "Se registró la aprobación correctamente.",
+      })
+      await Promise.resolve(onRefresh())
+    } catch (error) {
+      console.error("Error actualizando estado del parámetro:", error)
+      toast({
+        title: "No se pudo actualizar el estado",
+        description: error instanceof Error ? error.message : "Intenta nuevamente en unos minutos.",
+        variant: "destructive",
+      })
+    } finally {
+      setProcessingQualityId(null)
+    }
+  }
+
+  const handleDisapproval = async (quality: ProductionPhaseQualityResponse) => {
+    setProcessingQualityId(quality.id)
+    try {
+      await disapprovePhaseQuality(quality.id.toString())
+      toast({
+        title: "Parámetro desaprobado",
+        description: "El registro fue marcado como desaprobado para su corrección.",
+      })
+      await Promise.resolve(onRefresh())
+    } catch (error) {
+      console.error("Error desaprobando parámetro:", error)
+      toast({
+        title: "No se pudo desaprobar",
+        description: error instanceof Error ? error.message : "Intenta nuevamente en unos minutos.",
+        variant: "destructive",
+      })
+    } finally {
+      setProcessingQualityId(null)
+    }
+  }
+
+  const handleReviewPhase = async () => {
+    if (!canReview || phase.status !== "BAJO_REVISION") {
+      toast({
+        title: "Fase no disponible para evaluación",
+        description: "Solo puedes evaluar fases que estén marcadas como 'BAJO_REVISION'.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsReviewingPhase(true)
+    try {
+      const updatedPhase = await reviewPhase(phase.id.toString())
+
+      const messages: Record<string, { title: string; description: string }> = {
+        COMPLETADA: {
+          title: "Fase completada",
+          description: "Todos los parámetros fueron aprobados y la fase se marcó como completada.",
+        },
+        RECHAZADA: {
+          title: "Fase rechazada",
+          description: "Se detectaron parámetros críticos rechazados. Producción fue notificada.",
+        },
+        SIENDO_AJUSTADA: {
+          title: "Fase en ajuste",
+          description: "Hay parámetros observados no críticos. Producción realizará correcciones.",
+        },
+      }
+
+      const message = messages[updatedPhase.status] ?? {
+        title: "Revisión registrada",
+        description: "Se actualizó el estado de la fase según los parámetros evaluados.",
+      }
+
+      toast({
+        title: message.title,
+        description: message.description,
+      })
+
+      await Promise.resolve(onRefresh())
+    } catch (error) {
+      console.error("Error revisando fase:", error)
+      toast({
+        title: "No se pudo completar la revisión",
+        description: error instanceof Error ? error.message : "Intenta nuevamente en unos minutos.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsReviewingPhase(false)
+    }
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
@@ -137,57 +254,123 @@ export function QualityParametersSection({
             {qualities.length} parámetro{qualities.length !== 1 && "s"}
           </Badge>
         </div>
-        {canManage && (
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger asChild>
+        {(canTriggerReview || canCreate) && (
+          <div className="flex items-center gap-2">
+            {canTriggerReview && (
               <Button
                 size="sm"
-                variant="outline"
-                disabled={!isPhaseInProduction}
-                className="gap-2 border-primary-300 text-primary-700 hover:bg-primary-50 disabled:border-primary-200 disabled:text-primary-300 disabled:hover:bg-transparent"
+                onClick={handleReviewPhase}
+                disabled={isReviewingPhase}
+                className="gap-2 bg-primary-600 text-white hover:bg-primary-700 disabled:bg-primary-200"
               >
-                <Plus className="w-4 h-4" />
-                Registrar parámetro
+                {isReviewingPhase ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Evaluando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    Evaluar fase
+                  </>
+                )}
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Registrar Parámetro de Calidad</DialogTitle>
-              </DialogHeader>
-              <QualityParameterCreateForm
-                parameters={availableParameters}
-                loadingParameters={loadingParameters}
-                error={parametersError}
-                onRetry={loadParameters}
-                onSubmit={handleCreate}
-                submitting={isSubmitting}
-              />
-            </DialogContent>
-          </Dialog>
+            )}
+            {canCreate && (
+              <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!phaseAllowsRegistration}
+                    className="gap-2 border-primary-300 text-primary-700 hover:bg-primary-50 disabled:border-primary-200 disabled:text-primary-300 disabled:hover:bg-transparent"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Registrar parámetro
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Registrar Parámetro de Calidad</DialogTitle>
+                  </DialogHeader>
+                  <QualityParameterCreateForm
+                    parameters={availableParameters}
+                    loadingParameters={loadingParameters}
+                    error={parametersError}
+                    onRetry={loadParameters}
+                    onSubmit={handleCreate}
+                    submitting={isSubmitting}
+                  />
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         )}
       </div>
 
-      {canManage && !isPhaseInProduction && (
+      {canCreate && !phaseAllowsRegistration && (
         <div className="rounded-lg border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-600">
-          Esta fase debe estar en producción para registrar nuevos parámetros de calidad.
+          Esta fase debe estar en revisión para registrar nuevos parámetros de calidad.
         </div>
       )}
 
-      {qualities.length === 0 ? (
+      {activeQualities.length === 0 && historicalQualities.length === 0 ? (
         <div className="flex items-center gap-3 rounded-lg border border-primary-200 bg-white/80 px-4 py-3 text-sm text-primary-600">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           No se registraron parámetros de calidad en esta fase.
         </div>
       ) : (
-        <div className="space-y-2">
-          {qualities.map((quality) => (
-            <QualityParameterCard
-              key={quality.id}
-              quality={quality}
-              canManage={canManage}
-              onEdit={() => setEditingQuality(quality)}
-            />
-          ))}
+        <div className="space-y-5">
+          {activeQualities.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary-500">
+                Versión actual
+              </p>
+              {activeQualities.map((quality) => (
+                <QualityParameterCard
+                  key={quality.id}
+                  quality={quality}
+                  canReview={canReview}
+                  onEdit={() => setEditingQuality(quality)}
+                  onApprove={() => handleApproval(quality)}
+                  onDisapprove={() => handleDisapproval(quality)}
+                  processing={processingQualityId === quality.id}
+                />
+              ))}
+            </div>
+          )}
+
+          {historicalQualities.length > 0 && (
+            <div className="space-y-3 rounded-lg border border-primary-200 bg-primary-50/60 px-4 py-4">
+              <div className="flex items-center gap-2 text-primary-600">
+                <History className="w-4 h-4" />
+                <p className="text-sm font-semibold">Historial de versiones</p>
+              </div>
+              <div className="space-y-4">
+                {Object.entries(groupedHistorical)
+                  .sort(([a], [b]) => Number(b) - Number(a))
+                  .map(([version, items]) => (
+                    <div key={version} className="space-y-2">
+                      <p className="text-xs uppercase tracking-wide text-primary-500">
+                        Versión {version}
+                      </p>
+                      {items.map((quality) => (
+                        <QualityParameterCard
+                          key={quality.id}
+                          quality={quality}
+                          canReview={false}
+                          onEdit={() => {}}
+                          onApprove={() => {}}
+                          onDisapprove={() => {}}
+                          processing={false}
+                          isHistorical
+                        />
+                      ))}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -211,21 +394,41 @@ export function QualityParametersSection({
 
 function QualityParameterCard({
   quality,
-  canManage,
+  canReview,
   onEdit,
+  onApprove,
+  onDisapprove,
+  processing,
+  isHistorical = false,
 }: {
   quality: ProductionPhaseQualityResponse
-  canManage: boolean
+  canReview: boolean
   onEdit: () => void
+  onApprove: () => void
+  onDisapprove: () => void
+  processing: boolean
+  isHistorical?: boolean
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-primary-200 bg-white/80 px-4 py-3 text-sm">
+    <div
+      className={`flex flex-col gap-3 rounded-lg border px-4 py-3 text-sm transition-colors ${
+        isHistorical ? "border-primary-200 bg-white/70" : "border-primary-200 bg-white/90"
+      }`}
+    >
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="space-y-1">
           <p className="text-sm font-semibold text-primary-900">{quality.qualityParameterName}</p>
-          <p className="text-xs text-primary-500 mt-1">
-            Registrado el {new Date(quality.realizationDate).toLocaleString()}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-primary-500">
+            <span>Registrado el {new Date(quality.realizationDate).toLocaleString()}</span>
+            <span className="inline-flex items-center rounded-full bg-primary-100 px-2 py-0.5 text-primary-700">
+              Versión {quality.version}
+            </span>
+            {!quality.isActive && (
+              <span className="inline-flex items-center rounded-full bg-primary-200 px-2 py-0.5 text-primary-700">
+                Histórico
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge
@@ -235,9 +438,9 @@ function QualityParameterCard({
                 : "bg-red-100 text-red-600 border border-red-200"
             }
           >
-            {quality.isApproved ? "Aprobado" : "Observado"}
+            {quality.isApproved ? "Aprobado" : "No aprobado"}
           </Badge>
-          {canManage && (
+          {canReview && quality.isActive && (
             <Button
               variant="outline"
               size="sm"
@@ -257,6 +460,31 @@ function QualityParameterCard({
           <span className="font-semibold text-primary-900">{quality.value}</span>
         </div>
       </div>
+
+      {canReview && quality.isActive && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={processing}
+            onClick={onDisapprove}
+            className="gap-2 border-primary-300 text-primary-700 hover:bg-primary-50 disabled:border-primary-200 disabled:text-primary-300"
+          >
+            <XCircle className="w-4 h-4" />
+            Desaprobar
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            disabled={processing}
+            onClick={onApprove}
+            className="gap-2 bg-primary-600 text-white hover:bg-primary-700 disabled:bg-primary-200"
+          >
+            <CheckCircle className="w-4 h-4" />
+            Aprobar
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
@@ -283,7 +511,6 @@ function QualityParameterCreateForm({
   const [formValues, setFormValues] = useState<QualityParameterFormValues>({
     qualityParameterId: "",
     value: "",
-    isApproved: true,
   })
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -355,27 +582,16 @@ function QualityParameterCreateForm({
           className="min-h-[110px] rounded-lg border border-primary-300 bg-white text-primary-900 placeholder:text-primary-300 focus:border-primary-500 focus:ring-primary-500"
         />
       </div>
-
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-primary-900">Estado</Label>
-        <Select
-          value={formValues.isApproved ? "true" : "false"}
-          onValueChange={(value) => setFormValues((prev) => ({ ...prev, isApproved: value === "true" }))}
-        >
-          <SelectTrigger className="h-11 border border-primary-300 bg-white text-primary-900 focus:border-primary-500 focus:ring-primary-500">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="border border-primary-200 bg-white">
-            <SelectItem value="true">Aprobado</SelectItem>
-            <SelectItem value="false">Observado</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <Button
         type="submit"
         className="w-full border border-primary-300 text-primary-700 hover:bg-primary-50 disabled:border-primary-200 disabled:text-primary-300 disabled:hover:bg-transparent"
-        disabled={submitting || loadingParameters || Boolean(error) || !formValues.qualityParameterId}
+        disabled={
+          submitting ||
+          loadingParameters ||
+          Boolean(error) ||
+          !formValues.qualityParameterId ||
+          formValues.value.trim().length === 0
+        }
       >
         {submitting ? "Guardando..." : "Guardar parámetro"}
       </Button>
@@ -390,11 +606,10 @@ function QualityParameterEditForm({
 }: {
   quality: ProductionPhaseQualityResponse
   submitting: boolean
-  onSubmit: (values: Omit<QualityParameterFormValues, "qualityParameterId">) => Promise<void> | void
+  onSubmit: (values: Pick<QualityParameterFormValues, "value">) => Promise<void> | void
 }) {
-  const [formValues, setFormValues] = useState<Omit<QualityParameterFormValues, "qualityParameterId">>({
+  const [formValues, setFormValues] = useState<Pick<QualityParameterFormValues, "value">>({
     value: quality.value,
-    isApproved: quality.isApproved,
   })
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -426,26 +641,10 @@ function QualityParameterEditForm({
         />
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-primary-900">Estado</Label>
-        <Select
-          value={formValues.isApproved ? "true" : "false"}
-          onValueChange={(value) => setFormValues((prev) => ({ ...prev, isApproved: value === "true" }))}
-        >
-          <SelectTrigger className="h-11 border border-primary-300 bg-white text-primary-900 focus:border-primary-500 focus:ring-primary-500">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="border border-primary-200 bg-white">
-            <SelectItem value="true">Aprobado</SelectItem>
-            <SelectItem value="false">Observado</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <Button
         type="submit"
         className="w-full border border-primary-300 text-primary-700 hover:bg-primary-50 disabled:border-primary-200 disabled:text-primary-300 disabled:hover:bg-transparent"
-        disabled={submitting}
+        disabled={submitting || formValues.value.trim().length === 0}
       >
         {submitting ? "Guardando..." : "Guardar cambios"}
       </Button>

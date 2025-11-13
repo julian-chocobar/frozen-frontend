@@ -63,6 +63,16 @@ export async function updatePhaseQuality(id: string, data: ProductionPhaseQualit
   return response
 }
 
+export async function approvePhaseQuality(id: string) {
+  const response = await api.patch<ProductionPhaseQualityResponse>(`/api/production-phases-qualities/${id}/approve`, {})
+  return response
+}
+
+export async function disapprovePhaseQuality(id: string) {
+  const response = await api.patch<ProductionPhaseQualityResponse>(`/api/production-phases-qualities/${id}/disapprove`, {})
+  return response
+}
+
 /**
  * Obtener medición de calidad por ID
  */

@@ -643,6 +643,8 @@ export interface ProductionPhaseQualityResponse {
   value: string
   isApproved: boolean
   realizationDate: string
+  version: number
+  isActive: boolean
 }
 
 export interface QualityParameterSimple {
@@ -657,7 +659,7 @@ export interface ProductionPhaseQualityCreateRequest {
   qualityParameterId: number
   productionPhaseId: number
   value: string
-  isApproved: boolean
+  isApproved?: boolean
 }
 
 export interface ProductionPhaseQualityUpdateRequest {

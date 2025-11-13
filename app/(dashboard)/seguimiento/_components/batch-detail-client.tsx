@@ -1,13 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
-import { getProductionPhasesByBatch, getPhaseQualitiesByBatch } from "@/lib/production-phases-api"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { getProductionPhasesByBatch, getPhaseQualitiesByBatch, setPhaseUnderReview } from "@/lib/production-phases-api"
 import { QualityParametersSection } from "./phase-quality-panel"
 import { ErrorState } from "@/components/ui/error-state"
 import type { ProductionPhaseResponse, ProductionPhaseQualityResponse } from "@/types"
-import { AlertTriangle, Clock, CheckCircle, Play, Settings, Ban } from "lucide-react"
+import { AlertTriangle, Clock, CheckCircle, Play, Settings, Ban, Loader2, RotateCcw } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/hooks/use-toast"
 
 interface BatchDetailClientProps {
   batchId: string
@@ -65,49 +70,121 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
+  const { toast } = useToast()
+  const [phaseUnderReview, setPhaseUnderReview] = useState<ProductionPhaseResponse | null>(null)
+  const [underReviewForm, setUnderReviewForm] = useState<{ input: string; output: string }>({
+    input: "",
+    output: "",
+  })
+  const [submittingUnderReview, setSubmittingUnderReview] = useState(false)
 
-  const canManageQuality = Boolean(
-    user?.roles?.some(
-      (role) => role === "SUPERVISOR_DE_CALIDAD" || role === "OPERARIO_DE_CALIDAD"
-    )
-  )
+  const isQualityOperator = Boolean(user?.roles?.includes("OPERARIO_DE_CALIDAD"))
+  const isQualitySupervisor = Boolean(user?.roles?.includes("SUPERVISOR_DE_CALIDAD"))
+  const isProductionSupervisor = Boolean(user?.roles?.includes("SUPERVISOR_DE_PRODUCCION"))
 
-  const refreshQualities = async () => {
-    try {
-      const qualitiesData = await getPhaseQualitiesByBatch(batchId)
-      setQualities(qualitiesData)
-    } catch (err) {
-      console.error("Error actualizando parámetros de calidad:", err)
-    }
-  }
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
+  const fetchData = useCallback(
+    async (showSpinner = true) => {
+      if (showSpinner) {
+        setLoading(true)
+      }
       setError(null)
 
       try {
         const [phasesData, qualitiesData] = await Promise.all([
           getProductionPhasesByBatch(batchId),
-          getPhaseQualitiesByBatch(batchId)
+          getPhaseQualitiesByBatch(batchId),
         ])
-        
+
         setPhases(phasesData)
         setQualities(qualitiesData)
       } catch (err) {
-        console.error('Error cargando fases:', err)
+        console.error("Error cargando fases:", err)
         if (err instanceof Error) {
           setError(err.message)
         } else {
-          setError('No se pudieron cargar las fases de producción')
+          setError("No se pudieron cargar las fases de producción")
         }
       } finally {
-        setLoading(false)
+        if (showSpinner) {
+          setLoading(false)
+        }
       }
+    },
+    [batchId]
+  )
+
+  const refreshData = useCallback(async () => {
+    await fetchData(false)
+  }, [fetchData])
+
+  const handleOpenUnderReview = (phase: ProductionPhaseResponse) => {
+    setPhaseUnderReview(phase)
+    setUnderReviewForm({
+      input: phase.input !== null && phase.input !== undefined ? String(phase.input) : "",
+      output: phase.output !== null && phase.output !== undefined ? String(phase.output) : "",
+    })
+  }
+
+  const handleCloseUnderReview = () => {
+    setPhaseUnderReview(null)
+    setUnderReviewForm({ input: "", output: "" })
+    setSubmittingUnderReview(false)
+  }
+
+  const handleSubmitUnderReview = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!phaseUnderReview) return
+
+    const inputRaw = underReviewForm.input.trim()
+    const outputRaw = underReviewForm.output.trim()
+
+    if (!inputRaw || !outputRaw) {
+      toast({
+        title: "Datos incompletos",
+        description: "Debes ingresar los valores de input y output antes de enviar a revisión.",
+        variant: "destructive",
+      })
+      return
     }
 
-    loadData()
-  }, [batchId])
+    const inputValue = Number(inputRaw)
+    const outputValue = Number(outputRaw)
+
+    if (Number.isNaN(inputValue) || Number.isNaN(outputValue)) {
+      toast({
+        title: "Datos inválidos",
+        description: "Debes ingresar valores numéricos para input y output.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setSubmittingUnderReview(true)
+    try {
+      await setPhaseUnderReview(phaseUnderReview.id.toString(), {
+        input: inputValue,
+        output: outputValue,
+      })
+      toast({
+        title: "Fase enviada a revisión",
+        description: "Se notificó al equipo de calidad para continuar con la revisión.",
+      })
+      handleCloseUnderReview()
+      await refreshData()
+    } catch (err) {
+      console.error("Error al enviar fase a revisión:", err)
+      toast({
+        title: "No se pudo enviar a revisión",
+        description: err instanceof Error ? err.message : "Intenta nuevamente en unos minutos.",
+        variant: "destructive",
+      })
+      setSubmittingUnderReview(false)
+    }
+  }
+
+  useEffect(() => {
+    void fetchData(true)
+  }, [fetchData])
 
   if (loading) {
     return (
@@ -127,7 +204,8 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       <div className="card border-2 border-primary-600 p-6">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
           <h2 className="text-xl font-semibold text-primary-900">Fases de Producción</h2>
@@ -150,6 +228,9 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
               const cardClass = STATUS_CARD_VARIANTS[phase.status] ?? STATUS_CARD_VARIANTS.default
               const phaseQualities = qualities.filter(q => q.productionPhaseId === phase.id)
               const isLastPhase = index === phases.length - 1
+              const canSendUnderReview =
+                isProductionSupervisor &&
+                (phase.status === "EN_PROCESO" || phase.status === "SIENDO_AJUSTADA")
 
               return (
                 <div key={phase.id} className={`relative border-2 rounded-lg p-5 transition-all duration-200 ${cardClass}`}>
@@ -172,7 +253,19 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
                         </div>
                       </div>
                     </div>
-
+                    {canSendUnderReview && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenUnderReview(phase)}
+                          className="gap-2 border-primary-300 text-primary-700 hover:bg-primary-50"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          Enviar a revisión
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 text-sm">
@@ -206,8 +299,9 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
                     <QualityParametersSection
                       phase={phase}
                       qualities={phaseQualities}
-                      canManage={canManageQuality}
-                      onRefresh={refreshQualities}
+                      canCreate={isQualityOperator}
+                      canReview={isQualitySupervisor}
+                      onRefresh={refreshData}
                     />
                   </div>
                 </div>
@@ -217,5 +311,78 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
         )}
       </div>
     </div>
+
+      <Dialog open={Boolean(phaseUnderReview)} onOpenChange={(open) => !open && handleCloseUnderReview()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enviar fase a revisión</DialogTitle>
+          </DialogHeader>
+          {phaseUnderReview && (
+            <form onSubmit={handleSubmitUnderReview} className="space-y-4">
+              <p className="text-sm text-primary-600">
+                Confirma los valores medidos antes de solicitar la revisión de calidad.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phase-input" className="text-sm font-medium text-primary-900">
+                    Input registrado
+                  </Label>
+                  <Input
+                    id="phase-input"
+                    type="number"
+                    step="0.01"
+                    value={underReviewForm.input}
+                    onChange={(event) => setUnderReviewForm((prev) => ({ ...prev, input: event.target.value }))}
+                    required
+                    className="border border-primary-300 text-primary-900 focus:border-primary-500 focus:ring-primary-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phase-output" className="text-sm font-medium text-primary-900">
+                    Output registrado
+                  </Label>
+                  <Input
+                    id="phase-output"
+                    type="number"
+                    step="0.01"
+                    value={underReviewForm.output}
+                    onChange={(event) => setUnderReviewForm((prev) => ({ ...prev, output: event.target.value }))}
+                    required
+                    className="border border-primary-300 text-primary-900 focus:border-primary-500 focus:ring-primary-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCloseUnderReview}
+                  className="border-primary-300 text-primary-700 hover:bg-primary-50"
+                  disabled={submittingUnderReview}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={submittingUnderReview}
+                  className="gap-2 bg-primary-600 hover:bg-primary-700 text-white"
+                >
+                  {submittingUnderReview ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    "Enviar a revisión"
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
