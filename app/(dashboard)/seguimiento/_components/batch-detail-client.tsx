@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { getProductionPhasesByBatch, getPhaseQualitiesByBatch, setPhaseUnderReview } from "@/lib/production-phases-api"
+import { getProductionPhasesByBatch, getPhaseQualitiesByBatch, setPhaseUnderReview as setPhaseUnderReviewApi } from "@/lib/production-phases-api"
 import { QualityParametersSection } from "./phase-quality-panel"
 import { ErrorState } from "@/components/ui/error-state"
 import type { ProductionPhaseResponse, ProductionPhaseQualityResponse } from "@/types"
@@ -150,10 +150,10 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
     const inputValue = Number(inputRaw)
     const outputValue = Number(outputRaw)
 
-    if (Number.isNaN(inputValue) || Number.isNaN(outputValue)) {
+    if (Number.isNaN(inputValue) || Number.isNaN(outputValue) || !Number.isFinite(inputValue) || !Number.isFinite(outputValue)) {
       toast({
         title: "Datos inválidos",
-        description: "Debes ingresar valores numéricos para input y output.",
+        description: "Debes ingresar valores numéricos válidos para input y output.",
         variant: "destructive",
       })
       return
@@ -161,10 +161,11 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
 
     setSubmittingUnderReview(true)
     try {
-      await setPhaseUnderReview(phaseUnderReview.id.toString(), {
+      const requestData: { input: number; output: number } = {
         input: inputValue,
         output: outputValue,
-      })
+      }
+      await setPhaseUnderReviewApi(phaseUnderReview.id.toString(), requestData)
       toast({
         title: "Fase enviada a revisión",
         description: "Se notificó al equipo de calidad para continuar con la revisión.",

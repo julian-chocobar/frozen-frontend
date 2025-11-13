@@ -30,8 +30,8 @@ export async function getProductionPhasesByBatch(batchId: string) {
 /**
  * Marcar fase bajo revisión (enviar métricas de entrada y salida)
  */
-export async function setPhaseUnderReview(id: string, data: ProductionPhaseUnderReviewRequest) {
-  const response = await api.patch<ProductionPhaseResponse>(`/api/production-phases/set-under-review/${id}`, data)
+export async function setPhaseUnderReview(ProductionPhaseId: string, data: ProductionPhaseUnderReviewRequest) {
+  const response = await api.patch<ProductionPhaseResponse>(`/api/production-phases/set-under-review/${ProductionPhaseId}`, data)
   return response
 }
 
