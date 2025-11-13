@@ -171,7 +171,7 @@ export default function BatchDetailPage() {
                 </div>
 
                 {/* Componente para fases de producción y calidad */}
-                <BatchDetailClient batchId={batch.id} />
+                <BatchDetailClient batchId={batch.id} productId={batch.productId} />
             </div>
         </>
     )

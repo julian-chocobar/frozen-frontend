@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { approvePhaseQuality, createPhaseQuality, disapprovePhaseQuality, reviewPhase, updatePhaseQuality } from "@/lib/production-phases-api"
 import { getActiveQualityParameters } from "@/lib/quality-parameters-api"
-import type { ProductionPhaseQualityResponse, ProductionPhaseResponse, QualityParameterSimple } from "@/types"
+import type { ProductionPhaseQualityResponse, ProductionPhaseResponse, QualityParameterResponse } from "@/types"
 import { AlertCircle, CheckCircle, Edit, History, Loader2, Plus, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -36,7 +36,7 @@ export function QualityParametersSection({
 }: QualityParametersSectionProps) {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [editingQuality, setEditingQuality] = useState<ProductionPhaseQualityResponse | null>(null)
-  const [availableParameters, setAvailableParameters] = useState<QualityParameterSimple[]>([])
+  const [availableParameters, setAvailableParameters] = useState<QualityParameterResponse[]>([])
   const [parametersError, setParametersError] = useState<string | null>(null)
   const [loadingParameters, setLoadingParameters] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -104,7 +104,6 @@ export function QualityParametersSection({
         productionPhaseId: Number(phase.id),
         qualityParameterId: Number(formValues.qualityParameterId),
         value: formValues.value,
-        isApproved: false,
       })
       toast({
         title: "Parámetro registrado",
@@ -501,7 +500,7 @@ function QualityParameterCreateForm({
   onSubmit,
   submitting,
 }: {
-  parameters: QualityParameterSimple[]
+  parameters: QualityParameterResponse[]
   loadingParameters: boolean
   error: string | null
   onRetry: () => Promise<void> | void
@@ -512,10 +511,17 @@ function QualityParameterCreateForm({
     qualityParameterId: "",
     value: "",
   })
+  const [selectedParameter, setSelectedParameter] = useState<QualityParameterResponse | null>(null)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     await handlePromise(onSubmit(formValues))
+  }
+
+  const handleParameterChange = (value: string) => {
+    setFormValues((prev) => ({ ...prev, qualityParameterId: value }))
+    const parameter = parameters.find((p) => p.id.toString() === value)
+    setSelectedParameter(parameter || null)
   }
 
   return (
@@ -544,7 +550,7 @@ function QualityParameterCreateForm({
         ) : (
           <Select
             value={formValues.qualityParameterId}
-            onValueChange={(value) => setFormValues((prev) => ({ ...prev, qualityParameterId: value }))}
+            onValueChange={handleParameterChange}
           >
             <SelectTrigger className="h-11 w-full border border-primary-300 bg-white text-primary-900 focus:ring-primary-500 focus:border-primary-500">
               <SelectValue
@@ -558,16 +564,47 @@ function QualityParameterCreateForm({
                   No hay parámetros activos para esta fase.
                 </div>
               ) : (
-                parameters.map((parameter) => (
-                  <SelectItem key={parameter.id} value={parameter.id.toString()}>
-                    {parameter.name}
-                  </SelectItem>
-                ))
+                parameters.map((parameter) => {
+                  const criticalLabel = parameter.isCritical ? " [Crítico]" : ""
+                  const unitLabel = parameter.unit ? ` (${parameter.unit})` : ""
+                  return (
+                    <SelectItem key={parameter.id} value={parameter.id.toString()}>
+                      {parameter.name}{criticalLabel}{unitLabel}
+                    </SelectItem>
+                  )
+                })
               )}
             </SelectContent>
           </Select>
         )}
       </div>
+
+      {/* Información del parámetro seleccionado */}
+      {selectedParameter && (
+        <div className="rounded-lg border border-primary-200 bg-primary-50/60 p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-sm font-semibold text-primary-900">{selectedParameter.name}</h4>
+            <div className="flex items-center gap-2">
+              {selectedParameter.isCritical && (
+                <Badge className="bg-red-100 text-red-700 border border-red-200 text-xs">
+                  Crítico
+                </Badge>
+              )}
+              {selectedParameter.unit && (
+                <Badge variant="outline" className="border-primary-300 text-primary-700 text-xs">
+                  {selectedParameter.unit}
+                </Badge>
+              )}
+            </div>
+          </div>
+          {selectedParameter.information && (
+            <div className="text-sm text-primary-700">
+              <p className="font-medium text-primary-800 mb-1">Información:</p>
+              <p className="text-primary-600">{selectedParameter.information}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="quality-value" className="text-sm font-medium text-primary-900">

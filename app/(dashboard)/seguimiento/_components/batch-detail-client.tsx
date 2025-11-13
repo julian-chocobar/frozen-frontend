@@ -7,15 +7,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { getProductionPhasesByBatch, getPhaseQualitiesByBatch, setPhaseUnderReview as setPhaseUnderReviewApi } from "@/lib/production-phases-api"
+import { getProductPhasesByProductId } from "@/lib/product-phases-api"
+import { getRecipesByProductPhaseId } from "@/lib/recipes-api"
 import { QualityParametersSection } from "./phase-quality-panel"
 import { ErrorState } from "@/components/ui/error-state"
-import type { ProductionPhaseResponse, ProductionPhaseQualityResponse } from "@/types"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import type { ProductionPhaseResponse, ProductionPhaseQualityResponse, ProductPhaseResponse, RecipeResponse } from "@/types"
 import { AlertTriangle, Clock, CheckCircle, Play, Settings, Ban, Loader2, RotateCcw } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
 
 interface BatchDetailClientProps {
   batchId: string
+  productId: string
 }
 
 const PHASE_ICONS: Record<string, any> = {
@@ -64,9 +68,11 @@ const STATUS_CARD_VARIANTS: Record<string, string> = {
   default: "border-primary-200 bg-white"
 }
 
-export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
+export function BatchDetailClient({ batchId, productId }: BatchDetailClientProps) {
   const [phases, setPhases] = useState<ProductionPhaseResponse[]>([])
   const [qualities, setQualities] = useState<ProductionPhaseQualityResponse[]>([])
+  const [productPhases, setProductPhases] = useState<ProductPhaseResponse[]>([])
+  const [recipesByPhase, setRecipesByPhase] = useState<Record<string, RecipeResponse[]>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
@@ -90,13 +96,34 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
       setError(null)
 
       try {
-        const [phasesData, qualitiesData] = await Promise.all([
+        const [phasesData, qualitiesData, productPhasesData] = await Promise.all([
           getProductionPhasesByBatch(batchId),
           getPhaseQualitiesByBatch(batchId),
+          getProductPhasesByProductId(productId),
         ])
 
         setPhases(phasesData)
         setQualities(qualitiesData)
+        setProductPhases(productPhasesData)
+
+        // Cargar recetas para todas las fases del producto en paralelo
+        const recipesMap: Record<string, RecipeResponse[]> = {}
+        const recipePromises = productPhasesData.map(async (phase) => {
+          try {
+            const recipes = await getRecipesByProductPhaseId(phase.id)
+            return { phaseId: phase.id, phase: phase.phase, recipes }
+          } catch (err) {
+            console.error(`Error al cargar recetas para fase ${phase.id}:`, err)
+            return { phaseId: phase.id, phase: phase.phase, recipes: [] }
+          }
+        })
+
+        const results = await Promise.all(recipePromises)
+        results.forEach(({ phaseId, recipes }) => {
+          recipesMap[phaseId] = recipes
+        })
+
+        setRecipesByPhase(recipesMap)
       } catch (err) {
         console.error("Error cargando fases:", err)
         if (err instanceof Error) {
@@ -110,7 +137,7 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
         }
       }
     },
-    [batchId]
+    [batchId, productId]
   )
 
   const refreshData = useCallback(async () => {
@@ -297,13 +324,40 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
                   </div>
 
                   <div className="mt-5 pt-5 border-t border-primary-200">
-                    <QualityParametersSection
-                      phase={phase}
-                      qualities={phaseQualities}
-                      canCreate={isQualityOperator}
-                      canReview={isQualitySupervisor}
-                      onRefresh={refreshData}
-                    />
+                    <Tabs defaultValue="quality" className="w-full">
+                      <TabsList className="bg-primary-50 border border-primary-200">
+                        <TabsTrigger 
+                          value="quality" 
+                          className="data-[state=active]:bg-primary-600 data-[state=active]:text-white text-primary-700"
+                        >
+                          Parámetros de Calidad
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="info" 
+                          className="data-[state=active]:bg-primary-600 data-[state=active]:text-white text-primary-700"
+                        >
+                          Información de Fase
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="quality" className="mt-4">
+                        <QualityParametersSection
+                          phase={phase}
+                          qualities={phaseQualities}
+                          canCreate={isQualityOperator}
+                          canReview={isQualitySupervisor}
+                          onRefresh={refreshData}
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="info" className="mt-4">
+                        <PhaseInfoSection
+                          productionPhase={phase}
+                          productPhases={productPhases}
+                          recipesByPhase={recipesByPhase}
+                        />
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 </div>
               )
@@ -385,5 +439,83 @@ export function BatchDetailClient({ batchId }: BatchDetailClientProps) {
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+interface PhaseInfoSectionProps {
+  productionPhase: ProductionPhaseResponse
+  productPhases: ProductPhaseResponse[]
+  recipesByPhase: Record<string, RecipeResponse[]>
+}
+
+function PhaseInfoSection({ productionPhase, productPhases, recipesByPhase }: PhaseInfoSectionProps) {
+  // Encontrar la fase del producto correspondiente por el campo phase
+  const productPhase = productPhases.find(p => p.phase === productionPhase.phase)
+  
+  if (!productPhase) {
+    return (
+      <div className="text-center py-6 text-primary-600">
+        <p className="text-sm">No se encontró información de esta fase en el producto.</p>
+      </div>
+    )
+  }
+
+  const phaseRecipes = recipesByPhase[productPhase.id] || []
+
+  return (
+    <div className="space-y-4">
+      {/* Información de la fase */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg">
+          <p className="text-xs font-medium text-primary-600 uppercase mb-1">Input Estándar</p>
+          <p className="text-lg font-semibold text-primary-900">{productPhase.input}</p>
+        </div>
+        <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg">
+          <p className="text-xs font-medium text-primary-600 uppercase mb-1">Output Estándar</p>
+          <p className="text-lg font-semibold text-primary-900">
+            {productPhase.output} {productPhase.outputUnit}
+          </p>
+        </div>
+        <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg">
+          <p className="text-xs font-medium text-primary-600 uppercase mb-1">Horas Estimadas</p>
+          <p className="text-lg font-semibold text-primary-900">{productPhase.estimatedHours}h</p>
+        </div>
+      </div>
+
+      {/* Ingredientes */}
+      <div>
+        <h4 className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-3">
+          Ingredientes ({phaseRecipes.length})
+        </h4>
+        {phaseRecipes.length > 0 ? (
+          <div className="grid grid-cols-1 gap-2">
+            {phaseRecipes.map((recipe) => (
+              <div
+                key={recipe.id}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-primary-50 border border-primary-200 rounded-lg text-sm"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-primary-900 truncate">
+                      {recipe.materialName}
+                    </span>
+                    <span className="text-primary-600 flex-shrink-0">
+                      ({recipe.materialCode})
+                    </span>
+                  </div>
+                  <div className="text-primary-700 font-medium mt-1">
+                    {recipe.quantity} {recipe.materialUnit}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-4 text-primary-600 border border-primary-200 rounded-lg bg-white/50">
+            <p className="text-sm">No hay ingredientes configurados para esta fase.</p>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }

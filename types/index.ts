@@ -569,6 +569,7 @@ export interface BatchResponse {
   packagingName: string
   productName: string
   orderId: string
+  productId: string
   status: BatchStatus
   quantity: number
   creationDate: string
@@ -651,9 +652,14 @@ export interface QualityParameterSimple {
   id: number
   name: string
   phase: Phase
-  unit?: string
+  unit?: string | null
   description?: string
+  isCritical?: boolean
+  information?: string | null
 }
+
+// Alias para mantener compatibilidad - ahora devuelve QualityParameterResponse
+export type QualityParameterResponse = QualityParameterSimple
 
 export interface ProductionPhaseQualityCreateRequest {
   qualityParameterId: number
