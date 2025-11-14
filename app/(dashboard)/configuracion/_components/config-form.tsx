@@ -1,5 +1,5 @@
 import { useState } from "react"
-import type { WorkingDay, WorkingDayUpdateRequest } from "@/types"
+import type { WorkingDay, WorkingDayUpdateRequest, DayOfWeek } from "@/types"
 import { Button } from "@/components/ui/button"
 
 interface WorkingDayFormProps {
@@ -7,6 +7,20 @@ interface WorkingDayFormProps {
   onSubmit: (data: WorkingDayUpdateRequest) => void
   onCancel: () => void
   isLoading?: boolean
+}
+
+// Función para formatear el día de la semana en español
+const formatDayOfWeek = (day: DayOfWeek): string => {
+  const dayMap: Record<DayOfWeek, string> = {
+    'MONDAY': 'Lunes',
+    'TUESDAY': 'Martes',
+    'WEDNESDAY': 'Miércoles',
+    'THURSDAY': 'Jueves',
+    'FRIDAY': 'Viernes',
+    'SATURDAY': 'Sábado',
+    'SUNDAY': 'Domingo'
+  }
+  return dayMap[day] || day
 }
 
 export function WorkingDayForm({ initial, onSubmit, onCancel, isLoading }: WorkingDayFormProps) {
@@ -34,7 +48,7 @@ export function WorkingDayForm({ initial, onSubmit, onCancel, isLoading }: Worki
           <div>
             <label className="block text-sm font-medium text-primary-900 mb-2">Día</label>
             <input
-              value={form.dayOfWeek}
+              value={formatDayOfWeek(form.dayOfWeek)}
               disabled
               className="w-full px-3 py-2 border border-primary-200 rounded-lg bg-primary-50 text-primary-700"
             />

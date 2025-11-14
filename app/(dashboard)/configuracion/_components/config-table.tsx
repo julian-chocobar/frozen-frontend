@@ -1,10 +1,24 @@
-import type { WorkingDay } from "@/types"
+import type { WorkingDay, DayOfWeek } from "@/types"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 interface ConfigTableProps {
   workingDays: WorkingDay[]
   onEdit: (workingDay: WorkingDay) => void
+}
+
+// Función para formatear el día de la semana en español
+const formatDayOfWeek = (day: DayOfWeek): string => {
+  const dayMap: Record<DayOfWeek, string> = {
+    'MONDAY': 'Lunes',
+    'TUESDAY': 'Martes',
+    'WEDNESDAY': 'Miércoles',
+    'THURSDAY': 'Jueves',
+    'FRIDAY': 'Viernes',
+    'SATURDAY': 'Sábado',
+    'SUNDAY': 'Domingo'
+  }
+  return dayMap[day] || day
 }
 
 export function ConfigTable({ workingDays, onEdit }: ConfigTableProps) {
@@ -26,7 +40,7 @@ export function ConfigTable({ workingDays, onEdit }: ConfigTableProps) {
             {workingDays.map((wd) => (
               <tr key={wd.dayOfWeek} className="border-b border-primary-100 last:border-0 hover:bg-primary-50">
                 <td className="py-3 pr-4">
-                  <span className="text-sm font-medium text-primary-900">{wd.dayOfWeek}</span>
+                  <span className="text-sm font-medium text-primary-900">{formatDayOfWeek(wd.dayOfWeek)}</span>
                 </td>
                 <td className="py-3 pr-4">
                   <span className={cn(

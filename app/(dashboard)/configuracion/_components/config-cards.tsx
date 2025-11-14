@@ -1,4 +1,4 @@
-import type { WorkingDay } from "@/types"
+import type { WorkingDay, DayOfWeek } from "@/types"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -7,13 +7,27 @@ interface ConfigCardsProps {
   onEdit: (workingDay: WorkingDay) => void
 }
 
+// Función para formatear el día de la semana en español
+const formatDayOfWeek = (day: DayOfWeek): string => {
+  const dayMap: Record<DayOfWeek, string> = {
+    'MONDAY': 'Lunes',
+    'TUESDAY': 'Martes',
+    'WEDNESDAY': 'Miércoles',
+    'THURSDAY': 'Jueves',
+    'FRIDAY': 'Viernes',
+    'SATURDAY': 'Sábado',
+    'SUNDAY': 'Domingo'
+  }
+  return dayMap[day] || day
+}
+
 export function ConfigCards({ workingDays, onEdit }: ConfigCardsProps) {
   return (
     <div className="space-y-4">
       {workingDays.map((wd) => (
         <div key={wd.dayOfWeek} className="card p-4 border-2 border-primary-600 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-base font-semibold text-primary-900">{wd.dayOfWeek}</h4>
+            <h4 className="text-base font-semibold text-primary-900">{formatDayOfWeek(wd.dayOfWeek)}</h4>
             <span className={cn(
               "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
               wd.isWorkingDay

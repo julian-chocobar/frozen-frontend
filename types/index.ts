@@ -953,13 +953,13 @@ export interface ConnectionsInfo {
 // ============================================
 
 export type DayOfWeek =
-  | "LUNES"
-  | "MARTES"
-  | "MIERCOLES"
-  | "JUEVES"
-  | "VIERNES"
-  | "SABADO"
-  | "DOMINGO"
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY"
+  | "SUNDAY"
 
 
 export interface WorkingDay {
