@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast"
 interface BatchDetailClientProps {
   batchId: string
   productId: string
+  onBatchUpdate?: () => void
 }
 
 const PHASE_ICONS: Record<string, any> = {
@@ -68,7 +69,7 @@ const STATUS_CARD_VARIANTS: Record<string, string> = {
   default: "border-primary-200 bg-white"
 }
 
-export function BatchDetailClient({ batchId, productId }: BatchDetailClientProps) {
+export function BatchDetailClient({ batchId, productId, onBatchUpdate }: BatchDetailClientProps) {
   const [phases, setPhases] = useState<ProductionPhaseResponse[]>([])
   const [qualities, setQualities] = useState<ProductionPhaseQualityResponse[]>([])
   const [productPhases, setProductPhases] = useState<ProductPhaseResponse[]>([])
@@ -142,7 +143,10 @@ export function BatchDetailClient({ batchId, productId }: BatchDetailClientProps
 
   const refreshData = useCallback(async () => {
     await fetchData(false)
-  }, [fetchData])
+    if (onBatchUpdate) {
+      onBatchUpdate()
+    }
+  }, [fetchData, onBatchUpdate])
 
   const handleOpenUnderReview = (phase: ProductionPhaseResponse) => {
     setPhaseUnderReview(phase)

@@ -168,6 +168,14 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
     return `${y}-${pad(m || 1)}-${pad(d || 1)}T00:00:00${sign}${oh}:${om}`
   };
 
+  // Función helper para obtener la fecha de hoy en formato local YYYY-MM-DD
+  const getTodayLocalDate = () => {
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-background p-6 rounded-lg h-full flex flex-col">
@@ -293,7 +301,7 @@ export function OrderForm({ order, onSubmit, onCancel, isLoading = false }: Orde
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
               errors.plannedDate ? "border-red-500" : "border-stroke"
             }`}
-            min={new Date().toISOString().split('T')[0]}
+            min={getTodayLocalDate()}
           />
           {errors.plannedDate && <p className="text-red-500 text-sm mt-1">{errors.plannedDate}</p>}
         </div>

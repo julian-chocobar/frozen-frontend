@@ -29,9 +29,10 @@ interface OrderClientProps {
     last: boolean
   }
   autoOpenId?: string
+  onRefresh?: () => void
 }
 
-export function OrderClient({ orders, pagination, autoOpenId }: OrderClientProps) {
+export function OrderClient({ orders, pagination, autoOpenId, onRefresh }: OrderClientProps) {
   const router = useRouter()
   const [selectedOrder, setSelectedOrder] = useState<ProductionOrderResponse | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -53,6 +54,9 @@ export function OrderClient({ orders, pagination, autoOpenId }: OrderClientProps
     try {
       await approveProductionOrder(order.id)
       router.refresh()
+      if (onRefresh) {
+        onRefresh()
+      }
       setIsViewing(false)
       setSelectedOrder(null)
       showSuccess('Orden aprobada exitosamente')
@@ -70,6 +74,9 @@ export function OrderClient({ orders, pagination, autoOpenId }: OrderClientProps
     try {
       await rejectProductionOrder(order.id)
       router.refresh()
+      if (onRefresh) {
+        onRefresh()
+      }
       setIsViewing(false)
       setSelectedOrder(null)
       showSuccess('Orden rechazada exitosamente')
@@ -87,6 +94,9 @@ export function OrderClient({ orders, pagination, autoOpenId }: OrderClientProps
     try {
       await cancelProductionOrder(order.id)
       router.refresh()
+      if (onRefresh) {
+        onRefresh()
+      }
       setIsViewing(false)
       setSelectedOrder(null)
       showSuccess('Orden cancelada exitosamente')

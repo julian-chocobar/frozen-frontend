@@ -529,6 +529,10 @@ export interface ProductionOrderResponse {
   startDate: string
   estimatedCompletedDate: string
   completedDate: string
+  createdByUserName: string
+  createdByUserId: string
+  approvedByUserName?: string
+  approvedByUserId?: string
 }
 
 export interface ProductionOrderCreateRequest {
@@ -577,6 +581,8 @@ export interface BatchResponse {
   startDate: string
   estimatedCompletedDate: string
   completedDate: string
+  assignedUserName: string
+  assignedUserId: string
 }
 
 export interface BatchFilters {
@@ -642,6 +648,7 @@ export interface ProductionPhaseQualityResponse {
   productionPhaseId: number
   productionPhase: Phase
   value: string
+  unit: string
   isApproved: boolean
   realizationDate: string
   version: number

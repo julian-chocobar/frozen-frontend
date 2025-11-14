@@ -249,7 +249,9 @@ export function OrdersCards({
                   <User className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-primary-600">Responsable</p>
-                    <p className="font-medium text-primary-900 text-sm">A definir</p>
+                    <p className="font-medium text-primary-900 text-sm">
+                      {order.approvedByUserName || "A definir"}
+                    </p>
                   </div>
                 </div>
               )}

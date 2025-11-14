@@ -73,3 +73,27 @@ export async function getBatchById(id: string) {
 export async function processBatchesToday() {
     await api.post('/api/batches/process-today')
 }
+
+/**
+ * Obtener reporte PDF de trazabilidad del lote
+ */
+export async function getBatchTraceabilityPdf(id: string): Promise<Blob> {
+    const response = await fetch(`/api/batches/${id}/traceability-pdf`, {
+        method: 'GET',
+        credentials: 'include',
+    })
+
+    if (!response.ok) {
+        throw new Error(`Error al obtener el PDF: ${response.statusText}`)
+    }
+
+    return await response.blob()
+}
+
+/**
+ * Cancelar un lote
+ */
+export async function cancelBatch(id: string) {
+    const response = await api.patch<BatchResponse>(`/api/batches/cancel-batch/${id}`)
+    return response
+}

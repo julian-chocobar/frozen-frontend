@@ -456,7 +456,10 @@ function QualityParameterCard({
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-primary-700">
         <div className="flex items-center gap-2">
           <span className="text-xs uppercase tracking-wide text-primary-500">Valor</span>
-          <span className="font-semibold text-primary-900">{quality.value}</span>
+          <span className="font-semibold text-primary-900">
+            {quality.value}
+            {quality.unit && <span className="ml-1 text-primary-600 font-normal">({quality.unit})</span>}
+          </span>
         </div>
       </div>
 

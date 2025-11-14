@@ -207,6 +207,7 @@ export default function OrdenesPage() {
               orders={ordersData.productionOrders}
               pagination={ordersData.pagination}
               autoOpenId={autoOpenId}
+              onRefresh={() => setRefreshKey(prev => prev + 1)}
             />
           </>
         ) : null}

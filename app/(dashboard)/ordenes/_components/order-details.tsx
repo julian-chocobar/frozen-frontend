@@ -141,21 +141,7 @@ export function OrderDetails({
       )
     }
     
-    if (order.status === 'APROBADA' && onCancel) {
-      return (
-        <Button
-          variant="outline"
-          onClick={() => onCancel(order)}
-          className="border-orange-600 text-orange-600 hover:bg-orange-50 w-full sm:w-auto text-xs sm:text-sm"
-          disabled={isLoading}
-          size="sm"
-        >
-          <XCircle className="w-4 h-4 mr-1.5 sm:mr-2" />
-          <span>Cancelar Orden</span>
-        </Button>
-      )
-    }
-    
+    // No mostrar botón de cancelar para órdenes aprobadas
     return null
   }
 
@@ -325,6 +311,16 @@ export function OrderDetails({
             <label className="text-sm text-primary-700">Código de Lote</label>
             <p className="text-sm font-medium text-primary-900">{order.batchCode}</p>
           </div>
+          <div>
+            <label className="text-sm text-primary-700">Creado por</label>
+            <p className="text-sm font-medium text-primary-900">{order.createdByUserName}</p>
+          </div>
+          {order.approvedByUserName && (
+            <div>
+              <label className="text-sm text-primary-700">Aprobado por</label>
+              <p className="text-sm font-medium text-primary-900">{order.approvedByUserName}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
