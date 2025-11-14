@@ -102,6 +102,7 @@ export function BatchesClient({ batches, pagination }: BatchesClientProps) {
               progreso: progress,
               fechaInicio: batch.startDate || batch.plannedDate,
               fechaFinEstimada: batch.estimatedCompletedDate,
+              fechaFinReal: batch.completedDate,
             }}
           />
         ))}

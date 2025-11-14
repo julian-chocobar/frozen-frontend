@@ -167,6 +167,12 @@ export default function BatchDetailPage() {
                             <p className="text-sm text-primary-600 font-medium">Estimada Fin</p>
                             <p className="text-lg text-primary-900">{new Date(batch.estimatedCompletedDate).toLocaleDateString()}</p>
                         </div>
+                        {batch.completedDate && (
+                            <div>
+                                <p className="text-sm text-primary-600 font-medium">Fin Real</p>
+                                <p className="text-lg text-primary-900">{new Date(batch.completedDate).toLocaleDateString()}</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -105,7 +105,7 @@ export function CompactFilters({
 
       case 'custom':
         return (
-          <div key={field.key} className={cn("relative shrink-0", field.className)}>
+          <div key={field.key} className={cn("relative shrink-0 overflow-visible", field.className)}>
             {field.customComponent}
           </div>
         )
@@ -120,7 +120,7 @@ export function CompactFilters({
       {/* Vista Desktop - Filtros en línea horizontal (sin wrap) */}
       <div className="hidden xl:block">
         <div className={cn(
-          "flex items-end gap-2",
+          "flex items-end gap-2 overflow-visible",
           align === 'right' ? 'justify-end' : 'justify-start'
         )}>
           {/* Campos de filtro */}
@@ -188,9 +188,9 @@ export function CompactFilters({
 
         {/* Contenido colapsable */}
         {isExpanded && (
-          <div className="mt-3 space-y-3">
+          <div className="mt-3 space-y-3 overflow-visible">
             {/* Campos de filtro */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-visible">
               {fields.map(renderField)}
             </div>
             

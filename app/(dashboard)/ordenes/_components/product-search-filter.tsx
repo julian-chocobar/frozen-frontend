@@ -5,7 +5,8 @@
  * Usa el endpoint api/products/id-name-list con búsqueda por nombre
  */
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getProductsIdNameList } from "@/lib/products-api"
@@ -28,6 +29,8 @@ export function ProductSearchFilter({
   const [loading, setLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<{ id: string; name: string } | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null)
 
   // Buscar productos cuando cambie el término de búsqueda
   useEffect(() => {
@@ -87,6 +90,43 @@ export function ProductSearchFilter({
     }
   }, [value])
 
+  // Calcular posición del dropdown cuando se muestra
+  useEffect(() => {
+    if (showDropdown && searchTerm && inputRef.current) {
+      const updatePosition = () => {
+        if (!inputRef.current) return
+        const rect = inputRef.current.getBoundingClientRect()
+        setDropdownPosition({
+          top: rect.bottom + 4, // position: fixed usa coordenadas relativas al viewport
+          left: rect.left,
+          width: rect.width
+        })
+      }
+      
+      updatePosition()
+      // Actualizar posición al redimensionar ventana
+      window.addEventListener('resize', updatePosition)
+      
+      return () => {
+        window.removeEventListener('resize', updatePosition)
+      }
+    } else {
+      setDropdownPosition(null)
+    }
+  }, [showDropdown, searchTerm])
+
+  // Cerrar dropdown al hacer scroll
+  useEffect(() => {
+    if (!showDropdown) return
+
+    const handleScroll = () => {
+      setShowDropdown(false)
+    }
+
+    window.addEventListener('scroll', handleScroll, true)
+    return () => window.removeEventListener('scroll', handleScroll, true)
+  }, [showDropdown])
+
   const handleProductSelect = (product: { id: string; name: string }) => {
     setSelectedProduct(product)
     setSearchTerm(product.name)
@@ -107,6 +147,7 @@ export function ProductSearchFilter({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-600" />
         <input
+          ref={inputRef}
           type="text"
           value={searchTerm}
           onChange={(e) => {
@@ -128,26 +169,42 @@ export function ProductSearchFilter({
         )}
       </div>
 
-      {/* Dropdown de resultados */}
-      {showDropdown && searchTerm && (
-        <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
-          {products.length === 0 && !loading ? (
-            <div className="px-3 py-2 text-sm text-primary-600">
-              No se encontraron productos
-            </div>
-          ) : (
-            products.map((product) => (
-              <button
-                key={product.id}
-                type="button"
-                onClick={() => handleProductSelect(product)}
-                className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-primary-100 last:border-b-0"
-              >
-                <div className="font-medium text-primary-900 text-sm">{product.name}</div>
-              </button>
-            ))
-          )}
-        </div>
+      {/* Dropdown de resultados - usando portal para evitar overflow */}
+      {showDropdown && searchTerm && dropdownPosition && typeof window !== 'undefined' && createPortal(
+        <>
+          {/* Overlay para cerrar dropdown */}
+          <div 
+            className="fixed inset-0 z-[9998]" 
+            onClick={() => setShowDropdown(false)}
+          />
+          {/* Dropdown posicionado fijamente calculado desde el input */}
+          <div 
+            className="fixed z-[9999] max-h-60 overflow-y-auto border border-stroke rounded-lg bg-white shadow-xl"
+            style={{
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`
+            }}
+          >
+            {products.length === 0 && !loading ? (
+              <div className="px-3 py-2 text-sm text-primary-600">
+                No se encontraron productos
+              </div>
+            ) : (
+              products.map((product) => (
+                <button
+                  key={product.id}
+                  type="button"
+                  onClick={() => handleProductSelect(product)}
+                  className="w-full px-3 py-2 text-left hover:bg-primary-50 border-b border-primary-100 last:border-b-0 transition-colors"
+                >
+                  <div className="font-medium text-primary-900 text-sm">{product.name}</div>
+                </button>
+              ))
+            )}
+          </div>
+        </>,
+        document.body
       )}
 
       {/* Producto seleccionado */}
@@ -168,14 +225,6 @@ export function ProductSearchFilter({
             </button>
           </div>
         </div>
-      )}
-
-      {/* Overlay para cerrar dropdown */}
-      {showDropdown && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowDropdown(false)}
-        />
       )}
     </div>
   )

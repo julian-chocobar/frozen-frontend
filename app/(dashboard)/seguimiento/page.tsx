@@ -118,11 +118,11 @@ export default function SeguimientoPage() {
   // Calcular estadísticas
   const stats = {
     total: batchesData?.batches?.length || 0,
-    pendientes: batchesData?.batches?.filter(b => b.status === 'Pendiente').length || 0,
-    enProduccion: batchesData?.batches?.filter(b => b.status === 'En Producción').length || 0,
-    enEspera: batchesData?.batches?.filter(b => b.status === 'En Espera').length || 0,
-    completados: batchesData?.batches?.filter(b => b.status === 'Completado').length || 0,
-    cancelados: batchesData?.batches?.filter(b => b.status === 'Cancelado').length || 0,
+    pendientes: batchesData?.batches?.filter(b => b.status === 'PENDIENTE').length || 0,
+    enProduccion: batchesData?.batches?.filter(b => b.status === 'EN_PRODUCCION').length || 0,
+    enEspera: batchesData?.batches?.filter(b => b.status === 'EN_ESPERA').length || 0,
+    completados: batchesData?.batches?.filter(b => b.status === 'COMPLETADO').length || 0,
+    cancelados: batchesData?.batches?.filter(b => b.status === 'CANCELADO').length || 0,
     volumenTotal: batchesData?.batches?.reduce((sum, batch) => sum + batch.quantity, 0) || 0
   }
 
@@ -239,7 +239,6 @@ export default function SeguimientoPage() {
             <BatchesClient
               batches={batchesData.batches}
               pagination={batchesData.pagination}
-              autoOpenId={autoOpenId}
             />
           </>
         ) : null}

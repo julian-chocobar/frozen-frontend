@@ -561,7 +561,7 @@ export interface ProductionOrderPageResponse {
 // BATCHES
 // ============================================
 
-export type BatchStatus = "Pendiente" | "En Producción" | "En Espera" | "Completado" | "Cancelado"
+export type BatchStatus = "PENDIENTE" | "EN_PRODUCCION" | "EN_ESPERA" | "COMPLETADO" | "CANCELADO"
 
 export interface BatchResponse {
   id: string

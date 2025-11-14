@@ -16,12 +16,13 @@ interface BatchCardProps {
     progreso: number
     fechaInicio?: string | null
     fechaFinEstimada?: string | null
+    fechaFinReal?: string | null
   }
 }
 
 export function BatchCard({ lote }: BatchCardProps) {
   const progressPercent = Math.min(Math.max(lote.progreso ?? 0, 0), 100)
-  const showDates = lote.fechaInicio || lote.fechaFinEstimada
+  const showDates = lote.fechaInicio || lote.fechaFinEstimada || lote.fechaFinReal
 
   return (
     <div className="card p-5 transition-all hover:shadow-card-hover border-2 border-primary-600">
@@ -76,6 +77,12 @@ export function BatchCard({ lote }: BatchCardProps) {
             <div className="flex items-center gap-2 text-xs text-primary-700">
               <ArrowRight className="w-4 h-4" />
               <span>Fin estimado: {formatearFecha(lote.fechaFinEstimada)}</span>
+            </div>
+          )}
+          {lote.fechaFinReal && (
+            <div className="flex items-center gap-2 text-xs text-primary-700">
+              <Calendar className="w-4 h-4" />
+              <span>Fin real: {formatearFecha(lote.fechaFinReal)}</span>
             </div>
           )}
         </div>
