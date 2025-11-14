@@ -20,6 +20,18 @@ interface BatchCardProps {
   }
 }
 
+// Función para obtener los estilos del estado del lote
+const getBatchStatusStyles = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    "PENDIENTE": "bg-gray-100 text-gray-700 border border-gray-300",
+    "EN_PRODUCCION": "bg-blue-100 text-blue-700 border border-blue-300",
+    "EN_ESPERA": "bg-yellow-100 text-yellow-700 border border-yellow-300",
+    "COMPLETADO": "bg-green-100 text-green-700 border border-green-300",
+    "CANCELADO": "bg-red-100 text-red-700 border border-red-300",
+  }
+  return statusMap[status] || "bg-gray-100 text-gray-700 border border-gray-300"
+}
+
 export function BatchCard({ lote }: BatchCardProps) {
   const progressPercent = Math.min(Math.max(lote.progreso ?? 0, 0), 100)
   const showDates = lote.fechaInicio || lote.fechaFinEstimada || lote.fechaFinReal
@@ -34,7 +46,7 @@ export function BatchCard({ lote }: BatchCardProps) {
             <p className="text-xs text-primary-700">Orden: {lote.ordenProduccionId}</p>
           </div>
         </div>
-        <span className="badge badge-status">
+        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getBatchStatusStyles(lote.estado)}`}>
           {lote.estado}
         </span>
       </div>

@@ -20,12 +20,12 @@ import { FileText, XCircle, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 const statusStyles: Record<string, string> = {
-    "Completado": "bg-green-100 text-green-800 border border-green-200",
-    "En Producción": "bg-primary-100 text-primary-700 border border-primary-300",
-    "Pendiente": "bg-amber-100 text-amber-700 border border-amber-200",
-    "Cancelado": "bg-red-100 text-red-700 border border-red-200",
-    "En Espera": "bg-sky-100 text-sky-700 border border-sky-200",
-    default: "bg-primary-50 text-primary-700 border border-primary-200"
+    "PENDIENTE": "bg-gray-100 text-gray-700 border border-gray-300",
+    "EN_PRODUCCION": "bg-blue-100 text-blue-700 border border-blue-300",
+    "EN_ESPERA": "bg-yellow-100 text-yellow-700 border border-yellow-300",
+    "COMPLETADO": "bg-green-100 text-green-700 border border-green-300",
+    "CANCELADO": "bg-red-100 text-red-700 border border-red-300",
+    default: "bg-gray-100 text-gray-700 border border-gray-300"
 }
 
 export default function BatchDetailPage() {

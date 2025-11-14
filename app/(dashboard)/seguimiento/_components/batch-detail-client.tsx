@@ -48,25 +48,25 @@ const PHASE_NAMES: Record<string, string> = {
 }
 
 const STATUS_BADGE_VARIANTS: Record<string, string> = {
-  PENDIENTE: "bg-amber-100 text-amber-700 border border-amber-200",
-  EN_PROCESO: "bg-primary-100 text-primary-700 border border-primary-300",
+  PENDIENTE: "bg-gray-100 text-gray-700 border border-gray-300",
+  EN_PROCESO: "bg-blue-100 text-blue-700 border border-blue-300",
   BAJO_REVISION: "bg-yellow-100 text-yellow-700 border border-yellow-300",
-  SIENDO_AJUSTADA: "bg-primary-50 text-primary-800 border border-primary-300",
-  RECHAZADA: "bg-red-100 text-red-600 border border-red-200",
-  SUSPENDIDA: "bg-primary-100 text-primary-800 border border-primary-300",
-  COMPLETADA: "bg-green-100 text-green-600 border border-green-200",
-  default: "bg-primary-50 text-primary-700 border border-primary-200"
+  SIENDO_AJUSTADA: "bg-blue-100 text-blue-700 border border-blue-300",
+  RECHAZADA: "bg-red-100 text-red-700 border border-red-300",
+  SUSPENDIDA: "bg-red-100 text-red-700 border border-red-300",
+  COMPLETADA: "bg-green-100 text-green-700 border border-green-300",
+  default: "bg-gray-100 text-gray-700 border border-gray-300"
 }
 
 const STATUS_CARD_VARIANTS: Record<string, string> = {
-  PENDIENTE: "border-amber-300 bg-amber-50",
-  EN_PROCESO: "border-primary-300 bg-primary-50",
+  PENDIENTE: "border-gray-300 bg-gray-50",
+  EN_PROCESO: "border-blue-300 bg-blue-50",
   BAJO_REVISION: "border-yellow-300 bg-yellow-50",
-  SIENDO_AJUSTADA: "border-primary-300 bg-primary-50",
+  SIENDO_AJUSTADA: "border-blue-300 bg-blue-50",
   RECHAZADA: "border-red-300 bg-red-50",
-  SUSPENDIDA: "border-primary-300 bg-primary-50",
+  SUSPENDIDA: "border-red-300 bg-red-50",
   COMPLETADA: "border-green-300 bg-green-50",
-  default: "border-primary-200 bg-white"
+  default: "border-gray-200 bg-white"
 }
 
 export function BatchDetailClient({ batchId, productId, onBatchUpdate }: BatchDetailClientProps) {
