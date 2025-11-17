@@ -179,8 +179,8 @@ export function ConfigClient() {
 
       {/* Modal edición */}
       <Dialog open={!!selected} onOpenChange={(v)=> !v && setSelected(null)}>
-        <DialogContent className="max-w-xl">
-          <DialogTitle>Editar día laboral</DialogTitle>
+        <DialogContent className="max-w-xl border-2 border-primary-200 shadow-2xl">
+          <DialogTitle className="text-xl font-semibold text-primary-900 mb-4">Editar día laboral</DialogTitle>
           {selected && (
             <WorkingDayForm
               initial={selected}

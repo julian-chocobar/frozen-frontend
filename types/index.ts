@@ -665,9 +665,6 @@ export interface QualityParameterSimple {
   information?: string | null
 }
 
-// Alias para mantener compatibilidad - ahora devuelve QualityParameterResponse
-export type QualityParameterResponse = QualityParameterSimple
-
 export interface ProductionPhaseQualityCreateRequest {
   qualityParameterId: number
   productionPhaseId: number
@@ -981,4 +978,87 @@ export interface WorkingDayUpdateRequest {
   isWorkingDay: boolean
   openingHour: string 
     closingHour: string 
+}
+
+// ============================================
+// SECTORS
+// ============================================
+
+export type SectorType = "PRODUCCION" | "CALIDAD" | "ALMACEN"
+
+// SectorResponseDTO - coincide exactamente con el DTO del backend
+export interface SectorResponse {
+  id?: number
+  name: string
+  supervisorId: number
+  type: SectorType
+  phase: Phase | null
+  productionCapacity: number | null
+  isTimeActive: boolean | null
+}
+
+// Respuesta paginada de sectores
+export interface SectorsPageResponse {
+  content: SectorResponse[]
+  isFirst: boolean
+  totalItems: number
+  size: number
+  isLast: boolean
+  totalPages: number
+  hasPrevious: boolean
+  hasNext: boolean
+  currentPage: number
+}
+
+// SectorCreateDTO - coincide exactamente con el DTO del backend
+export interface SectorCreateRequest {
+  name: string
+  supervisorId: number
+  type: SectorType
+  phase?: Phase | null
+  productionCapacity?: number | null
+  isTimeActive?: boolean | null
+}
+
+// SectorUpdateDTO - coincide exactamente con el DTO del backend
+export interface SectorUpdateRequest {
+  name?: string
+  supervisorId?: number
+  type?: SectorType
+  phase?: Phase | null
+  productionCapacity?: number | null
+  isTimeActive?: boolean | null
+}
+
+// ============================================
+// QUALITY PARAMETERS
+// ============================================
+
+// QualityParameterResponseDTO - coincide exactamente con el DTO del backend
+export interface QualityParameterResponse {
+  id: number
+  phase: Phase
+  isCritical: boolean
+  name: string
+  description: string | null
+  unit: string | null
+  information: string | null
+  isActive: boolean
+}
+
+// QualityParameterCreateDTO - coincide exactamente con el DTO del backend
+export interface QualityParameterCreateRequest {
+  phase: Phase
+  isCritical: boolean
+  name: string
+  description?: string | null
+  unit?: string | null
+  information?: string | null
+}
+
+// QualityParameterUpdateDTO - coincide exactamente con el DTO del backend
+export interface QualityParameterUpdateRequest {
+  description?: string | null
+  unit?: string | null
+  information?: string | null
 }

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { WorkingDay, WorkingDayUpdateRequest, DayOfWeek } from "@/types"
 import { Button } from "@/components/ui/button"
+import { Save } from "lucide-react"
 
 interface WorkingDayFormProps {
   initial: WorkingDay
@@ -98,13 +99,14 @@ export function WorkingDayForm({ initial, onSubmit, onCancel, isLoading }: Worki
         >
           Cancelar
         </Button>
-        <Button
+        <button
           type="submit"
           disabled={isLoading}
-          className="gap-2"
+          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
+          <Save className="w-4 h-4" />
           {isLoading ? "Guardando..." : "Guardar"}
-        </Button>
+        </button>
       </div>
     </form>
   )
