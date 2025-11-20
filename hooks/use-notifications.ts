@@ -24,6 +24,7 @@ const reconnectDelayMs = 3000;
 let hasLoadedInitially = false;
 let started = false;
 let focusListenerAttached = false;
+let cachedBackendUrl: string | null = null;
 
 const state: NotificationsState = {
   notifications: [],
@@ -37,12 +38,56 @@ function notify() {
   for (const sub of subscribers) sub({ ...state });
 }
 
+/**
+ * Obtiene la URL del backend desde el servidor o usa la variable de entorno pública
+ */
+async function getBackendUrl(): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+  
+  // Si ya tenemos la URL en caché, usarla
+  if (cachedBackendUrl) {
+    return cachedBackendUrl;
+  }
+  
+  // Intentar obtener desde variable de entorno pública (más rápido)
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    cachedBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    return cachedBackendUrl;
+  }
+  
+  // Si no está disponible, obtenerla desde el servidor
+  try {
+    const response = await fetch('/api/backend-config');
+    if (response.ok) {
+      const data = await response.json();
+      cachedBackendUrl = data.backendUrl;
+      return cachedBackendUrl;
+    }
+  } catch (error) {
+    console.error('📡 SSE: Error obteniendo configuración del backend:', error);
+  }
+  
+  // Fallback: usar localhost en desarrollo
+  if (process.env.NODE_ENV === 'development') {
+    cachedBackendUrl = 'http://localhost:8080';
+    return cachedBackendUrl;
+  }
+  
+  // Fallback: usar el origen actual en producción
+  cachedBackendUrl = window.location.origin;
+  return cachedBackendUrl;
+}
+
 function getSSEUrl(): string | null {
   if (typeof window === 'undefined') return null;
-  const backendUrl = process.env.NODE_ENV === 'development'
-    ? 'http://localhost:8080'
-    : window.location.origin;
-  return `${backendUrl}/api/notifications/stream`;
+  
+  // Usar el proxy de Next.js para SSE, así las cookies se envían correctamente
+  // El endpoint /api/notifications/stream actúa como proxy al backend
+  const url = '/api/notifications/stream';
+  
+  console.log('📡 SSE: URL construida (usando proxy):', url);
+  
+  return url;
 }
 
 async function loadInitialDataOnce() {
@@ -82,11 +127,19 @@ function attachWindowFocusReconnect() {
 
 function connectSSE() {
   const url = getSSEUrl();
-  if (!url) return;
+  if (!url) {
+    console.error('📡 SSE: No se pudo construir la URL');
+    return;
+  }
 
   // Si ya existe una conexión, no crear otra
-  if (eventSource) return;
+  if (eventSource) {
+    console.log('📡 SSE: Ya existe una conexión activa, omitiendo...');
+    return;
+  }
 
+  console.log('📡 SSE: Intentando conectar a:', url);
+  
   try {
     const es = new EventSource(url, { withCredentials: true });
 
@@ -103,7 +156,15 @@ function connectSSE() {
     };
 
     es.onerror = (event) => {
-      console.error('📡 SSE: Error en conexión', event);
+      const errorInfo = {
+        type: event.type,
+        readyState: es.readyState,
+        url: es.url,
+        readyStateText: es.readyState === EventSource.CONNECTING ? 'CONNECTING' : 
+                        es.readyState === EventSource.OPEN ? 'OPEN' : 
+                        es.readyState === EventSource.CLOSED ? 'CLOSED' : 'UNKNOWN'
+      };
+      console.error('📡 SSE: Error en conexión', errorInfo, event);
       state.isConnected = false;
       notify();
 
@@ -116,10 +177,16 @@ function connectSSE() {
             connectSSE();
           }, reconnectDelayMs);
         } else {
-          state.error = 'No se pudo conectar al servidor de notificaciones';
-          console.error('📡 SSE: Máximo de intentos de reconexión alcanzado');
+          state.error = `No se pudo conectar al servidor de notificaciones. URL: ${es.url}`;
+          console.error('📡 SSE: Máximo de intentos de reconexión alcanzado', {
+            url: es.url,
+            readyState: es.readyState
+          });
           notify();
         }
+      } else if (es.readyState === EventSource.CONNECTING) {
+        // El EventSource está intentando reconectar automáticamente
+        console.log('📡 SSE: Reconectando automáticamente...');
       }
     };
 
@@ -232,6 +299,12 @@ async function ensureStarted() {
   if (started) return;
   started = true;
   attachWindowFocusReconnect();
+  
+  // Obtener la URL del backend antes de conectar SSE
+  if (!cachedBackendUrl && typeof window !== 'undefined') {
+    await getBackendUrl();
+  }
+  
   await loadInitialDataOnce();
   connectSSE();
 }
