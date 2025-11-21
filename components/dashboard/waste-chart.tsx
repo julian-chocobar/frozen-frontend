@@ -1,12 +1,12 @@
 "use client"
 
 /**
- * Componente InventoryChart - Gráfico de producción mensual
- * Muestra la producción mensual usando datos reales del backend con filtros
+ * Componente WasteChart - Gráfico de desperdicios mensuales
+ * Muestra los desperdicios generados mensualmente usando datos reales del backend con filtros
  */
 
 import { useEffect, useState } from "react"
-import { Bar, Line } from 'react-chartjs-2'
+import { Bar, Pie, Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,15 +14,15 @@ import {
   BarElement,
   LineElement,
   PointElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js'
 import { analyticsApi } from "@/lib/analytics-api"
-import { MonthlyTotalDTO } from "@/types"
+import { MonthlyTotalDTO, Phase } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
 import { AnalyticsFilters, AnalyticsFiltersState } from "./analytics-filters"
-import { ProductSearchFilter } from "@/app/(dashboard)/ordenes/_components/product-search-filter"
 import { cn } from "@/lib/utils"
 
 // Registrar componentes de Chart.js
@@ -32,21 +32,23 @@ ChartJS.register(
   BarElement,
   LineElement,
   PointElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend
 )
 
-type ChartType = "bar" | "line"
+type ChartType = "bar" | "pie" | "line"
 
-export function InventoryChart() {
+export function WasteChart() {
   const [data, setData] = useState<MonthlyTotalDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<AnalyticsFiltersState>({})
-  const [productId, setProductId] = useState<string>("")
+  const [phase, setPhase] = useState<string>("")
+  const [transferOnly, setTransferOnly] = useState<boolean>(false)
   const [chartType, setChartType] = useState<ChartType>("line")
-  const [shouldLoad, setShouldLoad] = useState(true) // Flag para controlar cuándo cargar
+  const [shouldLoad, setShouldLoad] = useState(true)
 
   useEffect(() => {
     if (!shouldLoad) return
@@ -55,28 +57,32 @@ export function InventoryChart() {
       setLoading(true)
       setError(null)
       try {
-        const monthlyData = await analyticsApi.getMonthlyProduction({
+        const monthlyData = await analyticsApi.getMonthlyWaste({
           startDate: filters.startDate,
           endDate: filters.endDate,
-          productId: productId || filters.productId || undefined,
+          phase: phase || filters.phase || undefined,
+          transferOnly: filters.transferOnly !== undefined ? filters.transferOnly : transferOnly,
         })
         setData(monthlyData)
       } catch (err) {
-        console.error('Error cargando producción mensual:', err)
-        setError('No se pudo cargar la producción mensual')
+        console.error('Error cargando desperdicios mensuales:', err)
+        setError('No se pudo cargar los desperdicios mensuales')
       } finally {
         setLoading(false)
-        setShouldLoad(false) // Resetear flag después de cargar
+        setShouldLoad(false)
       }
     }
     loadData()
-  }, [shouldLoad, filters, productId])
+  }, [shouldLoad, filters, phase, transferOnly])
 
   const handleFiltersChange = (newFilters: AnalyticsFiltersState) => {
     setFilters(newFilters)
-    // Sincronizar productId si viene en los filtros
-    if (newFilters.productId !== undefined) {
-      setProductId(newFilters.productId)
+    // Sincronizar phase y transferOnly si vienen en los filtros
+    if (newFilters.phase !== undefined) {
+      setPhase(newFilters.phase)
+    }
+    if (newFilters.transferOnly !== undefined) {
+      setTransferOnly(newFilters.transferOnly)
     }
   }
 
@@ -84,14 +90,16 @@ export function InventoryChart() {
     // Usar los filtros que vienen del componente de filtros
     setFilters({
       ...searchFilters,
-      productId: productId || searchFilters.productId || undefined,
+      phase: phase || searchFilters.phase || undefined,
+      transferOnly: searchFilters.transferOnly !== undefined ? searchFilters.transferOnly : transferOnly,
     })
-    setShouldLoad(true) // Activar carga cuando se presiona "Buscar"
+    setShouldLoad(true)
   }
 
   const handleClear = () => {
-    setProductId("")
-    setShouldLoad(true) // Activar carga cuando se limpia
+    setPhase("")
+    setTransferOnly(false)
+    setShouldLoad(true)
   }
 
   const formatMonthLabel = (item: MonthlyTotalDTO): string => {
@@ -127,7 +135,7 @@ export function InventoryChart() {
     return (
       <div className="p-6">
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-primary-900 mb-1">Producción Mensual</h3>
+          <h3 className="text-lg font-semibold text-primary-900 mb-1">Desperdicios Mensuales</h3>
           <p className="text-sm text-primary-600">Cargando datos...</p>
         </div>
       </div>
@@ -138,7 +146,7 @@ export function InventoryChart() {
     return (
       <div className="p-6">
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-primary-900 mb-1">Producción Mensual</h3>
+          <h3 className="text-lg font-semibold text-primary-900 mb-1">Desperdicios Mensuales</h3>
         </div>
         <ErrorState message={error} />
       </div>
@@ -149,7 +157,7 @@ export function InventoryChart() {
     return (
       <div className="p-6">
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-primary-900 mb-1">Producción Mensual</h3>
+          <h3 className="text-lg font-semibold text-primary-900 mb-1">Desperdicios Mensuales</h3>
           <p className="text-sm text-primary-600">No hay datos disponibles</p>
         </div>
       </div>
@@ -163,22 +171,57 @@ export function InventoryChart() {
     return a.month - b.month
   })
 
-  const chartData = {
+  const barChartData = {
     labels: sortedData.map(formatMonthLabel),
     datasets: [
       {
-        label: 'Producción (L)',
+        label: 'Desperdicios (L)',
         data: sortedData.map(item => item.total || 0),
-        backgroundColor: 'rgba(37, 99, 235, 0.8)',
-        borderColor: 'rgba(37, 99, 235, 1)',
-        borderWidth: 2,
-        tension: chartType === "line" ? 0.4 : undefined,
-        fill: chartType === "line",
+        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+        borderColor: 'rgba(239, 68, 68, 1)',
+        borderWidth: 1,
       },
     ],
   }
 
-  const options = {
+  const lineChartData = {
+    labels: sortedData.map(formatMonthLabel),
+    datasets: [
+      {
+        label: 'Desperdicios (L)',
+        data: sortedData.map(item => item.total || 0),
+        borderColor: 'rgba(239, 68, 68, 1)',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        tension: 0.4,
+        fill: true,
+        borderWidth: 2,
+      },
+    ],
+  }
+
+  const pieChartData = {
+    labels: sortedData.map(formatMonthLabel),
+    datasets: [
+      {
+        label: 'Desperdicios (L)',
+        data: sortedData.map(item => item.total || 0),
+        backgroundColor: [
+          'rgba(239, 68, 68, 0.8)',
+          'rgba(239, 68, 68, 0.7)',
+          'rgba(239, 68, 68, 0.6)',
+          'rgba(239, 68, 68, 0.5)',
+          'rgba(220, 38, 38, 0.8)',
+          'rgba(220, 38, 38, 0.7)',
+          'rgba(220, 38, 38, 0.6)',
+          'rgba(220, 38, 38, 0.5)',
+        ],
+        borderColor: 'rgba(239, 68, 68, 1)',
+        borderWidth: 1,
+      },
+    ],
+  }
+
+  const barOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -188,7 +231,7 @@ export function InventoryChart() {
       tooltip: {
         callbacks: {
           label: function(context: any) {
-            return `Producción: ${context.parsed.y.toFixed(2)} L`
+            return `Desperdicios: ${context.parsed.y.toFixed(2)} L`
           }
         }
       },
@@ -211,12 +254,68 @@ export function InventoryChart() {
     },
   }
 
+  const lineOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top' as const,
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            return `Desperdicios: ${context.parsed.y.toFixed(2)} L`
+          }
+        }
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value: any) {
+            return `${value} L`
+          }
+        }
+      },
+      x: {
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+        }
+      }
+    },
+  }
+
+  const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'right' as const,
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            const label = context.label || ''
+            const value = context.parsed || 0
+            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0)
+            const percentage = ((value / total) * 100).toFixed(1)
+            return `${label}: ${value.toFixed(2)} L (${percentage}%)`
+          }
+        }
+      },
+    },
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-primary-900 mb-1">Producción Mensual</h3>
+            <h3 className="text-lg font-semibold text-primary-900 mb-1">Desperdicios Mensuales</h3>
             <div className="flex items-baseline gap-2">
               <p className="text-3xl font-bold text-primary-900 font-mono">{total.toFixed(2)} L</p>
               <span className="text-sm font-medium text-primary-600">Total del período</span>
@@ -230,7 +329,7 @@ export function InventoryChart() {
               className={cn(
                 "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
                 chartType === "line"
-                  ? "bg-primary-600 text-white"
+                  ? "bg-alert-600 text-white"
                   : "bg-surface-secondary text-primary-900 hover:bg-stroke"
               )}
             >
@@ -241,38 +340,45 @@ export function InventoryChart() {
               className={cn(
                 "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
                 chartType === "bar"
-                  ? "bg-primary-600 text-white"
+                  ? "bg-alert-600 text-white"
                   : "bg-surface-secondary text-primary-900 hover:bg-stroke"
               )}
             >
               Barras
             </button>
+            <button
+              onClick={() => setChartType("pie")}
+              className={cn(
+                "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
+                chartType === "pie"
+                  ? "bg-alert-600 text-white"
+                  : "bg-surface-secondary text-primary-900 hover:bg-stroke"
+              )}
+            >
+              Torta
+            </button>
           </div>
         </div>
 
-          {/* Filtros */}
-        <div className="space-y-3">
+        {/* Filtros */}
+        <div className="mb-4">
           <AnalyticsFilters
             onFiltersChange={handleFiltersChange}
             onSearch={handleSearch}
             onClear={handleClear}
-            showProductFilter={true}
-            productFilterComponent={
-              <ProductSearchFilter
-                value={productId}
-                onChange={setProductId}
-                placeholder="Buscar producto..."
-              />
-            }
+            showPhaseFilter={true}
+            showTransferOnly={true}
           />
         </div>
       </div>
 
       <div style={{ height: '300px' }}>
         {chartType === "bar" ? (
-          <Bar data={chartData} options={options} />
+          <Bar data={barChartData} options={barOptions} />
+        ) : chartType === "line" ? (
+          <Line data={lineChartData} options={lineOptions} />
         ) : (
-          <Line data={chartData} options={options} />
+          <Pie data={pieChartData} options={pieOptions} />
         )}
       </div>
     </div>

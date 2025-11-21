@@ -871,6 +871,33 @@ export interface TendenciaConsumo {
   }[]
 }
 
+// Analytics DTOs - Backend Analytics Module
+export interface MonthlyTotalDTO {
+  year?: number
+  month: number | string  // Puede ser número (1-12) o string (nombre del mes)
+  total: number
+  monthName?: string
+}
+
+export interface DashboardStatsDTO {
+  totalProduced: number
+  totalWaste: number
+  totalMaterialsUsed: number
+  batchesInProgress: number
+  batchesCancelled: number
+  batchesCompleted: number
+  ordersRejected: number
+}
+
+export interface AnalyticsFilters {
+  startDate?: string // ISO date string
+  endDate?: string // ISO date string
+  productId?: string
+  materialId?: string
+  phase?: Phase
+  transferOnly?: boolean
+}
+
 // ============================================
 // USUARIO Y AUTENTICACIÓN
 // ============================================

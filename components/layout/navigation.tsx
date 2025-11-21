@@ -54,11 +54,6 @@ export const navItems: NavItem[] = [
     icon: Activity,
   },
   {
-    label: "Reportes",
-    href: "/reportes",
-    icon: FileText,
-  },
-  {
     label: "Config",
     href: "/configuracion",
     icon: Settings,
