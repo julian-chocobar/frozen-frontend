@@ -1,5 +1,22 @@
 /**
  * Componente MaterialsFilters - Filtros compactos y responsive para materiales
+ * 
+ * Proporciona controles de filtrado para la lista de materiales:
+ * - Búsqueda por nombre
+ * - Filtro por proveedor
+ * - Filtro por categoría/tipo de material
+ * - Filtro por estado (activo/inactivo)
+ * 
+ * Los filtros se sincronizan con la URL usando searchParams para mantener
+ * el estado entre navegaciones y permitir compartir URLs con filtros.
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * <MaterialsFilters 
+ *   onFilterChange={(filters) => console.log(filters)} 
+ * />
+ * ```
  */
 
 "use client"
@@ -7,7 +24,7 @@
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { CompactFilters, type CompactFilterField } from "@/components/ui/compact-filters"
-import { getTypeLabel } from "@/lib/materials-api"
+import { getTypeLabel } from "@/lib/materials/api"
 import type { MaterialType, MaterialStatus } from "@/types"
 
 interface MaterialsFiltersProps {

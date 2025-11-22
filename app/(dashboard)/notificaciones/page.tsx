@@ -1,139 +1,36 @@
 'use client';
 
-import { Bell, CheckCheck, Filter, Clock, Check, AlertCircle, Package, ClipboardList, RefreshCw, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useCallback, useMemo } from 'react';
+import Link from 'next/link';
+import { useNotificationsDashboard } from '@/hooks/use-notifications-dashboard';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
-import { useNotificationsDashboard } from '@/hooks/use-notifications-dashboard';
-import type { 
-  NotificationResponseDTO, 
-  NotificationType
-} from '@/types';
-import Link from 'next/link';
-
-/**
- * Icono según tipo de notificación
- */
-function getNotificationIcon(type: NotificationType) {
-  switch (type) {
-    case 'PRODUCTION_ORDER_PENDING':
-    case 'PRODUCTION_ORDER_APPROVED':
-    case 'PRODUCTION_ORDER_REJECTED':
-      return ClipboardList;
-    case 'PENDING_MOVEMENT':
-      return Package;
-    case 'LOW_STOCK_ALERT':
-      return AlertCircle;
-    case 'SYSTEM_REMINDER':
-      return Bell;
-    default:
-      return Bell;
-  }
-}
-
-/**
- * Color según tipo de notificación
- */
-function getNotificationColor(type: NotificationType) {
-  switch (type) {
-    case 'PRODUCTION_ORDER_PENDING':
-      return 'text-primary-700 bg-primary-50 border-primary-200';
-    case 'PRODUCTION_ORDER_APPROVED':
-      return 'text-green-700 bg-green-50 border-green-200';
-    case 'PRODUCTION_ORDER_REJECTED':
-      return 'text-red-700 bg-red-50 border-red-200';
-    case 'PENDING_MOVEMENT':
-      return 'text-sky-700 bg-sky-50 border-sky-200';
-    case 'LOW_STOCK_ALERT':
-      return 'text-red-700 bg-red-50 border-red-200';
-    case 'SYSTEM_REMINDER':
-      return 'text-primary-700 bg-primary-50 border-primary-200';
-    default:
-      return 'text-primary-700 bg-primary-50 border-primary-200';
-  }
-}
-
-/**
- * Texto descriptivo del tipo de notificación
- */
-function getNotificationTypeText(type: NotificationType): string {
-  switch (type) {
-    case 'PRODUCTION_ORDER_PENDING':
-      return 'Orden Pendiente';
-    case 'PRODUCTION_ORDER_APPROVED':
-      return 'Orden Aprobada';
-    case 'PRODUCTION_ORDER_REJECTED':
-      return 'Orden Rechazada';
-    case 'PENDING_MOVEMENT':
-      return 'Movimiento Pendiente';
-    case 'LOW_STOCK_ALERT':
-      return 'Stock Bajo';
-    case 'SYSTEM_REMINDER':
-      return 'Recordatorio';
-    default:
-      return 'Notificación';
-  }
-}
-
-/**
- * Obtener URL de acción según tipo de notificación
- */
-function getNotificationUrl(notification: NotificationResponseDTO): string | null {
-  const { type, relatedEntityId } = notification;
-
-  switch (type) {
-    case 'PRODUCTION_ORDER_PENDING':
-    case 'PRODUCTION_ORDER_APPROVED':
-    case 'PRODUCTION_ORDER_REJECTED':
-      // Dirigir al modal de detalle de orden para aprobar/rechazar
-      return relatedEntityId ? `/ordenes?detail=${relatedEntityId}` : '/ordenes';
-    case 'PENDING_MOVEMENT':
-      // Dirigir al modal de detalle de movimiento para marcar como en proceso/completo
-      return relatedEntityId ? `/movimientos?detail=${relatedEntityId}` : '/movimientos';
-    case 'LOW_STOCK_ALERT':
-      // Dirigir al modal de detalle de material para ver información de stock
-      return relatedEntityId ? `/materiales?detail=${relatedEntityId}` : '/materiales';
-    default:
-      return null;
-  }
-}
-
-/**
- * Formatear fecha relativa
- */
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return 'Ahora mismo';
-  if (diffMins < 60) return `Hace ${diffMins} min`;
-  if (diffHours < 24) return `Hace ${diffHours} h`;
-  if (diffDays < 7) return `Hace ${diffDays} días`;
-  
-  return date.toLocaleDateString('es-ES', { 
-    day: 'numeric', 
-    month: 'short',
-    year: diffDays > 30 ? 'numeric' : undefined
-  });
-}
-
-/**
- * Formatear fecha completa
- */
-function formatFullDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleString('es-ES', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
+import { NotificationsLoadingState } from '@/components/notifications/notifications-loading-state';
+import { NotificationsEmptyState } from '@/components/notifications/notifications-empty-state';
+import {
+  getNotificationIcon,
+  getNotificationColor,
+  getNotificationTypeText,
+  getNotificationUrl,
+  formatRelativeTime,
+  formatFullDate,
+} from '@/lib/notifications/utils';
+import {
+  NOTIFICATION_FILTERS,
+  NOTIFICATION_FILTER_LABELS,
+  NOTIFICATION_EMPTY_STATES,
+} from '@/lib/constants';
+import {
+  Bell,
+  CheckCheck,
+  RefreshCw,
+  Clock,
+  Check,
+  Filter,
+  AlertCircle,
+  X,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function NotificationsPage() {
   const {
@@ -146,7 +43,6 @@ export default function NotificationsPage() {
     markAsRead,
     markAllAsRead,
     changeFilter,
-    changePage,
     goToNextPage,
     goToPreviousPage,
     refresh,
@@ -158,25 +54,45 @@ export default function NotificationsPage() {
 
   /**
    * Manejar marcar como leída con manejo de errores
+   * Memoizado para evitar re-renderizados innecesarios
    */
-  const handleMarkAsRead = async (notificationId: number) => {
+  const handleMarkAsRead = useCallback(async (notificationId: number) => {
     try {
       await markAsRead(notificationId);
     } catch (error) {
       // El error ya se maneja en el hook
     }
-  };
+  }, [markAsRead]);
 
   /**
    * Manejar marcar todas como leídas con manejo de errores
+   * Memoizado para evitar re-renderizados innecesarios
    */
-  const handleMarkAllAsRead = async () => {
+  const handleMarkAllAsRead = useCallback(async () => {
     try {
       await markAllAsRead();
     } catch (error) {
       // El error ya se maneja en el hook
     }
-  };
+  }, [markAllAsRead]);
+
+  /**
+   * Obtener el estado vacío adecuado según el filtro actual
+   * Memoizado para evitar cálculos repetidos
+   */
+  const emptyState = useMemo(() => {
+    if (filter === NOTIFICATION_FILTERS.UNREAD) return NOTIFICATION_EMPTY_STATES.UNREAD;
+    if (filter === NOTIFICATION_FILTERS.READ) return NOTIFICATION_EMPTY_STATES.READ;
+    return NOTIFICATION_EMPTY_STATES.ALL;
+  }, [filter]);
+
+  /**
+   * Texto de paginación
+   * Memoizado para evitar recalcular en cada render
+   */
+  const paginationText = useMemo(() => {
+    return `Mostrando ${notifications.length} de ${pagination.totalItems} notificaciones`;
+  }, [notifications.length, pagination.totalItems]);
 
   return (
     <>
@@ -275,9 +191,9 @@ export default function NotificationsPage() {
             <span className="text-sm font-medium text-primary-700">Filtrar:</span>
             <div className="flex bg-primary-50 border border-primary-200 rounded-lg p-1">
               {[
-                { key: 'all', label: 'Todas', count: pagination.totalItems },
-                { key: 'unread', label: 'No leídas', count: stats.unreadCount },
-                { key: 'read', label: 'Leídas', count: stats.readCount }
+                { key: 'all', label: NOTIFICATION_FILTER_LABELS.all, count: pagination.totalItems },
+                { key: 'unread', label: NOTIFICATION_FILTER_LABELS.unread, count: stats.unreadCount },
+                { key: 'read', label: NOTIFICATION_FILTER_LABELS.read, count: stats.readCount }
               ].map((item) => (
                 <button
                   key={item.key}
@@ -317,24 +233,12 @@ export default function NotificationsPage() {
         {/* Lista de notificaciones */}
         <div className="card border-2 border-border overflow-hidden">
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-primary-600">Cargando notificaciones...</div>
-            </div>
+            <NotificationsLoadingState />
           ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-              <Bell className="w-16 h-16 text-primary-400 mb-4" />
-              <p className="text-lg font-medium text-primary-900 mb-2">
-                No hay notificaciones
-              </p>
-              <p className="text-primary-600">
-                {filter === 'unread' 
-                  ? 'No tienes notificaciones sin leer' 
-                  : filter === 'read'
-                  ? 'No tienes notificaciones leídas'
-                  : 'Las notificaciones aparecerán aquí'
-                }
-              </p>
-            </div>
+            <NotificationsEmptyState
+              title={emptyState.title}
+              description={emptyState.description}
+            />
           ) : (
             <div className="divide-y divide-stroke">
               {notifications.map((notification) => {
@@ -429,7 +333,7 @@ export default function NotificationsPage() {
           {pagination.totalPages > 1 && (
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between p-4 border-t border-stroke">
               <div className="text-sm text-primary-600">
-                Mostrando {notifications.length} de {pagination.totalItems} notificaciones
+                {paginationText}
               </div>
               
               <div className="flex items-center gap-2">

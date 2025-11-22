@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import type { PackagingCreateRequest, PackagingResponse, UnitMeasurement } from "@/types"
-import type { MaterialIdName } from "@/lib/materials-api"
-import { getUnitMeasurements, getMaterialsIdNameList } from "@/lib/materials-api"
+import type { MaterialIdName } from "@/lib/materials/api"
+import { getUnitMeasurements, getMaterialsIdNameList } from "@/lib/materials/api"
 
 interface PackagingFormProps {
     packaging?: PackagingResponse

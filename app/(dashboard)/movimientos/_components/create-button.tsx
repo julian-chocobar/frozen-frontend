@@ -7,7 +7,7 @@
 
 import { CreateButton, useCreateModal } from "@/components/ui/create-button"
 import { MovementForm } from "./movement-form"
-import { createMovement } from "@/lib/movements-api"
+import { createMovement } from "@/lib/movements"
 import { useRouter } from "next/navigation"
 import type { MovementCreateRequest } from "@/types"
 

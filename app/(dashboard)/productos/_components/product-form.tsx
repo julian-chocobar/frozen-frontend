@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { ProductCreateRequest, ProductUpdateRequest, ProductResponse, UnitMeasurement } from "@/types"
 import { Button } from "@/components/ui/button"
-import { getUnitMeasurements } from "@/lib/materials-api"
+import { getUnitMeasurements } from "@/lib/materials/api"
 
 interface ProductFormProps {
     product?: ProductResponse

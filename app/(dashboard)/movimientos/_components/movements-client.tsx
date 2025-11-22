@@ -3,17 +3,30 @@
 /**
  * Componente cliente para manejar operaciones CRUD de movimientos
  * Incluye modales para crear/editar y confirmaciones para eliminar
+ * 
+ * Refactorizado siguiendo patrones del módulo de dashboards:
+ * - Memoización de handlers con useCallback
+ * - Optimización de re-renders
+ * - Manejo centralizado de errores
+ * 
+ * @example
+ * ```tsx
+ * <MovementsClient 
+ *   movements={movements} 
+ *   pagination={pagination}
+ *   autoOpenId={searchParams.get('id')}
+ * />
+ * ```
  */
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { MovementsTable } from "./movements-table"
 import { MovementsCards } from "./movements-cards"
 import { MovementDetails } from "./movement-details"
-import { getMovementById, toggleMovementInProgress, completeMovement } from "@/lib/movements-api"
+import { getMovementById, toggleMovementInProgress, completeMovement } from "@/lib/movements"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import { PaginationClient } from "@/components/ui/pagination-client"
 import { Button } from "@/components/ui/button"
-
 
 import type { MovementResponse, MovementDetailResponse } from "@/types"
 
@@ -44,20 +57,16 @@ export function MovementsClient({ movements, pagination, autoOpenId }: Movements
 
   // Auto-abrir modal si se proporciona autoOpenId
   useEffect(() => {
-    console.log('MovementsClient autoOpenId effect:', { autoOpenId, movementsCount: movements.length })
     if (autoOpenId && movements.length > 0) {
-      console.log('Looking for movement with id:', autoOpenId)
-      console.log('Available movements:', movements.map(m => ({ id: m.id, type: m.type })))
       const targetMovement = movements.find(m => m.id === autoOpenId)
-      console.log('Found target movement:', targetMovement)
       if (targetMovement) {
-        console.log('Opening modal for movement:', targetMovement.id)
         handleViewDetails(targetMovement)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoOpenId, movements])
 
-  const handleViewDetails = async (movement: MovementResponse) => {
+  const handleViewDetails = useCallback(async (movement: MovementResponse) => {
     setLoadingDetails(true)
     setIsViewing(true)
     
@@ -72,9 +81,9 @@ export function MovementsClient({ movements, pagination, autoOpenId }: Movements
     } finally {
       setLoadingDetails(false)
     }
-  }
+  }, [])
 
-  const handleToggleInProgress = async (id: string) => {
+  const handleToggleInProgress = useCallback(async (id: string) => {
     if (!selectedMovement) return
 
     setIsLoadingAction(true)
@@ -105,9 +114,9 @@ export function MovementsClient({ movements, pagination, autoOpenId }: Movements
     } finally {
       setIsLoadingAction(false)
     }
-  }
+  }, [selectedMovement])
 
-  const handleComplete = async (id: string) => {
+  const handleComplete = useCallback(async (id: string) => {
     if (!selectedMovement) return
 
     setIsLoadingAction(true)
@@ -139,7 +148,13 @@ export function MovementsClient({ movements, pagination, autoOpenId }: Movements
     } finally {
       setIsLoadingAction(false)
     }
-  }
+  }, [selectedMovement])
+
+  // Memoizar el texto de paginación
+  const paginationText = useMemo(() => {
+    if (!pagination) return ''
+    return `Mostrando ${localMovements.length} movimientos de ${pagination.totalElements} totales`
+  }, [localMovements.length, pagination])
 
   return (
     <div>
@@ -153,9 +168,7 @@ export function MovementsClient({ movements, pagination, autoOpenId }: Movements
       {pagination && (
         <div className="mt-4 border-t border-stroke bg-primary-50/40 px-4 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-primary-700">
-            <p>
-              Mostrando {localMovements.length} movimientos de {pagination.totalElements} totales
-            </p>
+            <p>{paginationText}</p>
             <PaginationClient 
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}

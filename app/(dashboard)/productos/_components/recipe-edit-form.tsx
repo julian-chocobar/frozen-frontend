@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { RecipeResponse, RecipeUpdateRequest, Phase } from "@/types"
-import { updateRecipe } from "@/lib/recipes-api"
+import { updateRecipe } from "@/lib/recipes"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 

@@ -24,32 +24,48 @@ const variantStyles = {
 
 export function StatCard({ title, value, subtitle, icon: Icon, variant = "default", className }: StatCardProps) {
   return (
-    <div className={cn("card p-6 transition-all hover:shadow-md h-full min-h-[140px] flex flex-col", variantStyles[variant], className)}>
-      <div className="flex items-start justify-between mb-3">
-        <h3 className="text-sm font-medium text-primary-800 line-clamp-2">{title}</h3>
+    <div className={cn(
+      "card p-6 transition-all duration-300 h-full min-h-[140px] flex flex-col",
+      "hover:shadow-lg hover:-translate-y-1 hover:border-opacity-80",
+      "bg-gradient-to-br from-white to-gray-50/50",
+      "border-2",
+      variantStyles[variant], 
+      className
+    )}>
+      <div className="flex items-start justify-between mb-4">
+        <h3 className="text-sm font-semibold text-primary-700 line-clamp-2 tracking-wide">{title}</h3>
         {Icon && (
-          <Icon
-            className={cn(
-              "w-5 h-5 flex-shrink-0 ml-2",
-              variant === "primary" && "text-primary-600",
-              variant === "alert" && "text-alert-600",
-              variant === "success" && "text-success-600",
-              variant === "default" && "text-muted",
-            )}
-          />
+          <div className={cn(
+            "flex-shrink-0 ml-2 p-2 rounded-xl transition-all duration-300",
+            "shadow-sm",
+            variant === "primary" && "bg-primary-50 text-primary-600",
+            variant === "alert" && "bg-red-50 text-red-600",
+            variant === "success" && "bg-green-50 text-green-600",
+            variant === "default" && "bg-gray-100 text-gray-600",
+          )}>
+            <Icon className="w-4 h-4" />
+          </div>
         )}
       </div>
-      <div className="mb-2 flex-grow flex items-center">
-        <p className="text-3xl font-bold text-primary-900 font-mono">{value}</p>
+      <div className="mb-3 flex-grow flex items-center">
+        <p className={cn(
+          "text-3xl font-bold font-mono tracking-tight",
+          variant === "primary" && "text-primary-700",
+          variant === "alert" && "text-red-700",
+          variant === "success" && "text-green-700",
+          variant === "default" && "text-primary-900",
+        )}>
+          {value}
+        </p>
       </div>
       {subtitle && (
         <p
           className={cn(
-            "text-sm font-medium line-clamp-2",
+            "text-xs font-medium line-clamp-2 opacity-80",
             variant === "primary" && "text-primary-600",
-            variant === "alert" && "text-alert-600",
-            variant === "success" && "text-success-600",
-            variant === "default" && "text-muted",
+            variant === "alert" && "text-red-600",
+            variant === "success" && "text-green-600",
+            variant === "default" && "text-gray-600",
           )}
         >
           {subtitle}

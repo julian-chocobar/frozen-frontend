@@ -8,7 +8,7 @@
 import { useState, useEffect } from "react"
 import { Search } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { getMaterialsIdNameList, type MaterialIdName } from "@/lib/materials-api"
+import { getMaterialsIdNameList, type MaterialIdName } from "@/lib/materials/api"
 import type { Phase } from "@/types"
 
 interface MaterialSearchFilterProps {

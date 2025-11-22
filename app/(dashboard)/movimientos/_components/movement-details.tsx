@@ -6,8 +6,8 @@
 import { ArrowUp, ArrowDown, Calendar, Package, X, Clock, Play, CheckCircle, MapPin, User, Lock, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MovementDetailResponse } from "@/types"
-import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
-import { getStatusLabel } from "@/lib/movements-api"
+import { getTypeLabel, getUnitLabel } from "@/lib/materials/api"
+import { getStatusLabel } from "@/lib/movements"
 import { useAuth } from "@/contexts/auth-context"
 
 interface MovementDetailsProps {

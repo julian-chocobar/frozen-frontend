@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { Search } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { getProductsIdNameList } from "@/lib/products-api"
+import { getProductsIdNameList } from "@/lib/products"
 
 interface ProductSearchFilterProps {
   value: string

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { ProductPhaseResponse, RecipeCreateRequest, Phase } from "@/types"
-import { createRecipe } from "@/lib/recipes-api"
-import { getMaterialsIdNameList, MaterialIdName } from "@/lib/materials-api"
+import { createRecipe } from "@/lib/recipes"
+import { getMaterialsIdNameList, MaterialIdName } from "@/lib/materials/api"
 import { Button } from "@/components/ui/button"
 import { MaterialSearchFilter } from "@/app/(dashboard)/movimientos/_components/material-search-filter"
 import { toast } from "sonner"

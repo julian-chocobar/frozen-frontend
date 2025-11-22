@@ -8,7 +8,7 @@ import { PackagingForm } from "./packaging-form"
 import { 
   updatePackaging, 
   togglePackagingActive 
-} from "@/lib/packagings-api"
+} from "@/lib/packagings"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import type { PackagingResponse, PackagingUpdateRequest } from "@/types"
 import { PaginationClient } from "@/components/ui/pagination-client"

@@ -1,14 +1,30 @@
 /**
  * Componente MovementsTable - Wrapper específico para movimientos usando DataTable genérico
  * Muestra todos los movimientos en formato tabla para desktop
+ * 
+ * Características:
+ * - Visualización en formato tabla para escritorio
+ * - Columnas personalizadas para ID, fecha, estado, tipo, material y cantidad
+ * - Indicadores visuales con iconos para tipos de movimiento
+ * - Badges de color para estados
+ * - Integración con acción de ver detalles
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * <MovementsTable
+ *   movements={movements}
+ *   onViewDetails={(movement) => handleView(movement)}
+ * />
+ * ```
  */
 
 import { ArrowUp, ArrowDown, Calendar, Package, Lock, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
 import type { MovementResponse } from "@/types"
-import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
-import { getStatusLabel } from "@/lib/movements-api"
+import { getTypeLabel, getUnitLabel } from "@/lib/materials/api"
+import { getStatusLabel } from "@/lib/movements"
 
 interface MovementsTableProps {
   movements: MovementResponse[]

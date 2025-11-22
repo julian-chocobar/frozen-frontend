@@ -3,12 +3,14 @@
 import { Header } from "@/components/layout/header"
 import { ProductsClient } from "./_components/products-client"
 import { ProductsFilters } from "./_components/products-filters"
-import { ErrorState } from "@/components/ui/error-state"
+import { ProductsLoadingState } from "@/components/products/products-loading-state"
+import { ProductsErrorState } from "@/components/products/products-error-state"
 import { ProductCreateButton } from "./_components/create-button"
-import { getProducts } from "@/lib/products-api"
+import { getProducts } from "@/lib/products"
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { ProductResponse } from "@/types"
+import { PRODUCT_PAGINATION, PRODUCT_ERROR_MESSAGES } from "@/lib/constants"
 
 // Tipo para los datos de la página
 interface ProductsPageData {
@@ -30,22 +32,26 @@ export default function ProductosPage() {
     const [loading, setLoading] = useState(true)
     const [refreshKey, setRefreshKey] = useState(0)
 
-    // Obtener parámetros de búsqueda
-    const page = parseInt(searchParams.get('page') || '0')
-    const name = searchParams.get('name') || undefined
-    const alcoholic = searchParams.get('alcoholic') || undefined
-    const estado = searchParams.get('estado') || undefined
-    const ready = searchParams.get('ready') || undefined
+    // Obtener parámetros de búsqueda memoizados
+    const filters = useMemo(() => ({
+      page: parseInt(searchParams.get('page') || '0'),
+      name: searchParams.get('name') || undefined,
+      alcoholic: searchParams.get('alcoholic') || undefined,
+      estado: searchParams.get('estado') || undefined,
+      ready: searchParams.get('ready') || undefined,
+      size: PRODUCT_PAGINATION.DEFAULT_PAGE_SIZE
+    }), [searchParams])
+
+    // Callback para forzar actualización
+    const handleRefresh = useCallback(() => {
+      setRefreshKey(prev => prev + 1)
+    }, [])
 
     // Escuchar cambios de navegación para forzar refresh
     useEffect(() => {
-        const handleFocus = () => {
-            setRefreshKey(prev => prev + 1)
-        }
-        
-        window.addEventListener('focus', handleFocus)
-        return () => window.removeEventListener('focus', handleFocus)
-    }, [])
+        window.addEventListener('focus', handleRefresh)
+        return () => window.removeEventListener('focus', handleRefresh)
+    }, [handleRefresh])
 
     // Cargar datos cuando cambien los parámetros o refreshKey
     useEffect(() => {
@@ -54,26 +60,21 @@ export default function ProductosPage() {
             setError(null)
 
             try {
-                const data = await getProducts({
-                    page,
-                    name,
-                    alcoholic,
-                    estado,
-                    ready,
-                    size: 10
-                })
+                const data = await getProducts(filters)
                 setProductsData(data)
             } catch (err) {
                 console.error('Error al cargar productos:', err)
 
                 if (err instanceof Error) {
-                    if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
-                        setError('No se pudo conectar con el backend')
+                    if (err.message.includes('conectar con el backend') || 
+                        err.message.includes('ECONNREFUSED') || 
+                        err.message.includes('fetch failed')) {
+                        setError(PRODUCT_ERROR_MESSAGES.NETWORK_ERROR)
                     } else {
                         setError(err.message)
                     }
                 } else {
-                    setError('No se pudieron cargar los productos')
+                    setError(PRODUCT_ERROR_MESSAGES.FETCH_FAILED)
                 }
             } finally {
                 setLoading(false)
@@ -81,7 +82,13 @@ export default function ProductosPage() {
         }
 
         loadProducts()
-    }, [page, name, alcoholic, estado, ready, refreshKey])
+    }, [filters, refreshKey])
+
+    // Callback para reintentar carga
+    const handleRetry = useCallback(() => {
+      handleRefresh()
+    }, [handleRefresh])
+
     return (
         <>
             <Header
@@ -99,17 +106,22 @@ export default function ProductosPage() {
                                 <p className="text-sm text-primary-600">Gestiona tus productos</p>
                             </div>
                             {!loading && productsData && (
-                                <ProductCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+                                <ProductCreateButton onCreateCallback={handleRefresh} />
                             )}
                         </div>
                     </div>
                     
                     {error ? (
-                        <ErrorState error={error} />
+                        <div className="p-6">
+                          <ProductsErrorState 
+                            message={error}
+                            onRetry={handleRetry}
+                            isRetrying={loading}
+                          />
+                        </div>
                     ) : loading ? (
-                        <div className="p-8 text-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                            <p className="mt-4 text-primary-600">Cargando productos...</p>
+                        <div className="p-6">
+                          <ProductsLoadingState count={6} />
                         </div>
                     ) : productsData ? (
                         <ProductsClient 

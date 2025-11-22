@@ -2,11 +2,14 @@
 
 import { Header } from "@/components/layout/header"
 import { ProductDetailClient } from "@/app/(dashboard)/productos/_components/product-detail-client"
-import { ErrorState } from "@/components/ui/error-state"
-import { getProductById } from "@/lib/products-api"
+import { ProductsLoadingState } from "@/components/products/products-loading-state"
+import { ProductsErrorState } from "@/components/products/products-error-state"
+import { getProductById } from "@/lib/products"
 import { notFound, useParams } from "next/navigation"
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { ProductResponse } from "@/types"
+import { getAlcoholicText, getActiveText, validateProductData } from "@/lib/products/utils"
+import { PRODUCT_ERROR_MESSAGES } from "@/lib/constants"
 
 export default function ProductDetailPage() {
     const params = useParams()
@@ -16,37 +19,58 @@ export default function ProductDetailPage() {
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        const loadProduct = async () => {
-            setLoading(true)
-            setError(null)
+    // Callback para cargar producto
+    const loadProduct = useCallback(async () => {
+        setLoading(true)
+        setError(null)
 
-            try {
-                const data = await getProductById(id)
-                setProduct(data)
-            } catch (err) {
-                console.error('Error al cargar producto:', err)
-
-                if (err instanceof Error) {
-                    if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
-                        setError('No se pudo conectar con el backend')
-                    } else if (err.message.includes('404') || err.message.includes('Not Found')) {
-                        notFound()
-                    } else {
-                        setError(err.message)
-                    }
-                } else {
-                    setError('No se pudo cargar el producto')
-                }
-            } finally {
-                setLoading(false)
+        try {
+            const data = await getProductById(id)
+            
+            // Validar datos antes de establecer
+            if (!validateProductData(data)) {
+                throw new Error(PRODUCT_ERROR_MESSAGES.INVALID_DATA)
             }
-        }
+            
+            setProduct(data)
+        } catch (err) {
+            console.error('Error al cargar producto:', err)
 
+            if (err instanceof Error) {
+                if (err.message.includes('conectar con el backend') || 
+                    err.message.includes('ECONNREFUSED') || 
+                    err.message.includes('fetch failed')) {
+                    setError(PRODUCT_ERROR_MESSAGES.NETWORK_ERROR)
+                } else if (err.message.includes('404') || err.message.includes('Not Found')) {
+                    notFound()
+                } else {
+                    setError(err.message)
+                }
+            } else {
+                setError(PRODUCT_ERROR_MESSAGES.FETCH_BY_ID_FAILED)
+            }
+        } finally {
+            setLoading(false)
+        }
+    }, [id])
+
+    // Cargar producto al montar
+    useEffect(() => {
         if (id) {
             loadProduct()
         }
-    }, [id])
+    }, [id, loadProduct])
+
+    // Callback para reintentar
+    const handleRetry = useCallback(() => {
+        loadProduct()
+    }, [loadProduct])
+
+    // Subtítulo memoizado
+    const subtitle = useMemo(() => {
+        if (!product) return ''
+        return `Producto ${getAlcoholicText(product.isAlcoholic)} - ${getActiveText(product.isActive)}`
+    }, [product])
 
     if (error) {
         return (
@@ -57,7 +81,11 @@ export default function ProductDetailPage() {
                     backButton={{ href: "/productos" }}
                 />
                 <div className="p-4 md:p-6">
-                    <ErrorState error={error} />
+                    <ProductsErrorState 
+                      message={error}
+                      onRetry={handleRetry}
+                      isRetrying={loading}
+                    />
                 </div>
             </>
         )
@@ -72,10 +100,7 @@ export default function ProductDetailPage() {
                     backButton={{ href: "/productos" }}
                 />
                 <div className="p-4 md:p-6">
-                    <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                        <p className="mt-4 text-primary-600">Cargando producto...</p>
-                    </div>
+                    <ProductsLoadingState count={1} />
                 </div>
             </>
         )
@@ -90,7 +115,7 @@ export default function ProductDetailPage() {
         <>
             <Header
                 title={product.name}
-                subtitle={`Producto ${product.isAlcoholic ? 'Alcohólico' : 'No Alcohólico'} - ${product.isActive ? 'Activo' : 'Inactivo'}`}
+                subtitle={subtitle}
                 backButton={{ href: "/productos" }}
             />
             <div className="p-4 md:p-6">

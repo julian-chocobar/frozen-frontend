@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label"
 import { Header } from "@/components/layout/header"
 import { Save, Eye, EyeOff, User as UserIcon, Mail, Shield, Lock } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { getUserById, updateUser, updateUserPassword } from "@/lib/users-api"
+import { getUserById, updateUser, updateUserPassword } from "@/lib/users"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import type { UserDetail, UserUpdateRequest, UpdatePasswordRequest } from "@/types"
-import { getRoleLabel } from "@/lib/users-api"
+import { getRoleLabel } from "@/lib/users"
 
 /**
  * Página de Edición de Perfil de Usuario
@@ -82,7 +82,7 @@ export default function PerfilPage() {
     loadUserData()
   }, [user])
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = useCallback(async () => {
     if (!user?.id || !userDetail) return
     
     setIsLoading(true)
@@ -102,9 +102,9 @@ export default function PerfilPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user?.id, userDetail, nombre, email, phoneNumber, router])
 
-  const handleChangePassword = async () => {
+  const handleChangePassword = useCallback(async () => {
     if (newPassword !== confirmPassword) {
       showSuccess('Las contraseñas no coinciden', 'error')
       return
@@ -137,7 +137,7 @@ export default function PerfilPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user?.id, newPassword, confirmPassword])
 
   if (isLoadingData) {
     return (

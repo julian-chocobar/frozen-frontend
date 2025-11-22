@@ -6,7 +6,7 @@
 import { Edit, MapPin, Power, PowerOff, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MaterialDetailResponse } from "@/types"
-import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
+import { getTypeLabel, getUnitLabel } from "@/lib/materials/api"
 
 interface MaterialDetailsProps {
   material: MaterialDetailResponse

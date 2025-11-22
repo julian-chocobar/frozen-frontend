@@ -5,7 +5,7 @@ import { BatchCard } from "@/components/production/batch-card"
 import { Eye } from "lucide-react"
 import { PaginationClient } from "@/components/ui/pagination-client"
 import type { BatchResponse, Phase, ProductionPhaseResponse } from "@/types"
-import { getProductionPhasesByBatch } from "@/lib/production-phases-api"
+import { getProductionPhasesByBatch } from "@/lib/phases/production-phases-api"
 
 interface BatchesClientProps {
   batches: BatchResponse[]

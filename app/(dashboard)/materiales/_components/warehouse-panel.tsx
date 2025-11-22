@@ -16,8 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { getWarehouseZones, getSectionsForZone } from '@/lib/materials-api'
-import { getWarehouseLayout, getMaterialsWarehouseMap, getWarehouseInfo } from '@/lib/warehouse-api'
+import { getWarehouseZones, getSectionsForZone } from '@/lib/materials/api'
+import { getWarehouseLayout, getMaterialsWarehouseMap, getWarehouseInfo } from '@/lib/warehouse'
 import type { MaterialType, WarehouseZone, MaterialWarehouseLocation, WarehouseInfoResponse } from '@/types'
 
 // Configuración del mapa

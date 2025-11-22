@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { ProductPhaseResponse, ProductPhaseUpdateRequest, UnitMeasurement } from "@/types"
-import { updateProductPhase } from "@/lib/product-phases-api"
+import { updateProductPhase } from "@/lib/phases/product-phases-api"
 import { Button } from "@/components/ui/button"
-import { getUnitMeasurements } from "@/lib/materials-api"
+import { getUnitMeasurements } from "@/lib/materials/api"
 import { toast } from "sonner"
 
 interface PhaseFormProps {

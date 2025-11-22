@@ -7,7 +7,7 @@
 
 import { CreateButton, useCreateModal } from "@/components/ui/create-button"
 import { UserForm } from "./user-form"
-import { createUser } from "@/lib/users-api"
+import { createUser } from "@/lib/users"
 import { useRouter } from "next/navigation"
 import type { UserCreateRequest } from "@/types"
 

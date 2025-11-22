@@ -1,12 +1,29 @@
 /**
  * Componente MovementsFilters - Filtros compactos y responsive para movimientos
+ * 
+ * Proporciona controles de filtrado para la lista de movimientos:
+ * - Búsqueda por material (con componente de búsqueda especializado)
+ * - Filtro por tipo de movimiento (INGRESO, EGRESO, RESERVA, DEVUELTO)
+ * - Filtro por estado (PENDIENTE, EN_PROCESO, COMPLETADO)
+ * - Filtro por rango de fechas (desde/hasta)
+ * 
+ * Los filtros se sincronizan con la URL usando searchParams para mantener
+ * el estado entre navegaciones y permitir compartir URLs con filtros.
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * <MovementsFilters 
+ *   onFilterChange={(filters) => console.log(filters)} 
+ * />
+ * ```
  */
 "use client"
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { CompactFilters, type CompactFilterField } from "@/components/ui/compact-filters"
 import { MaterialSearchFilter } from "./material-search-filter"
-import { getTypeLabel } from "@/lib/movements-api"
+import { getTypeLabel } from "@/lib/movements"
 import type { MovementType, MovementStatus } from "@/types"
 
 interface MovementsFiltersProps {

@@ -13,7 +13,7 @@ import {
   approveProductionOrder, 
   rejectProductionOrder, 
   cancelProductionOrder 
-} from "@/lib/production-orders-api"
+} from "@/lib/orders"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import type { ProductionOrderResponse } from "@/types"
 import { PaginationClient } from "@/components/ui/pagination-client"

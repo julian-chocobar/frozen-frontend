@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { updateSector, getAllSectors } from "@/lib/sectors-api"
+import { updateSector, getAllSectors } from "@/lib/sectors"
 import type { SectorResponse, SectorCreateRequest, SectorUpdateRequest, SectorType, Phase } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Save, X } from "lucide-react"
 import { handleError, showSuccess } from "@/lib/error-handler"
-import { getUsers } from "@/lib/users-api"
+import { getUsers } from "@/lib/users"
 import type { UserResponse } from "@/types"
 
 const SECTOR_TYPES: { value: SectorType; label: string }[] = [

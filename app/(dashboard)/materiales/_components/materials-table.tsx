@@ -1,13 +1,30 @@
 /**
  * Componente MaterialsTable - Wrapper específico para materiales usando DataTable genérico
  * Muestra todos los materiales en formato tabla para desktop
+ * 
+ * Características:
+ * - Visualización en formato tabla para escritorio
+ * - Columnas personalizadas para código, nombre, categoría, stock, proveedor y estado
+ * - Indicadores visuales para stock disponible, reservado y total
+ * - Integración con acciones CRUD (ver, editar, cambiar estado)
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * <MaterialsTable
+ *   materiales={materials}
+ *   onEdit={(material) => handleEdit(material)}
+ *   onToggleActive={(material) => handleToggle(material)}
+ *   onViewDetails={(material) => handleView(material)}
+ * />
+ * ```
  */
 
 import { Power, PowerOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
 import type { Material } from "@/types"
-import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
+import { getTypeLabel, getUnitLabel } from "@/lib/materials/api"
 
 interface MaterialsTableProps {
   materiales: Material[]

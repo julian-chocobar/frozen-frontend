@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { notificationsApi } from '@/lib/notifications-api';
+import { notificationsApi } from '@/lib/notifications';
 import type {
   NotificationResponseDTO,
   NotificationStats,
@@ -10,15 +10,50 @@ import type {
 
 type FilterType = 'all' | 'unread' | 'read';
 
+/**
+ * Props para configurar el hook useNotificationsDashboard
+ */
 interface UseNotificationsDashboardProps {
+  /** Página inicial (base 0) */
   initialPage?: number;
+  /** Cantidad de notificaciones por página */
   pageSize?: number;
+  /** Filtro inicial a aplicar */
   initialFilter?: FilterType;
 }
 
 /**
  * Hook especializado para el dashboard de notificaciones
- * Maneja paginación, filtros y acciones sobre notificaciones
+ * 
+ * Maneja el estado completo de notificaciones incluyendo paginación, filtros,
+ * estadísticas y acciones como marcar como leída. Proporciona una interfaz
+ * unificada para gestionar todas las operaciones relacionadas con notificaciones.
+ * 
+ * @param props - Configuración del hook
+ * @returns Objeto con estado, datos y funciones para gestionar notificaciones
+ * 
+ * @example
+ * ```tsx
+ * function NotificationsPage() {
+ *   const {
+ *     notifications,
+ *     stats,
+ *     isLoading,
+ *     markAsRead,
+ *     changeFilter,
+ *   } = useNotificationsDashboard({ pageSize: 20 });
+ * 
+ *   return (
+ *     <div>
+ *       {notifications.map(n => (
+ *         <div key={n.id} onClick={() => markAsRead(n.id)}>
+ *           {n.message}
+ *         </div>
+ *       ))}
+ *     </div>
+ *   );
+ * }
+ * ```
  */
 export function useNotificationsDashboard({
   initialPage = 0,
@@ -37,6 +72,9 @@ export function useNotificationsDashboard({
 
   /**
    * Cargar notificaciones con filtros y paginación
+   * 
+   * @param page - Número de página a cargar
+   * @param filterType - Tipo de filtro a aplicar
    */
   const loadNotifications = useCallback(async (
     page = currentPage, 
@@ -83,7 +121,9 @@ export function useNotificationsDashboard({
   }, [currentPage, filter, pageSize]);
 
   /**
-   * Cambiar filtro y resetear página
+   * Cambiar el filtro de notificaciones y resetear la página a la primera
+   * 
+   * @param newFilter - Tipo de filtro a aplicar ('all', 'unread', 'read')
    */
   const changeFilter = useCallback((newFilter: FilterType) => {
     setFilter(newFilter);
@@ -92,7 +132,9 @@ export function useNotificationsDashboard({
   }, [loadNotifications]);
 
   /**
-   * Cambiar página
+   * Cambiar a una página específica manteniendo el filtro actual
+   * 
+   * @param page - Número de página a cargar (base 0)
    */
   const changePage = useCallback((page: number) => {
     setCurrentPage(page);
@@ -100,7 +142,7 @@ export function useNotificationsDashboard({
   }, [loadNotifications, filter]);
 
   /**
-   * Ir a página siguiente
+   * Navegar a la página siguiente si existe
    */
   const goToNextPage = useCallback(() => {
     if (currentPage < totalPages - 1) {
@@ -109,7 +151,7 @@ export function useNotificationsDashboard({
   }, [currentPage, totalPages, changePage]);
 
   /**
-   * Ir a página anterior
+   * Navegar a la página anterior si existe
    */
   const goToPreviousPage = useCallback(() => {
     if (currentPage > 0) {
@@ -118,7 +160,13 @@ export function useNotificationsDashboard({
   }, [currentPage, changePage]);
 
   /**
-   * Marcar notificación como leída
+   * Marcar una notificación específica como leída
+   * 
+   * Actualiza el estado local y las estadísticas automáticamente.
+   * Previene marcados duplicados si ya está en proceso.
+   * 
+   * @param notificationId - ID de la notificación a marcar como leída
+   * @throws Error si falla la operación en el servidor
    */
   const markAsRead = useCallback(async (notificationId: number) => {
     if (isMarkingAsRead.has(notificationId)) return;
@@ -153,6 +201,11 @@ export function useNotificationsDashboard({
 
   /**
    * Marcar todas las notificaciones como leídas
+   * 
+   * Actualiza el estado local de todas las notificaciones y resetea
+   * el contador de no leídas a 0.
+   * 
+   * @throws Error si falla la operación en el servidor
    */
   const markAllAsRead = useCallback(async () => {
     try {
@@ -179,7 +232,9 @@ export function useNotificationsDashboard({
   }, []);
 
   /**
-   * Recargar datos
+   * Recargar las notificaciones desde el servidor
+   * 
+   * Mantiene la página y filtro actuales.
    */
   const refresh = useCallback(() => {
     loadNotifications(currentPage, filter);

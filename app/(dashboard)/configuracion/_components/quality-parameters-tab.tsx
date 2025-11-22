@@ -6,7 +6,7 @@ import {
   createQualityParameter, 
   updateQualityParameter,
   toggleQualityParameterActive 
-} from "@/lib/quality-parameters-api"
+} from "@/lib/quality/quality-parameters-api"
 import type { 
   QualityParameterResponse, 
   QualityParameterCreateRequest, 

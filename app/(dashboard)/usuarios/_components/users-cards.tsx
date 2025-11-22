@@ -7,7 +7,7 @@ import { Power, PowerOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataCards, type CardLayout, type TableActions } from "@/components/ui/data-cards"
 import type { UserResponse, Role } from "@/types"
-import { getRoleLabel } from "@/lib/users-api"
+import { getRoleLabel } from "@/lib/users"
 
 interface UsersCardsProps {
   users: UserResponse[]

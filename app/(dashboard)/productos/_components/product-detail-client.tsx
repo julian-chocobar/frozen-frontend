@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { ProductResponse, ProductPhaseResponse, RecipeResponse, Phase } from "@/types"
-import { getProductPhasesByProductId, toggleReady, toggleReady as toglePhaseReady } from "@/lib/product-phases-api"
-import { getRecipesByProductPhaseId, updateRecipe, deleteRecipe } from "@/lib/recipes-api"
-import { toogleReady as toogleProductReady } from "@/lib/products-api"
+import { getProductPhasesByProductId, toggleReady, toggleReady as toglePhaseReady } from "@/lib/phases/product-phases-api"
+import { getRecipesByProductPhaseId, updateRecipe, deleteRecipe } from "@/lib/recipes"
+import { toogleReady as toogleProductReady } from "@/lib/products"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import { ProductInfoCard } from "@/app/(dashboard)/productos/_components/product-info-card"
 import { PhasesList } from "@/app/(dashboard)/productos/_components/phases-list"

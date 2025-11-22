@@ -2,7 +2,7 @@ import { Power, PowerOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
 import type { PackagingResponse } from "@/types"
-import { getUnitLabel } from "@/lib/packagings-api"
+import { getUnitLabel } from "@/lib/packagings"
 
 interface PackagingsTableProps {
     packagings: PackagingResponse[]

@@ -5,13 +5,15 @@
  */
 
 import { Header } from "@/components/layout/header"
-import { getPackagings } from "@/lib/packagings-api"
+import { getPackagings } from "@/lib/packagings"
 import { PackagingsClient } from "./_components/packagings-client"
 import { PackagingCreateButton } from "./_components/create-button"
-import { ErrorState } from "@/components/ui/error-state"
+import { PackagingsLoadingState } from "@/components/packagings/packagings-loading-state"
+import { PackagingsErrorState } from "@/components/packagings/packagings-error-state"
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { PackagingResponse } from "@/types"
+import { PACKAGING_PAGINATION } from "@/lib/constants"
 
 // Tipo para los datos de la página
 interface PackagingsPageData {
@@ -32,12 +34,26 @@ export default function PackagingPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [isRetrying, setIsRetrying] = useState(false)
 
-  // Obtener parámetros de búsqueda
-  const page = parseInt(searchParams.get('page') || '0')
-  const name = searchParams.get('name') || undefined
-  const unitMeasurement = searchParams.get('unitMeasurement') || undefined
-  const quantity = searchParams.get('quantity') || undefined
+  // Memoizar parámetros de búsqueda
+  const queryParams = useMemo(() => ({
+    page: parseInt(searchParams.get('page') || '0'),
+    name: searchParams.get('name') || undefined,
+    unitMeasurement: searchParams.get('unitMeasurement') || undefined,
+    quantity: searchParams.get('quantity') || undefined,
+  }), [searchParams])
+
+  // Callback para refrescar datos
+  const handleRefresh = useCallback(() => {
+    setRefreshKey(prev => prev + 1)
+  }, [])
+
+  // Callback para reintentar carga
+  const handleRetry = useCallback(() => {
+    setIsRetrying(true)
+    handleRefresh()
+  }, [handleRefresh])
 
   // Escuchar cambios de navegación para forzar refresh
   useEffect(() => {
@@ -56,18 +72,22 @@ export default function PackagingPage() {
       setError(null)
 
       try {
-        const data = await getPackagings({ page, size: 10 })
+        const data = await getPackagings({ 
+          page: queryParams.page, 
+          size: PACKAGING_PAGINATION.DEFAULT_PAGE_SIZE 
+        })
         setPackagingsData(data)
       } catch (err) {
         console.error('Error al cargar packagings:', err)
         setError('No se pudieron cargar los packagings')
       } finally {
         setLoading(false)
+        setIsRetrying(false)
       }
     }
 
     loadPackagings()
-  }, [page, name, unitMeasurement, quantity, refreshKey])
+  }, [queryParams.page, queryParams.name, queryParams.unitMeasurement, queryParams.quantity, refreshKey])
   return (
     <>
       <Header
@@ -83,19 +103,22 @@ export default function PackagingPage() {
                 <p className="text-sm text-primary-600">Gestiona latas, botellas y otros envases</p>
               </div>
               {!loading && packagingsData && (
-                <PackagingCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+                <PackagingCreateButton onCreateCallback={handleRefresh} />
               )}
             </div>
           </div>
 
-        {error ? (
-                <ErrorState error={error} />
-              ) : loading ? (
-                <div className="p-8 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                  <p className="mt-4 text-primary-600">Cargando packagings...</p>
-                </div>
-              ) : packagingsData ? (
+          {error ? (
+            <PackagingsErrorState 
+              message={error}
+              onRetry={handleRetry}
+              isRetrying={isRetrying}
+            />
+          ) : loading ? (
+            <div className="p-6">
+              <PackagingsLoadingState count={PACKAGING_PAGINATION.DEFAULT_PAGE_SIZE} />
+            </div>
+          ) : packagingsData ? (
                 <PackagingsClient 
                   packagings={packagingsData.packagings} 
                   pagination={packagingsData.pagination}

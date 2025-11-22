@@ -5,20 +5,27 @@
  * Muestra todos los lotes activos con su progreso y estado
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Header } from "@/components/layout/header"
 import { BatchStats } from "@/components/production/batch-stats"
 import { StatsCarousel } from "@/components/ui/stats-carousel"
 import { StatCard } from "@/components/dashboard/stat-card"
-import { getBatches, processBatchesToday } from "@/lib/batches-api"
+import { getBatches, processBatchesToday } from "@/lib/batches"
+import { calculateBatchStats } from "@/lib/batches/utils"
 import { BatchesClient } from "./_components/batches-client"
 import { BatchesFilters } from "./_components/batches-filters"
-import { ErrorState } from "@/components/ui/error-state"
+import { BatchesLoadingState } from "@/components/batches/batches-loading-state"
+import { BatchesErrorState } from "@/components/batches/batches-error-state"
 import { Button } from "@/components/ui/button"
 import { useSearchParams } from 'next/navigation'
-import { Package, Play, Pause, CheckCircle, XCircle, Clock } from "lucide-react"
+import { Package, Play, Pause, CheckCircle, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { BatchResponse, BatchStatus } from "@/types"
+import { 
+  BATCH_PAGINATION, 
+  BATCH_ERROR_MESSAGES, 
+  BATCH_SUCCESS_MESSAGES 
+} from "@/lib/constants"
 
 // Tipo para los datos de la página
 interface BatchesPageData {
@@ -42,21 +49,24 @@ export default function SeguimientoPage() {
   const [processingBatches, setProcessingBatches] = useState(false)
   const { toast } = useToast()
 
-  // Obtener parámetros de búsqueda
-  const page = parseInt(searchParams.get('page') || '0')
-  const status = searchParams.get('status') as BatchStatus | undefined
-  const productId = searchParams.get('productId') || undefined
-  const autoOpenId = searchParams.get('id') || undefined
+  // Obtener parámetros de búsqueda memoizados
+  const filters = useMemo(() => ({
+    page: parseInt(searchParams.get('page') || '0'),
+    size: BATCH_PAGINATION.DEFAULT_PAGE_SIZE,
+    status: searchParams.get('status') as BatchStatus | undefined,
+    productId: searchParams.get('productId') || undefined
+  }), [searchParams])
+
+  // Callback para forzar actualización
+  const handleRefresh = useCallback(() => {
+    setRefreshKey(prev => prev + 1)
+  }, [])
 
   // Escuchar cambios de navegación para forzar refresh
   useEffect(() => {
-    const handleFocus = () => {
-      setRefreshKey(prev => prev + 1)
-    }
-    
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [])
+    window.addEventListener('focus', handleRefresh)
+    return () => window.removeEventListener('focus', handleRefresh)
+  }, [handleRefresh])
 
   // Cargar datos cuando cambien los parámetros o refreshKey
   useEffect(() => {
@@ -65,23 +75,20 @@ export default function SeguimientoPage() {
       setError(null)
 
       try {
-        const data = await getBatches({
-          page,
-          size: 12, // Grid de 3x4
-          status,
-          productId
-        })
+        const data = await getBatches(filters)
         setBatchesData(data)
       } catch (err) {
         console.error('Error cargando lotes:', err)
         if (err instanceof Error) {
-          if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
-            setError('No se pudo conectar con el backend')
+          if (err.message.includes('conectar con el backend') || 
+              err.message.includes('ECONNREFUSED') || 
+              err.message.includes('fetch failed')) {
+            setError(BATCH_ERROR_MESSAGES.NETWORK_ERROR)
           } else {
             setError(err.message)
           }
         } else {
-          setError('No se pudieron cargar los lotes')
+          setError(BATCH_ERROR_MESSAGES.FETCH_FAILED)
         }
       } finally {
         setLoading(false)
@@ -89,42 +96,52 @@ export default function SeguimientoPage() {
     }
 
     loadBatches()
-  }, [page, status, productId, refreshKey])
+  }, [filters, refreshKey])
 
-  const handleProcessBatchesToday = async () => {
+  // Callback para procesar lotes de hoy
+  const handleProcessBatchesToday = useCallback(async () => {
     setProcessingBatches(true)
     
     try {
       await processBatchesToday()
       toast({
         title: "Proceso iniciado correctamente",
-        description: "Se han procesado los lotes programados para hoy",
+        description: BATCH_SUCCESS_MESSAGES.PROCESS_TODAY_SUCCESS,
         variant: "default"
       })
-      // Recargar los datos
-      setRefreshKey(prev => prev + 1)
+      handleRefresh()
     } catch (err) {
       console.error('Error procesando lotes:', err)
       toast({
         title: "Error al procesar lotes",
-        description: err instanceof Error ? err.message : "No se pudo procesar los lotes de hoy",
+        description: err instanceof Error ? err.message : BATCH_ERROR_MESSAGES.PROCESS_TODAY_FAILED,
         variant: "destructive"
       })
     } finally {
       setProcessingBatches(false)
     }
-  }
+  }, [toast, handleRefresh])
 
-  // Calcular estadísticas
-  const stats = {
-    total: batchesData?.batches?.length || 0,
-    pendientes: batchesData?.batches?.filter(b => b.status === 'PENDIENTE').length || 0,
-    enProduccion: batchesData?.batches?.filter(b => b.status === 'EN_PRODUCCION').length || 0,
-    enEspera: batchesData?.batches?.filter(b => b.status === 'EN_ESPERA').length || 0,
-    completados: batchesData?.batches?.filter(b => b.status === 'COMPLETADO').length || 0,
-    cancelados: batchesData?.batches?.filter(b => b.status === 'CANCELADO').length || 0,
-    volumenTotal: batchesData?.batches?.reduce((sum, batch) => sum + batch.quantity, 0) || 0
-  }
+  // Callback para reintentar carga
+  const handleRetry = useCallback(() => {
+    handleRefresh()
+  }, [handleRefresh])
+
+  // Calcular estadísticas memoizadas
+  const stats = useMemo(() => {
+    if (!batchesData?.batches) {
+      return {
+        total: 0,
+        pendientes: 0,
+        enProduccion: 0,
+        enEspera: 0,
+        completados: 0,
+        cancelados: 0,
+        volumenTotal: 0
+      }
+    }
+    return calculateBatchStats(batchesData.batches)
+  }, [batchesData?.batches])
 
   return (
     <>
@@ -226,21 +243,18 @@ export default function SeguimientoPage() {
 
         {/* Lotes */}
         {error ? (
-          <div className="card border-2 border-primary-600">
-            <ErrorState error={error} />
-          </div>
+          <BatchesErrorState 
+            message={error}
+            onRetry={handleRetry}
+            isRetrying={loading}
+          />
         ) : loading ? (
-          <div className="card border-2 border-primary-600 p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-4 text-primary-600">Cargando lotes...</p>
-          </div>
+          <BatchesLoadingState count={BATCH_PAGINATION.DEFAULT_PAGE_SIZE} variant="grid" />
         ) : batchesData ? (
-          <>
-            <BatchesClient
-              batches={batchesData.batches}
-              pagination={batchesData.pagination}
-            />
-          </>
+          <BatchesClient
+            batches={batchesData.batches}
+            pagination={batchesData.pagination}
+          />
         ) : null}
       </div>
     </>

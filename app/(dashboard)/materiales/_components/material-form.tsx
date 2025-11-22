@@ -11,7 +11,7 @@ import {
   getWarehouseZones, 
   getSectionsForZone, 
   getWarehouseLevels 
-} from "@/lib/materials-api"
+} from "@/lib/materials/api"
 import type {
   Material,
   MaterialDetailResponse,

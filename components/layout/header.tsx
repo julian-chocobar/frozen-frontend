@@ -10,6 +10,7 @@ import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useRouter } from "next/navigation"
+import { handleError } from "@/lib/error-handler"
 
 interface HeaderProps {
   title: string
@@ -51,7 +52,11 @@ export function Header({ title, subtitle, actionButton, backButton }: HeaderProp
       await logout()
       setIsUserMenuOpen(false)
     } catch (error) {
-      console.error("Error durante logout:", error)
+      handleError(error, {
+        title: 'Error al cerrar sesión',
+        description: 'No se pudo cerrar sesión correctamente',
+        showToast: true,
+      })
     }
   }
 

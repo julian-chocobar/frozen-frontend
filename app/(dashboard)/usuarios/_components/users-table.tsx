@@ -7,7 +7,7 @@ import { Power, PowerOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
 import type { UserResponse, Role } from "@/types"
-import { getRoleLabel } from "@/lib/users-api"
+import { getRoleLabel } from "@/lib/users"
 
 interface UsersTableProps {
   users: UserResponse[]

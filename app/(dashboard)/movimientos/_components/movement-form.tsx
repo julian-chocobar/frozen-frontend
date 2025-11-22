@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react"
 import { ArrowUp, ArrowDown, Lock, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { getMaterialsIdNameList, type MaterialIdName } from "@/lib/materials-api"
+import { getMaterialsIdNameList, type MaterialIdName } from "@/lib/materials/api"
 import type { MovementType, MovementCreateRequest } from "@/types"
 
 interface MovementFormProps {

@@ -1,13 +1,31 @@
 /**
  * Componente MaterialsCards - Wrapper específico para materiales usando DataCards genérico
  * Transforma la tabla en cards apiladas para pantallas pequeñas
+ * 
+ * Características:
+ * - Visualización en formato cards para móviles
+ * - Diseño responsive optimizado para pantallas pequeñas
+ * - Información condensada del material (código, nombre, categoría, stock)
+ * - Indicadores visuales de estado activo/inactivo
+ * - Integración con acciones CRUD
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * <MaterialsCards
+ *   materiales={materials}
+ *   onEdit={(material) => handleEdit(material)}
+ *   onToggleActive={(material) => handleToggle(material)}
+ *   onViewDetails={(material) => handleView(material)}
+ * />
+ * ```
  */
 
 import { Power, PowerOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DataCards, type CardField, type CardLayout, type TableActions } from "@/components/ui/data-cards"
 import type { Material } from "@/types"
-import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
+import { getTypeLabel, getUnitLabel } from "@/lib/materials/api"
 
 interface MaterialsCardsProps {
   materiales: Material[]

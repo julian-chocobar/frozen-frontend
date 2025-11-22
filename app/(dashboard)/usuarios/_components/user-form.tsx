@@ -5,7 +5,7 @@
  */
 
 import { useState } from "react"
-import { getRoles } from "@/lib/users-api"
+import { getRoles } from "@/lib/users"
 import type { UserCreateRequest, Role } from "@/types"
 
 interface UserFormProps {

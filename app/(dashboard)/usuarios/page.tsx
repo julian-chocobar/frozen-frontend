@@ -10,12 +10,14 @@
 
 import { Header } from "@/components/layout/header"
 import { UserCreateButton } from "./_components/create-button"
-import { ErrorState } from "@/components/ui/error-state"
+import { UsersLoadingState } from "@/components/users/users-loading-state"
+import { UsersErrorState } from "@/components/users/users-error-state"
 import { UsersClient } from "./_components/users-client"
-import { getUsers } from "@/lib/users-api"
+import { getUsers } from "@/lib/users"
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { UserResponse } from "@/types"
+import { USER_PAGINATION } from "@/lib/constants"
 
 // Tipo para los datos de la página
 interface UsersPageData {
@@ -36,9 +38,23 @@ export default function UsuariosPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [isRetrying, setIsRetrying] = useState(false)
 
-  // Obtener parámetros de búsqueda
-  const page = parseInt(searchParams.get('page') || '0')
+  // Memoizar parámetros de búsqueda
+  const queryParams = useMemo(() => ({
+    page: parseInt(searchParams.get('page') || '0'),
+  }), [searchParams])
+
+  // Callback para refrescar datos
+  const handleRefresh = useCallback(() => {
+    setRefreshKey(prev => prev + 1)
+  }, [])
+
+  // Callback para reintentar carga
+  const handleRetry = useCallback(() => {
+    setIsRetrying(true)
+    handleRefresh()
+  }, [handleRefresh])
 
   // Escuchar cambios de navegación para forzar refresh
   useEffect(() => {
@@ -58,8 +74,8 @@ export default function UsuariosPage() {
       
       try {
         const data = await getUsers({
-          page,
-          size: 10
+          page: queryParams.page,
+          size: USER_PAGINATION.DEFAULT_PAGE_SIZE
         })
         setUsersData(data)
       } catch (err) {
@@ -77,11 +93,12 @@ export default function UsuariosPage() {
         }
       } finally {
         setLoading(false)
+        setIsRetrying(false)
       }
     }
 
     loadUsers()
-  }, [page, refreshKey])
+  }, [queryParams.page, refreshKey])
 
   return (
     <>
@@ -99,17 +116,20 @@ export default function UsuariosPage() {
                 <p className="text-sm text-primary-600">Gestiona roles, permisos y accesos de usuarios</p>
               </div>
               {!loading && usersData && (
-                <UserCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+                <UserCreateButton onCreateCallback={handleRefresh} />
               )}
             </div>
           </div>
           
           {error ? (
-            <ErrorState error={error} />
+            <UsersErrorState 
+              message={error}
+              onRetry={handleRetry}
+              isRetrying={isRetrying}
+            />
           ) : loading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-4 text-primary-600">Cargando usuarios...</p>
+            <div className="p-6">
+              <UsersLoadingState count={USER_PAGINATION.DEFAULT_PAGE_SIZE} />
             </div>
           ) : usersData ? (
             <UsersClient 

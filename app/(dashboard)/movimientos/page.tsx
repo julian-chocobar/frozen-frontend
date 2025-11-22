@@ -5,7 +5,7 @@
  */
 import { Header } from "@/components/layout/header"
 import { MovementCreateButton } from "./_components/create-button"
-import { getMovements } from "@/lib/movements-api"
+import { getMovements } from "@/lib/movements"
 import { MovementsFilters } from "./_components/movements-filters"
 import { MovementsClient } from "./_components/movements-client"
 import { ErrorState } from "@/components/ui/error-state"

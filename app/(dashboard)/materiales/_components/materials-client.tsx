@@ -3,9 +3,23 @@
 /**
  * Componente cliente para manejar operaciones CRUD de materiales
  * Incluye modales para crear/editar y confirmaciones para eliminar
+ * 
+ * Refactorizado siguiendo patrones del módulo de dashboards:
+ * - Memoización de handlers con useCallback
+ * - Optimización de re-renders
+ * - Manejo centralizado de errores
+ * 
+ * @example
+ * ```tsx
+ * <MaterialsClient 
+ *   materials={materials} 
+ *   pagination={pagination}
+ *   autoOpenId={searchParams.get('id')}
+ * />
+ * ```
  */
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { MaterialsTable } from "./materials-table"
 import { MaterialsCards } from "./materials-cards"
@@ -17,7 +31,7 @@ import {
   updateMaterial,
   toggleMaterialActive,
   getMaterialDetail,
-} from "@/lib/materials-api"
+} from "@/lib/materials/api"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import type { Material, MaterialDetailResponse, MaterialUpdateRequest } from "@/types"
 
@@ -50,7 +64,7 @@ export function MaterialsClient({ materials, pagination, autoOpenId, onMaterialS
     setLocalMaterials(materials)
   }, [materials])
 
-  const openDetail = async (id: string, mode: 'view' | 'edit') => {
+  const openDetail = useCallback(async (id: string, mode: 'view' | 'edit') => {
     setSelectedMaterialId(id)
     onMaterialSelect?.(id)
     setModalMode(mode)
@@ -69,40 +83,38 @@ export function MaterialsClient({ materials, pagination, autoOpenId, onMaterialS
     } finally {
       setDetailLoading(false)
     }
-  }
+  }, [onMaterialSelect])
 
   // Auto-abrir modal si se proporciona autoOpenId (desde query params)
   useEffect(() => {
     if (autoOpenId) {
       openDetail(autoOpenId, 'view')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoOpenId])
+  }, [autoOpenId, openDetail])
 
   // Abrir desde selección externa (mapa)
   useEffect(() => {
     if (externalViewId && externalViewId !== selectedMaterialId) {
       openDetail(externalViewId, 'view')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [externalViewId])
+  }, [externalViewId, selectedMaterialId, openDetail])
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setModalMode(null)
     setSelectedDetail(null)
     setSelectedMaterialId(null)
     onMaterialSelect?.(null)
-  }
+  }, [onMaterialSelect])
 
-  const handleViewDetails = (material: Material) => {
+  const handleViewDetails = useCallback((material: Material) => {
     openDetail(material.id, 'view')
-  }
+  }, [openDetail])
 
-  const handleEditClick = (material: Material) => {
+  const handleEditClick = useCallback((material: Material) => {
     openDetail(material.id, 'edit')
-  }
+  }, [openDetail])
 
-  const handleEdit = async (id: string, data: MaterialUpdateRequest) => {
+  const handleEdit = useCallback(async (id: string, data: MaterialUpdateRequest) => {
     setActionLoading(true)
     try {
       await updateMaterial(id, data)
@@ -119,9 +131,9 @@ export function MaterialsClient({ materials, pagination, autoOpenId, onMaterialS
     } finally {
       setActionLoading(false)
     }
-  }
+  }, [router])
 
-  const handleToggleActive = async (material: Material | MaterialDetailResponse) => {
+  const handleToggleActive = useCallback(async (material: Material | MaterialDetailResponse) => {
     setActionLoading(true)
     try {
       // Actualización optimista en la lista
@@ -157,29 +169,33 @@ export function MaterialsClient({ materials, pagination, autoOpenId, onMaterialS
     } finally {
       setActionLoading(false)
     }
-  }
+  }, [router, selectedMaterialId])
+
+  // Memoizar el texto de paginación
+  const paginationText = useMemo(() => {
+    if (!pagination) return ''
+    return `Mostrando ${localMaterials.length} materiales de ${pagination.totalElements} totales`
+  }, [localMaterials.length, pagination])
 
   return (
     <>
       <MaterialsTable
         materiales={localMaterials}
         onEdit={handleEditClick}
-        onToggleActive={(material) => handleToggleActive(material)}
+        onToggleActive={handleToggleActive}
         onViewDetails={handleViewDetails}
       />
       <MaterialsCards
         materiales={localMaterials}
         onEdit={handleEditClick}
-        onToggleActive={(material) => handleToggleActive(material)}
+        onToggleActive={handleToggleActive}
         onViewDetails={handleViewDetails}
       />
 
       {pagination && (
         <div className="mt-4 border-t border-stroke bg-primary-50/40 px-4 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-primary-700">
-            <p>
-              Mostrando {localMaterials.length} materiales de {pagination.totalElements} totales
-            </p>
+            <p>{paginationText}</p>
             <PaginationClient 
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}

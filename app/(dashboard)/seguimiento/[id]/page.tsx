@@ -8,25 +8,22 @@
 import { Header } from "@/components/layout/header"
 import { BatchDetailClient } from "@/app/(dashboard)/seguimiento/_components/batch-detail-client"
 import { OrderDetails } from "@/app/(dashboard)/ordenes/_components/order-details"
-import { ErrorState } from "@/components/ui/error-state"
+import { BatchesLoadingState } from "@/components/batches/batches-loading-state"
+import { BatchesErrorState } from "@/components/batches/batches-error-state"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { getBatchById, getBatchTraceabilityPdf, cancelBatch } from "@/lib/batches-api"
-import { getProductionOrderById } from "@/lib/production-orders-api"
+import { getBatchById, getBatchTraceabilityPdf, cancelBatch } from "@/lib/batches"
+import { getBatchStatusText, getBatchStatusBadgeConfig, validateBatchData, canCancelBatch } from "@/lib/batches/utils"
+import { getProductionOrderById } from "@/lib/orders"
 import { notFound, useParams, useRouter } from "next/navigation"
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { BatchResponse, ProductionOrderResponse } from "@/types"
 import { FileText, XCircle, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-
-const statusStyles: Record<string, string> = {
-    "PENDIENTE": "bg-gray-100 text-gray-700 border border-gray-300",
-    "EN_PRODUCCION": "bg-blue-100 text-blue-700 border border-blue-300",
-    "EN_ESPERA": "bg-yellow-100 text-yellow-700 border border-yellow-300",
-    "COMPLETADO": "bg-green-100 text-green-700 border border-green-300",
-    "CANCELADO": "bg-red-100 text-red-700 border border-red-300",
-    default: "bg-gray-100 text-gray-700 border border-gray-300"
-}
+import { 
+  BATCH_ERROR_MESSAGES, 
+  BATCH_SUCCESS_MESSAGES 
+} from "@/lib/constants"
 
 export default function BatchDetailPage() {
     const params = useParams()
@@ -44,39 +41,49 @@ export default function BatchDetailPage() {
     const [isCancelling, setIsCancelling] = useState(false)
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
 
-    useEffect(() => {
-        const loadBatch = async () => {
-            setLoading(true)
-            setError(null)
+    // Callback para cargar lote
+    const loadBatch = useCallback(async () => {
+        setLoading(true)
+        setError(null)
 
-            try {
-                const data = await getBatchById(id)
-                setBatch(data)
-            } catch (err) {
-                console.error('Error al cargar lote:', err)
-
-                if (err instanceof Error) {
-                    if (err.message.includes('conectar con el backend') || err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed')) {
-                        setError('No se pudo conectar con el backend')
-                    } else if (err.message.includes('404') || err.message.includes('Not Found')) {
-                        notFound()
-                    } else {
-                        setError(err.message)
-                    }
-                } else {
-                    setError('No se pudo cargar el lote')
-                }
-            } finally {
-                setLoading(false)
+        try {
+            const data = await getBatchById(id)
+            
+            // Validar datos antes de establecer
+            if (!validateBatchData(data)) {
+                throw new Error(BATCH_ERROR_MESSAGES.INVALID_DATA)
             }
-        }
+            
+            setBatch(data)
+        } catch (err) {
+            console.error('Error al cargar lote:', err)
 
-        if (id) {
-            loadBatch()
+            if (err instanceof Error) {
+                if (err.message.includes('conectar con el backend') || 
+                    err.message.includes('ECONNREFUSED') || 
+                    err.message.includes('fetch failed')) {
+                    setError(BATCH_ERROR_MESSAGES.NETWORK_ERROR)
+                } else if (err.message.includes('404') || err.message.includes('Not Found')) {
+                    notFound()
+                } else {
+                    setError(err.message)
+                }
+            } else {
+                setError(BATCH_ERROR_MESSAGES.FETCH_BY_ID_FAILED)
+            }
+        } finally {
+            setLoading(false)
         }
     }, [id])
 
-    const handleDownloadReport = async () => {
+    useEffect(() => {
+        if (id) {
+            loadBatch()
+        }
+    }, [id, loadBatch])
+
+    // Callback para descargar reporte PDF
+    const handleDownloadReport = useCallback(async () => {
         if (!batch) return
         
         setIsDownloadingPdf(true)
@@ -93,47 +100,63 @@ export default function BatchDetailPage() {
             
             toast({
                 title: "Reporte descargado",
-                description: "El reporte PDF se ha descargado correctamente.",
+                description: BATCH_SUCCESS_MESSAGES.PDF_DOWNLOADED,
             })
         } catch (err) {
             console.error('Error al descargar reporte:', err)
             toast({
                 title: "Error al descargar reporte",
-                description: err instanceof Error ? err.message : "No se pudo descargar el reporte PDF.",
+                description: err instanceof Error ? err.message : BATCH_ERROR_MESSAGES.PDF_FAILED,
                 variant: "destructive",
             })
         } finally {
             setIsDownloadingPdf(false)
         }
-    }
+    }, [batch, toast])
 
-    const handleCancelBatch = async () => {
-        if (!batch) return
+    // Callback para cancelar lote
+    const handleCancelBatch = useCallback(async () => {
+        if (!batch || !canCancelBatch(batch)) {
+            toast({
+                title: "No se puede cancelar",
+                description: BATCH_ERROR_MESSAGES.CANNOT_CANCEL,
+                variant: "destructive",
+            })
+            return
+        }
         
         setIsCancelling(true)
         try {
             await cancelBatch(batch.id)
             toast({
                 title: "Lote cancelado",
-                description: "El lote ha sido cancelado correctamente.",
+                description: BATCH_SUCCESS_MESSAGES.CANCELLED,
             })
             setShowCancelDialog(false)
             // Recargar los datos del lote
-            const updatedBatch = await getBatchById(id)
-            setBatch(updatedBatch)
-            // Opcional: redirigir a la lista de lotes
-            // router.push('/seguimiento')
+            await loadBatch()
         } catch (err) {
             console.error('Error al cancelar lote:', err)
             toast({
                 title: "Error al cancelar lote",
-                description: err instanceof Error ? err.message : "No se pudo cancelar el lote.",
+                description: err instanceof Error ? err.message : BATCH_ERROR_MESSAGES.CANCEL_FAILED,
                 variant: "destructive",
             })
         } finally {
             setIsCancelling(false)
         }
-    }
+    }, [batch, toast, loadBatch])
+
+    // Subtítulo memoizado
+    const subtitle = useMemo(() => {
+        if (!batch) return ''
+        return `${batch.productName || 'Producto'} - ${getBatchStatusText(batch.status)}`
+    }, [batch])
+
+    // Callback para reintentar
+    const handleRetry = useCallback(() => {
+        loadBatch()
+    }, [loadBatch])
 
     if (loading) {
         return (
@@ -145,10 +168,7 @@ export default function BatchDetailPage() {
                 />
                 
                 <div className="p-4 md:p-6">
-                    <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                        <p className="mt-4 text-primary-600">Cargando detalles del lote...</p>
-                    </div>
+                    <BatchesLoadingState count={1} variant="default" />
                 </div>
             </>
         )
@@ -164,7 +184,11 @@ export default function BatchDetailPage() {
                 />
                 
                 <div className="p-4 md:p-6">
-                    <ErrorState error={error} />
+                    <BatchesErrorState 
+                        message={error}
+                        onRetry={handleRetry}
+                        isRetrying={loading}
+                    />
                 </div>
             </>
         )
@@ -178,7 +202,7 @@ export default function BatchDetailPage() {
         <>
             <Header 
                 title={`Lote ${batch.code}`} 
-                subtitle={batch.productName}
+                subtitle={subtitle}
                 backButton={{ href: "/seguimiento" }}
             />
             

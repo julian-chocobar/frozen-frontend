@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getSystemConfiguration, updateWorkingDays } from "@/lib/system-config-api"
+import { getSystemConfiguration, updateWorkingDays } from "@/lib/config/api"
 import type { SystemConfigurationResponse, WorkingDay, WorkingDayUpdateRequest, DayOfWeek } from "@/types"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { ErrorState } from "@/components/ui/error-state"
@@ -12,13 +12,13 @@ import { WorkingDayForm } from "./config-form"
 
 // Orden de días de la semana: lunes a domingo
 const DAY_ORDER: Record<DayOfWeek, number> = {
-  'LUNES': 1,
-  'MARTES': 2,
-  'MIERCOLES': 3,
-  'JUEVES': 4,
-  'VIERNES': 5,
-  'SABADO': 6,
-  'DOMINGO': 7
+  'MONDAY': 1,
+  'TUESDAY': 2,
+  'WEDNESDAY': 3,
+  'THURSDAY': 4,
+  'FRIDAY': 5,
+  'SATURDAY': 6,
+  'SUNDAY': 7
 }
 
 // Función para normalizar valores de hora para inputs HTML

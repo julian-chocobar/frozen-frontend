@@ -7,8 +7,8 @@ import { ArrowUp, ArrowDown, Calendar, Package, Lock, RotateCcw } from "lucide-r
 import { cn } from "@/lib/utils"
 import { DataCards, type CardField, type CardLayout, type TableActions } from "@/components/ui/data-cards"
 import type { MovementResponse } from "@/types"
-import { getTypeLabel, getUnitLabel } from "@/lib/materials-api"
-import { getStatusLabel } from "@/lib/movements-api"
+import { getTypeLabel, getUnitLabel } from "@/lib/materials/api"
+import { getStatusLabel } from "@/lib/movements"
 
 interface MovementsCardsProps {
   movements: MovementResponse[]

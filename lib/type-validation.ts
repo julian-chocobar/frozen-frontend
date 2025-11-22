@@ -57,6 +57,7 @@ export const MATERIAL_TYPE_LABELS: Record<MaterialType, string> = {
   'AGUA': 'Agua',
   'LEVADURA': 'Levadura',
   'ENVASE': 'Envase',
+  'ETIQUETADO': 'Etiquetado',
   'OTROS': 'Otros',
 }
 

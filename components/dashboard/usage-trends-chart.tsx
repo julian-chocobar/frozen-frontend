@@ -3,279 +3,214 @@
 /**
  * Componente UsageTrendsChart - Gráfico de consumo de materiales mensual
  * Muestra el consumo de materiales a lo largo del tiempo usando datos reales con filtros
+ * Migrado a Recharts para mejor integración y estilo moderno
  */
 
-import { useEffect, useState } from "react"
-import { Line, Bar } from 'react-chartjs-2'
+import { useState, useMemo, useCallback } from "react"
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
-  Legend,
-} from 'chart.js'
-import { analyticsApi } from "@/lib/analytics-api"
+  ResponsiveContainer,
+} from 'recharts'
+import { Box } from "lucide-react"
+import { analyticsApi } from "@/lib/analytics"
 import { MonthlyTotalDTO } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
 import { AnalyticsFilters, AnalyticsFiltersState } from "./analytics-filters"
 import { MaterialSearchFilter } from "@/app/(dashboard)/movimientos/_components/material-search-filter"
-import { cn } from "@/lib/utils"
-
-// Registrar componentes de Chart.js
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-)
+import { cn, formatMonthLabel, sortMonthlyData } from "@/lib/utils"
+import { ChartLoadingState } from "./chart-loading-state"
+import { ChartEmptyState } from "./chart-empty-state"
+import { ChartTooltip } from "./chart-tooltip"
+import { useChartData } from "@/hooks/use-chart-data"
 
 type ChartType = "line" | "bar"
 
 export function UsageTrendsChart() {
-  const [data, setData] = useState<MonthlyTotalDTO[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<AnalyticsFiltersState>({})
   const [materialId, setMaterialId] = useState<string>("")
   const [chartType, setChartType] = useState<ChartType>("line")
-  const [shouldLoad, setShouldLoad] = useState(true)
 
-  useEffect(() => {
-    if (!shouldLoad) return
-    
-    const loadData = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const monthlyData = await analyticsApi.getMonthlyMaterialConsumption({
-          startDate: filters.startDate,
-          endDate: filters.endDate,
-          materialId: materialId || filters.materialId || undefined,
-        })
-        setData(monthlyData)
-      } catch (err) {
-        console.error('Error cargando consumo de materiales:', err)
-        setError('No se pudo cargar el consumo de materiales')
-      } finally {
-        setLoading(false)
-        setShouldLoad(false)
-      }
-    }
-    loadData()
-  }, [shouldLoad, filters, materialId])
+  // Usar hook personalizado para carga de datos
+  const { data, loading, error, reload } = useChartData({
+    loadFunction: analyticsApi.getMonthlyMaterialConsumption,
+    filters,
+    additionalFilterId: materialId,
+    additionalFilterKey: 'materialId',
+    errorMessage: 'No se pudo cargar el consumo de materiales',
+  })
 
-  const handleFiltersChange = (newFilters: AnalyticsFiltersState) => {
+  const handleFiltersChange = useCallback((newFilters: AnalyticsFiltersState) => {
     setFilters(newFilters)
-    // Sincronizar materialId si viene en los filtros
     if (newFilters.materialId !== undefined) {
       setMaterialId(newFilters.materialId)
     }
-  }
+  }, [])
 
-  const handleSearch = (searchFilters: AnalyticsFiltersState) => {
-    // Usar los filtros que vienen del componente de filtros
+  const handleSearch = useCallback((searchFilters: AnalyticsFiltersState) => {
     setFilters({
       ...searchFilters,
       materialId: materialId || searchFilters.materialId || undefined,
     })
-    setShouldLoad(true)
-  }
+    reload()
+  }, [materialId, reload])
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setMaterialId("")
-    setShouldLoad(true)
-  }
+    reload()
+  }, [reload])
 
-  const formatMonthLabel = (item: MonthlyTotalDTO): string => {
-    // Si hay monthName, usarlo directamente
-    if (item.monthName) {
-      return item.monthName
-    }
-    
-    // Si month es string (nombre del mes), usarlo directamente
-    if (typeof item.month === 'string') {
-      return item.month
-    }
-    
-    // Si month es number, formatearlo
-    if (typeof item.month === 'number' && item.month >= 1 && item.month <= 12) {
-      const monthNames = [
-        "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-        "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
-      ]
-      const monthLabel = monthNames[item.month - 1]
-      // Si hay year, incluirlo
-      if (item.year) {
-        return `${monthLabel} ${item.year}`
-      }
-      return monthLabel
-    }
-    
-    // Fallback
-    return `Mes ${item.month || 'N/A'}`
-  }
+  // Calcular total y formatear datos para el gráfico usando useMemo
+  const sortedData = useMemo(() => sortMonthlyData(data), [data])
+  
+  const total = useMemo(
+    () => data.reduce((sum, item) => sum + (item.total || 0), 0),
+    [data]
+  )
+
+  const chartData = useMemo(
+    () => sortedData.map(item => ({
+      name: formatMonthLabel(item),
+      value: item.total || 0,
+      fullValue: item.total || 0,
+    })),
+    [sortedData]
+  )
 
   if (loading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold text-primary-900 mb-1">Consumo de Materiales</h3>
-            <p className="text-sm text-primary-600">Cargando datos...</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <ChartLoadingState color="orange" />
   }
 
   if (error) {
     return (
       <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold text-primary-900 mb-1">Consumo de Materiales</h3>
-          </div>
-        </div>
-        <ErrorState message={error} />
+        <ErrorState error={error} />
       </div>
     )
   }
 
   if (data.length === 0) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold text-primary-900 mb-1">Consumo de Materiales</h3>
-            <p className="text-sm text-primary-600">No hay datos disponibles</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const sortedData = [...data].sort((a, b) => {
-    if (a.year !== b.year) return a.year - b.year
-    return a.month - b.month
-  })
-
-  const chartData = {
-    labels: sortedData.map(formatMonthLabel),
-    datasets: [
-      {
-        label: 'Consumo (kg)',
-        data: sortedData.map(item => item.total || 0),
-        borderColor: 'rgba(37, 99, 235, 1)',
-        backgroundColor: chartType === "line" 
-          ? 'rgba(37, 99, 235, 0.1)' 
-          : 'rgba(37, 99, 235, 0.8)',
-        tension: chartType === "line" ? 0.4 : undefined,
-        fill: chartType === "line",
-        borderWidth: 2,
-      },
-    ],
-  }
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        position: 'top' as const,
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: any) {
-            return `Consumo: ${context.parsed.y.toFixed(2)} kg`
-          }
-        }
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: function(value: any) {
-            return `${value} kg`
-          }
-        }
-      },
-      x: {
-        ticks: {
-          maxRotation: 45,
-          minRotation: 45,
-        }
-      }
-    },
+    return <ChartEmptyState icon={Box} message="No hay datos disponibles" />
   }
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-primary-900 mb-1">Consumo de Materiales</h3>
-          <p className="text-sm text-primary-600">Rastrea tus patrones de consumo a lo largo del tiempo</p>
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div>
+            <div className="flex items-baseline gap-2 mb-1">
+              <p className="text-3xl font-bold text-primary-900 font-mono">{total.toFixed(2)} kg</p>
+              <span className="text-sm font-medium text-primary-600">Total del período</span>
+            </div>
+          </div>
+
+          {/* Selector de tipo de gráfico */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setChartType("line")}
+              className={cn(
+                "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm",
+                chartType === "line"
+                  ? "bg-orange-600 text-white shadow-md"
+                  : "bg-white text-primary-700 border border-gray-200 hover:bg-gray-50 hover:shadow-md"
+              )}
+            >
+              Líneas
+            </button>
+            <button
+              onClick={() => setChartType("bar")}
+              className={cn(
+                "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm",
+                chartType === "bar"
+                  ? "bg-orange-600 text-white shadow-md"
+                  : "bg-white text-primary-700 border border-gray-200 hover:bg-gray-50 hover:shadow-md"
+              )}
+            >
+              Barras
+            </button>
+          </div>
         </div>
 
-        {/* Selector de tipo de gráfico */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => setChartType("line")}
-            className={cn(
-              "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
-              chartType === "line"
-                ? "bg-primary-600 text-white"
-                : "bg-surface-secondary text-primary-900 hover:bg-stroke"
-            )}
-          >
-            Líneas
-          </button>
-          <button
-            onClick={() => setChartType("bar")}
-            className={cn(
-              "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
-              chartType === "bar"
-                ? "bg-primary-600 text-white"
-                : "bg-surface-secondary text-primary-900 hover:bg-stroke"
-            )}
-          >
-            Barras
-          </button>
+        {/* Filtros */}
+        <div className="mb-4">
+          <AnalyticsFilters
+            onFiltersChange={handleFiltersChange}
+            onSearch={handleSearch}
+            onClear={handleClear}
+            showMaterialFilter={true}
+            materialFilterComponent={
+              <MaterialSearchFilter
+                value={materialId}
+                onChange={setMaterialId}
+                placeholder="Buscar material..."
+              />
+            }
+          />
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="mb-4">
-        <AnalyticsFilters
-          onFiltersChange={handleFiltersChange}
-          onSearch={handleSearch}
-          onClear={handleClear}
-          showMaterialFilter={true}
-          materialFilterComponent={
-            <MaterialSearchFilter
-              value={materialId}
-              onChange={setMaterialId}
-              placeholder="Buscar material..."
-            />
-          }
-        />
-      </div>
-
-      <div style={{ height: '300px' }}>
-        {chartType === "line" ? (
-          <Line data={chartData} options={options} />
-        ) : (
-          <Bar data={chartData} options={options} />
-        )}
+      <div className="h-[400px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          {chartType === "bar" ? (
+            <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.05)" />
+              <XAxis 
+                dataKey="name" 
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                tick={{ fill: 'rgba(0, 0, 0, 0.6)', fontSize: 11 }}
+                stroke="rgba(0, 0, 0, 0.1)"
+              />
+              <YAxis 
+                tick={{ fill: 'rgba(0, 0, 0, 0.6)', fontSize: 11 }}
+                stroke="rgba(0, 0, 0, 0.1)"
+                tickFormatter={(value) => `${value} kg`}
+              />
+              <Tooltip content={<ChartTooltip unit="kg" labelText="Consumo" color="#f97316" />} />
+              <Bar 
+                dataKey="value" 
+                fill="#f97316"
+                radius={[8, 8, 0, 0]}
+                fillOpacity={0.8}
+              />
+            </BarChart>
+          ) : (
+            <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.05)" />
+              <XAxis 
+                dataKey="name" 
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                tick={{ fill: 'rgba(0, 0, 0, 0.6)', fontSize: 11 }}
+                stroke="rgba(0, 0, 0, 0.1)"
+              />
+              <YAxis 
+                tick={{ fill: 'rgba(0, 0, 0, 0.6)', fontSize: 11 }}
+                stroke="rgba(0, 0, 0, 0.1)"
+                tickFormatter={(value) => `${value} kg`}
+              />
+              <Tooltip content={<ChartTooltip unit="kg" labelText="Consumo" color="#f97316" />} />
+              <Line 
+                type="monotone" 
+                dataKey="value" 
+                stroke="#f97316" 
+                strokeWidth={3}
+                fill="#f97316"
+                fillOpacity={0.1}
+                dot={{ fill: '#f97316', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}
+              />
+            </LineChart>
+          )}
+        </ResponsiveContainer>
       </div>
     </div>
   )

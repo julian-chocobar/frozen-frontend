@@ -11,7 +11,7 @@ import { MaterialsClient } from "./_components/materials-client"
 import { ErrorState } from "@/components/ui/error-state"
 import { MaterialCreateButton } from "./_components/create-button"
 import { MaterialsWarehousePanel } from "./_components/warehouse-panel"
-import { getMaterials } from "@/lib/materials-api"
+import { getMaterials } from "@/lib/materials/api"
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Material } from "@/types"

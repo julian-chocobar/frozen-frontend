@@ -7,7 +7,7 @@
 
 import { CreateButton, useCreateModal } from "@/components/ui/create-button"
 import { MaterialForm } from "./material-form"
-import { createMaterial } from "@/lib/materials-api"
+import { createMaterial } from "@/lib/materials/api"
 import { useRouter } from "next/navigation"
 import type { MaterialCreateRequest } from "@/types"
 

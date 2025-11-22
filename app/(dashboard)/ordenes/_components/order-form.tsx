@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from "react"
-import { getPackagingsIdNameList } from "@/lib/packagings-api"
+import { getPackagingsIdNameList } from "@/lib/packagings"
 import { ProductSearchFilter } from "./product-search-filter"
 import type { 
   ProductionOrderResponse, 

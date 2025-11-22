@@ -1,7 +1,7 @@
 "use client"
 import { CreateButton, useCreateModal } from "@/components/ui/create-button"
 import { PackagingForm } from "./packaging-form"
-import { createPackaging } from "@/lib/packagings-api"
+import { createPackaging } from "@/lib/packagings"
 import { useRouter } from "next/navigation"
 import type { PackagingCreateRequest } from "@/types"
 

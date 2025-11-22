@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Bell, RefreshCw, TestTube } from 'lucide-react';
 import { useNotifications } from '@/hooks/use-notifications';
 import { cn } from '@/lib/utils';
-import { notificationsApi } from '@/lib/notifications-api';
+import { notificationsApi } from '@/lib/notifications';
 import type { ConnectionsInfo } from '@/types';
 
 /**

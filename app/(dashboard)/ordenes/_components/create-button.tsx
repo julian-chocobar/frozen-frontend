@@ -7,7 +7,7 @@
 
 import { CreateButton, useCreateModal } from "@/components/ui/create-button"
 import { OrderForm } from "./order-form"
-import { createProductionOrder } from "@/lib/production-orders-api"
+import { createProductionOrder } from "@/lib/orders"
 import { useRouter } from "next/navigation"
 import type { ProductionOrderCreateRequest } from "@/types"
 

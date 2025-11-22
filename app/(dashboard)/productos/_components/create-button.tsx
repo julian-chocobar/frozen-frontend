@@ -2,7 +2,7 @@
 
 import { CreateButton, useCreateModal } from "@/components/ui/create-button"
 import { ProductForm } from "./product-form"
-import { createProduct } from "@/lib/products-api"
+import { createProduct } from "@/lib/products"
 import { useRouter } from "next/navigation"
 import type { ProductCreateRequest } from "@/types"
 

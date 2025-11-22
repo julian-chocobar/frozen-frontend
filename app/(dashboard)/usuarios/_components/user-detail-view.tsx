@@ -8,7 +8,7 @@
 import { X, Edit, Power, PowerOff, Shield, User as UserIcon, Mail, Phone, Calendar, Activity } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { UserDetail, Role } from "@/types"
-import { getRoleLabel } from "@/lib/users-api"
+import { getRoleLabel } from "@/lib/users"
 
 interface UserDetailViewProps {
   user: UserDetail

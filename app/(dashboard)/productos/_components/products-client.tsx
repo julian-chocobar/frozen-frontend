@@ -10,7 +10,7 @@ import {
     updateProduct,
     toggleProductActive,
     toogleReady
-} from "@/lib/products-api"
+} from "@/lib/products"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import type { ProductResponse, ProductUpdateRequest } from "@/types"
 

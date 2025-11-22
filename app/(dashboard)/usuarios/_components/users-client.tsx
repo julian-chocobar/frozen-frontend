@@ -14,7 +14,7 @@ import {
   toggleUserActive,
   updateUserRoles,
   getUserById
-} from "@/lib/users-api"
+} from "@/lib/users"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import type { UserResponse, UserUpdateRequest, UpdateRoleRequest, UserDetail } from "@/types"
 import { UserDetailView } from "./user-detail-view"
