@@ -45,9 +45,10 @@ export function QualityParametersSection({
   const { toast } = useToast()
 
   const phaseKey = useMemo(() => phase.phase, [phase.phase])
+  const isPhaseCompleted = phase.status === "COMPLETADA"
   const phaseAllowsRegistration = phase.status === "BAJO_REVISION"
-  const canOpenCreate = canCreate && phaseAllowsRegistration
-  const canTriggerReview = canReview && phase.status === "BAJO_REVISION"
+  const canOpenCreate = canCreate && phaseAllowsRegistration && !isPhaseCompleted
+  const canTriggerReview = canReview && phase.status === "BAJO_REVISION" && !isPhaseCompleted
   const activeQualities = useMemo(
     () => qualities.filter((quality) => quality.isActive),
     [qualities]
@@ -307,7 +308,12 @@ export function QualityParametersSection({
         )}
       </div>
 
-      {canCreate && !phaseAllowsRegistration && (
+      {isPhaseCompleted && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          Esta fase está completada. No se pueden editar o aprobar parámetros de calidad.
+        </div>
+      )}
+      {canCreate && !phaseAllowsRegistration && !isPhaseCompleted && (
         <div className="rounded-lg border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-600">
           Esta fase debe estar en revisión para registrar nuevos parámetros de calidad.
         </div>
@@ -329,7 +335,7 @@ export function QualityParametersSection({
                 <QualityParameterCard
                   key={quality.id}
                   quality={quality}
-                  canReview={canReview}
+                  canReview={canReview && !isPhaseCompleted}
                   onEdit={() => setEditingQuality(quality)}
                   onApprove={() => handleApproval(quality)}
                   onDisapprove={() => handleDisapproval(quality)}

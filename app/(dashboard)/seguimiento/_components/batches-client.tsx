@@ -95,7 +95,7 @@ export function BatchesClient({ batches, pagination }: BatchesClientProps) {
               ordenProduccionId: batch.orderId,
               nombreProducto: batch.productName,
               tipoProducto: batch.packagingName,
-              estado: mapBatchStatusToEstadoLote(batch.status),
+              estado: batch.status,
               etapaActual: summary.currentStage,
               fasesCompletadas: summary.completed,
               totalFases: summary.total,
@@ -173,22 +173,5 @@ function summarizePhases(phases: ProductionPhaseResponse[] | null | undefined): 
     currentStage,
     completed,
     total,
-  }
-}
-
-function mapBatchStatusToEstadoLote(status: BatchResponse["status"]) {
-  switch (status) {
-    case "Pendiente":
-      return "Planificado"
-    case "En Producción":
-      return "En Producción"
-    case "En Espera":
-      return "En Espera"
-    case "Completado":
-      return "Completado"
-    case "Cancelado":
-      return "Cancelado"
-    default:
-      return status
   }
 }

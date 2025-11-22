@@ -43,8 +43,8 @@ const PHASE_NAMES: Record<string, string> = {
   FERMENTACION: "Fermentación",
   MADURACION: "Maduración",
   GASIFICACION: "Gasificación",
+  DESALCOHOLIZACION: "Desalcoholización",
   ENVASADO: "Envasado",
-  DESALCOHOLIZACION: "Desalcoholización"
 }
 
 const STATUS_BADGE_VARIANTS: Record<string, string> = {
@@ -64,7 +64,7 @@ const STATUS_CARD_VARIANTS: Record<string, string> = {
   BAJO_REVISION: "border-yellow-300 bg-yellow-50",
   SIENDO_AJUSTADA: "border-blue-300 bg-blue-50",
   RECHAZADA: "border-red-300 bg-red-50",
-  SUSPENDIDA: "border-red-300 bg-red-50",
+  SUSPENDIDA: "border-orange-300 bg-orange-50",
   COMPLETADA: "border-green-300 bg-green-50",
   default: "border-gray-200 bg-white"
 }

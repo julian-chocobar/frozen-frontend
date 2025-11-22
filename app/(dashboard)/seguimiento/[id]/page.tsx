@@ -13,7 +13,7 @@ import { BatchesErrorState } from "@/components/batches/batches-error-state"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { getBatchById, getBatchTraceabilityPdf, cancelBatch } from "@/lib/batches"
-import { getBatchStatusText, getBatchStatusBadgeConfig, validateBatchData, canCancelBatch } from "@/lib/batches/utils"
+import { getBatchStatusText, getBatchStatusBadgeConfig, validateBatchData, canCancelBatch, getBatchStatusColor } from "@/lib/batches/utils"
 import { getProductionOrderById } from "@/lib/orders"
 import { notFound, useParams, useRouter } from "next/navigation"
 import { useEffect, useState, useCallback, useMemo } from 'react'
@@ -24,6 +24,8 @@ import {
   BATCH_ERROR_MESSAGES, 
   BATCH_SUCCESS_MESSAGES 
 } from "@/lib/constants"
+
+
 
 export default function BatchDetailPage() {
     const params = useParams()
@@ -233,7 +235,7 @@ export default function BatchDetailPage() {
                             </Button>
                             <Button
                                 onClick={() => setShowCancelDialog(true)}
-                                disabled={batch.status === "CANCELADO" || isCancelling}
+                                disabled={batch.status === "CANCELADO" || batch.status === "COMPLETADO" || isCancelling}
                                 variant="outline"
                                 size="sm"
                                 className="gap-2 border-red-600 text-red-600 hover:bg-red-50 disabled:border-primary-200 disabled:text-primary-300"
@@ -287,8 +289,8 @@ export default function BatchDetailPage() {
                         <div>
                             <p className="text-sm text-primary-600 font-medium">Estado</p>
                             <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                                statusStyles[batch.status] ?? statusStyles.default
-                            }`}>
+                                getBatchStatusColor(batch.status).bg
+                            } ${getBatchStatusColor(batch.status).text} ${getBatchStatusColor(batch.status).border}`}>
                                 {batch.status}
                             </span>
                         </div>

@@ -47,36 +47,6 @@ export interface BatchPageResponse {
   currentPage: number
 }
 
-export type EstadoLote =
-  | "Planificado"
-  | "En Producción"
-  | "Fermentación"
-  | "Maduración"
-  | "Envasado"
-  | "Completado"
-  | "Cancelado"
-
-export interface LoteProduccion {
-  id: string
-  codigo: string // Ej: "LOTE-001"
-  ordenProduccionId: string // Ej: "OP-2025-001"
-  nombreProducto: string // Ej: "IPA Americana"
-  tipoProducto: string // Ej: "IPA Americana - 485L"
-  volumenObjetivo: number // En litros
-  volumenReal?: number
-  estado: EstadoLote
-  etapaActual: EtapaProduccion
-  progreso: number // 0-100
-  fechaInicio: string // ISO date
-  fechaFinEstimada: string // ISO date
-  fechaFinReal?: string
-  responsable: string
-  temperatura?: number // Temperatura actual
-  ph?: number // pH actual
-  alertas?: string[] // Alertas activas
-  materiales: MaterialAsignado[]
-}
-
 export interface MaterialAsignado {
   materialId: string
   nombreMaterial: string
