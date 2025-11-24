@@ -99,7 +99,7 @@ export default function DashboardPage() {
       <Header title="Dashboard" subtitle="Monitorea tu producción en tiempo real" />
       <div className="p-4 md:p-6 space-y-6">
           {/* Tarjetas de estadísticas principales */}
-          <div className="mb-8">
+          <div className="mb-8" data-tour="dashboard-stats">
             <StatsCarousel>
           <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
             <StatCard 
@@ -170,7 +170,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Gráficos con selector de vista */}
-          <div className="space-y-4">
+          <div className="space-y-4" data-tour="dashboard-charts">
             {/* Selector de vista */}
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-primary-900">Análisis de Datos</h2>

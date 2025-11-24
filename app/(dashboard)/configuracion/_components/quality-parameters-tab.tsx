@@ -15,15 +15,17 @@ import type {
 } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Save, X, Power } from "lucide-react"
+import { Save, X, Power, PowerOff } from "lucide-react"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import { cn } from "@/lib/utils"
+import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
+import { DataCards, type CardLayout } from "@/components/ui/data-cards"
+import { CreateButton, useCreateModal } from "@/components/ui/create-button"
 
 const PHASES: Phase[] = [
   "MOLIENDA",
@@ -174,10 +176,15 @@ function QualityParameterForm({ initial, onSubmit, onCancel, isLoading }: Qualit
       </div>
 
       <div className="flex justify-end gap-3 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading} className="border border-primary-200 hover:bg-primary-50">
-          <X className="w-4 h-4 mr-2" />
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isLoading}
+          className="px-4 py-2 text-sm font-medium text-primary-700 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          <X className="w-4 h-4" />
           Cancelar
-        </Button>
+        </button>
         <button
           type="submit"
           disabled={isLoading}
@@ -196,8 +203,11 @@ export function QualityParametersTab() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<QualityParameterResponse | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
   const [saving, setSaving] = useState(false)
+  const { isOpen: isCreating, isLoading: isCreatingLoading, openModal, closeModal, handleSubmit } = useCreateModal({
+    successMessage: 'Parámetro de calidad creado exitosamente',
+    errorTitle: 'Error al crear parámetro de calidad'
+  })
 
   const loadParameters = async () => {
     try {
@@ -219,17 +229,10 @@ export function QualityParametersTab() {
   }, [])
 
   const handleCreate = async (data: QualityParameterCreateRequest) => {
-    try {
-      setSaving(true)
+    await handleSubmit(async () => {
       await createQualityParameter(data)
-      showSuccess("Parámetro de calidad creado exitosamente")
-      setIsCreating(false)
       await loadParameters()
-    } catch (error) {
-      handleError(error, { title: "Error al crear parámetro de calidad" })
-    } finally {
-      setSaving(false)
-    }
+    })
   }
 
   const handleUpdate = async (data: QualityParameterUpdateRequest) => {
@@ -257,193 +260,218 @@ export function QualityParametersTab() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="card p-8 border-2 border-primary-600 text-center">
-        <LoadingSpinner />
-        <p className="mt-4 text-primary-600">Cargando parámetros de calidad...</p>
-      </div>
-    )
+  const columns: ColumnDef<QualityParameterResponse>[] = [
+    {
+      key: 'name',
+      label: 'Nombre',
+      render: (value, param) => (
+        <div>
+          <div className="font-medium text-primary-900">{value}</div>
+          {param.description && (
+            <div className="text-xs text-primary-600 mt-1">{param.description}</div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'phase',
+      label: 'Fase',
+      render: (value) => (
+        <span className="text-sm text-primary-600">{value}</span>
+      )
+    },
+    {
+      key: 'isCritical',
+      label: 'Crítico',
+      render: (value) => (
+        <span className={cn(
+          "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
+          value
+            ? "bg-red-100 text-red-700 border-red-200"
+            : "bg-primary-50 text-primary-700 border-primary-200"
+        )}>
+          {value ? "Sí" : "No"}
+        </span>
+      )
+    },
+    {
+      key: 'unit',
+      label: 'Unidad',
+      render: (value) => (
+        <span className="text-sm text-primary-600">{value || "-"}</span>
+      )
+    },
+    {
+      key: 'isActive',
+      label: 'Estado',
+      render: (value, param) => (
+        <span className={cn(
+          "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border",
+          value
+            ? "bg-green-100 text-green-700 border-green-200"
+            : "bg-primary-50 text-primary-700 border-primary-200"
+        )}>
+          {value ? (
+            <>
+              <Power className="w-3 h-3" />
+              Activo
+            </>
+          ) : (
+            <>
+              <PowerOff className="w-3 h-3" />
+              Inactivo
+            </>
+          )}
+        </span>
+      )
+    }
+  ]
+
+  const cardLayout: CardLayout<QualityParameterResponse> = {
+    header: [
+      {
+        key: 'name',
+        label: '',
+        showLabel: false,
+        render: (value) => (
+          <h3 className="text-base font-semibold text-primary-900">{value}</h3>
+        )
+      }
+    ],
+    content: [
+      {
+        key: 'phase',
+        label: 'Fase',
+        render: (value) => (
+          <span className="text-sm text-primary-600">{value}</span>
+        )
+      },
+      {
+        key: 'description',
+        label: 'Descripción',
+        render: (value) => (
+          <span className="text-sm text-primary-600">{value || "-"}</span>
+        )
+      },
+      {
+        key: 'unit',
+        label: 'Unidad',
+        render: (value) => (
+          <span className="text-sm text-primary-900">{value || "-"}</span>
+        )
+      },
+      {
+        key: 'isCritical',
+        label: 'Crítico',
+        render: (value) => (
+          <span className={cn(
+            "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
+            value
+              ? "bg-red-100 text-red-700 border-red-200"
+              : "bg-primary-50 text-primary-700 border-primary-200"
+          )}>
+            {value ? "Sí" : "No"}
+          </span>
+        )
+      }
+    ],
+    footer: [
+      {
+        key: 'isActive',
+        label: '',
+        showLabel: false,
+        render: (value) => (
+          <span className={cn(
+            "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border",
+            value
+              ? "bg-green-100 text-green-700 border-green-200"
+              : "bg-primary-50 text-primary-700 border-primary-200"
+          )}>
+            {value ? (
+              <>
+                <Power className="w-3 h-3" />
+                Activo
+              </>
+            ) : (
+              <>
+                <PowerOff className="w-3 h-3" />
+                Inactivo
+              </>
+            )}
+          </span>
+        )
+      }
+    ]
   }
 
-  if (error && parameters.length === 0) {
-    return (
-      <div className="card p-6 border-2 border-primary-600">
-        <ErrorState error={error} />
-      </div>
+  const actions: TableActions<QualityParameterResponse> = {
+    onEdit: (param) => setSelected(param),
+    onToggleStatus: (param) => handleToggleActive(param.id),
+    toggleStatusIcon: (param) => (
+      param.isActive ? <PowerOff className="w-4 h-4 text-red-500" /> : <Power className="w-4 h-4 text-green-500" />
     )
   }
 
   return (
     <>
-      <div className="card p-6 border-2 border-primary-600">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-          <h3 className="text-lg font-semibold text-primary-900">Parámetros de Calidad</h3>
-          <Button 
-            onClick={() => setIsCreating(true)}
-            className="bg-primary-600 hover:bg-primary-700 text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Crear Parámetro
-          </Button>
-        </div>
-
-        {/* Tabla desktop */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left border-b border-primary-200">
-                <th className="py-2 pr-4 text-primary-700 font-medium">Nombre</th>
-                <th className="py-2 pr-4 text-primary-700 font-medium">Fase</th>
-                <th className="py-2 pr-4 text-primary-700 font-medium">Crítico</th>
-                <th className="py-2 pr-4 text-primary-700 font-medium">Unidad</th>
-                <th className="py-2 pr-4 text-primary-700 font-medium">Estado</th>
-                <th className="py-2 pr-4 text-primary-700 font-medium">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {parameters.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-primary-600">
-                    No hay parámetros de calidad registrados
-                  </td>
-                </tr>
-              ) : (
-                parameters.map((param) => (
-                  <tr key={param.id} className="border-b border-primary-100 last:border-0 hover:bg-primary-50">
-                    <td className="py-3 pr-4">
-                      <div className="font-medium text-primary-900">{param.name}</div>
-                      {param.description && (
-                        <div className="text-xs text-primary-600 mt-1">{param.description}</div>
-                      )}
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className="text-primary-600">{param.phase}</span>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className={cn(
-                        "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
-                        param.isCritical
-                          ? "bg-red-100 text-red-700 border-red-200"
-                          : "bg-primary-50 text-primary-700 border-primary-200"
-                      )}>
-                        {param.isCritical ? "Sí" : "No"}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className="text-primary-600">{param.unit || "-"}</span>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className={cn(
-                        "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
-                        param.isActive
-                          ? "bg-green-100 text-green-700 border-green-200"
-                          : "bg-primary-50 text-primary-700 border-primary-200"
-                      )}>
-                        {param.isActive ? "Activo" : "Inactivo"}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setSelected(param)}
-                          className="p-2 hover:bg-primary-50 rounded-lg transition-colors text-primary-600"
-                          aria-label="Editar"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleToggleActive(param.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border-0"
-                          aria-label={param.isActive ? "Desactivar" : "Activar"}
-                        >
-                          <Power className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Cards mobile */}
-        <div className="md:hidden space-y-4">
-          {parameters.length === 0 ? (
-            <div className="text-center py-8 text-primary-600">
-              No hay parámetros de calidad registrados
+      <div className="card border-2 border-primary-600 overflow-hidden">
+        <div className="p-6 border-b border-stroke">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-primary-900 mb-1">Parámetros de Calidad</h2>
+              <p className="text-sm text-primary-600">Gestiona los parámetros de control de calidad</p>
             </div>
-          ) : (
-            parameters.map((param) => (
-              <div key={param.id} className="bg-surface border border-stroke rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h4 className="font-medium text-primary-900">{param.name}</h4>
-                    <p className="text-sm text-primary-600">{param.phase}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setSelected(param)}
-                      className="p-2 hover:bg-primary-50 rounded-lg transition-colors text-primary-600"
-                      aria-label="Editar"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleToggleActive(param.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border-0"
-                      aria-label={param.isActive ? "Desactivar" : "Activar"}
-                    >
-                      <Power className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                {param.description && (
-                  <p className="text-sm text-primary-700 mb-2">{param.description}</p>
-                )}
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <span className={cn(
-                    "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
-                    param.isCritical
-                      ? "bg-red-100 text-red-700 border-red-200"
-                      : "bg-primary-50 text-primary-700 border-primary-200"
-                  )}>
-                    {param.isCritical ? "Crítico" : "No crítico"}
-                  </span>
-                  <span className={cn(
-                    "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
-                    param.isActive
-                      ? "bg-green-100 text-green-700 border-green-200"
-                      : "bg-primary-50 text-primary-700 border-primary-200"
-                  )}>
-                    {param.isActive ? "Activo" : "Inactivo"}
-                  </span>
-                  {param.unit && (
-                    <span className="text-xs text-primary-600">Unidad: {param.unit}</span>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
+            {!loading && !error && (
+              <CreateButton
+                buttonText="Nuevo"
+                modalTitle="Crear Nuevo Parámetro de Calidad"
+                ariaLabel="Agregar nuevo parámetro de calidad"
+                isOpen={isCreating}
+                onOpen={openModal}
+              >
+                <QualityParameterForm
+                  onSubmit={handleCreate as (data: QualityParameterCreateRequest | QualityParameterUpdateRequest) => Promise<void>}
+                  onCancel={closeModal}
+                  isLoading={isCreatingLoading}
+                />
+              </CreateButton>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Modal crear */}
-      <Dialog open={isCreating} onOpenChange={setIsCreating}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-primary-200 shadow-2xl">
-          <DialogTitle className="text-xl font-semibold text-primary-900 mb-4">Crear Nuevo Parámetro de Calidad</DialogTitle>
-          <QualityParameterForm
-            onSubmit={handleCreate as (data: QualityParameterCreateRequest | QualityParameterUpdateRequest) => Promise<void>}
-            onCancel={() => setIsCreating(false)}
-            isLoading={saving}
-          />
-        </DialogContent>
-      </Dialog>
+        {error && (
+          <div className="p-6">
+            <ErrorState error={error} />
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <LoadingSpinner />
+            <p className="ml-4 text-primary-600">Cargando parámetros de calidad...</p>
+          </div>
+        ) : (
+          <>
+            <div className="hidden md:block">
+              <DataTable
+                data={parameters}
+                columns={columns}
+                actions={actions}
+                emptyMessage="No hay parámetros de calidad registrados"
+              />
+            </div>
+            <div className="md:hidden">
+              <DataCards
+                data={parameters}
+                layout={cardLayout}
+                actions={actions}
+                emptyMessage="No hay parámetros de calidad registrados"
+                className="space-y-4"
+              />
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Modal editar */}
       <Dialog open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>

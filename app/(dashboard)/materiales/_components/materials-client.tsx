@@ -179,18 +179,20 @@ export function MaterialsClient({ materials, pagination, autoOpenId, onMaterialS
 
   return (
     <>
-      <MaterialsTable
-        materiales={localMaterials}
-        onEdit={handleEditClick}
-        onToggleActive={handleToggleActive}
-        onViewDetails={handleViewDetails}
-      />
-      <MaterialsCards
-        materiales={localMaterials}
-        onEdit={handleEditClick}
-        onToggleActive={handleToggleActive}
-        onViewDetails={handleViewDetails}
-      />
+      <div data-tour="materials-table">
+        <MaterialsTable
+          materiales={localMaterials}
+          onEdit={handleEditClick}
+          onToggleActive={handleToggleActive}
+          onViewDetails={handleViewDetails}
+        />
+        <MaterialsCards
+          materiales={localMaterials}
+          onEdit={handleEditClick}
+          onToggleActive={handleToggleActive}
+          onViewDetails={handleViewDetails}
+        />
+      </div>
 
       {pagination && (
         <div className="mt-4 border-t border-stroke bg-primary-50/40 px-4 py-4">

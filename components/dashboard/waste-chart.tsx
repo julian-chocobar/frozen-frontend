@@ -33,7 +33,7 @@ import { ChartEmptyState } from "./chart-empty-state"
 import { ChartTooltip } from "./chart-tooltip"
 import { useChartData } from "@/hooks/use-chart-data"
 
-type ChartType = "bar" | "pie" | "line"
+type ChartType = "bar" | "line"
 
 import { PIE_CHART_COLORS } from '@/lib/constants'
 
@@ -168,17 +168,6 @@ export function WasteChart() {
             >
               Barras
             </button>
-            <button
-              onClick={() => setChartType("pie")}
-              className={cn(
-                "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm",
-                chartType === "pie"
-                  ? "bg-red-600 text-white shadow-md"
-                  : "bg-white text-primary-700 border border-gray-200 hover:bg-gray-50 hover:shadow-md"
-              )}
-            >
-              Torta
-            </button>
           </div>
         </div>
 
@@ -249,28 +238,7 @@ export function WasteChart() {
               />
             </LineChart>
           ) : (
-            <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#ef4444"
-                dataKey="value"
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip content={<PieTooltip />} />
-              <Legend 
-                verticalAlign="right"
-                align="right"
-                wrapperStyle={{ fontSize: '12px', paddingLeft: '20px' }}
-              />
-            </PieChart>
+            <></>
           )}
         </ResponsiveContainer>
       </div>

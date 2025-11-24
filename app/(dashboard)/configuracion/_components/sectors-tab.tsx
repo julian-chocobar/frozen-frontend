@@ -1,11 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { updateSector, getAllSectors } from "@/lib/sectors"
+import { updateSector, getAllSectors, createSector } from "@/lib/sectors"
 import type { SectorResponse, SectorCreateRequest, SectorUpdateRequest, SectorType, Phase } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +13,10 @@ import { Save, X } from "lucide-react"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import { getUsers } from "@/lib/users"
 import type { UserResponse } from "@/types"
+import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
+import { DataCards, type CardLayout } from "@/components/ui/data-cards"
+import { CreateButton, useCreateModal } from "@/components/ui/create-button"
+import { cn } from "@/lib/utils"
 
 const SECTOR_TYPES: { value: SectorType; label: string }[] = [
   { value: "PRODUCCION", label: "Producción" },
@@ -190,10 +193,15 @@ function SectorForm({ initial, onSubmit, onCancel, isLoading }: SectorFormProps)
       </div>
 
       <div className="flex justify-end gap-3 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          <X className="w-4 h-4 mr-2" />
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isLoading}
+          className="px-4 py-2 text-sm font-medium text-primary-700 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          <X className="w-4 h-4" />
           Cancelar
-        </Button>
+        </button>
         <button
           type="submit"
           disabled={isLoading}
@@ -213,6 +221,10 @@ export function SectorsTab() {
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<SectorResponse | null>(null)
   const [saving, setSaving] = useState(false)
+  const { isOpen: isCreating, isLoading: isCreatingLoading, openModal, closeModal, handleSubmit } = useCreateModal({
+    successMessage: 'Sector creado exitosamente',
+    errorTitle: 'Error al crear sector'
+  })
 
   const loadSectors = async () => {
     try {
@@ -232,6 +244,13 @@ export function SectorsTab() {
     loadSectors()
   }, [])
 
+  const handleCreate = async (data: SectorCreateRequest) => {
+    await handleSubmit(async () => {
+      await createSector(data)
+      await loadSectors()
+    })
+  }
+
   const handleUpdate = async (data: SectorUpdateRequest) => {
     if (!selected || !selected.id) {
       showSuccess("Error: No se puede identificar el sector a actualizar", "error")
@@ -250,129 +269,178 @@ export function SectorsTab() {
     }
   }
 
+  const columns: ColumnDef<SectorResponse>[] = [
+    {
+      key: 'id',
+      label: 'ID',
+      render: (value) => (
+        <span className="text-sm font-mono text-primary-600">#{value || "-"}</span>
+      )
+    },
+    {
+      key: 'name',
+      label: 'Nombre',
+      render: (value) => (
+        <span className="text-sm font-medium text-primary-900">{value}</span>
+      )
+    },
+    {
+      key: 'type',
+      label: 'Tipo',
+      render: (value) => (
+        <span className="text-sm text-primary-600">{SECTOR_TYPES.find(t => t.value === value)?.label || value}</span>
+      )
+    },
+    {
+      key: 'phase',
+      label: 'Fase',
+      render: (value) => (
+        <span className="text-sm text-primary-600">{formatPhase(value)}</span>
+      )
+    },
+    {
+      key: 'productionCapacity',
+      label: 'Capacidad',
+      render: (value) => (
+        <span className="text-sm text-primary-600">{value || "-"}</span>
+      )
+    },
+    {
+      key: 'isTimeActive',
+      label: 'Activo',
+      render: (value) => (
+        <span className={cn(
+          "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
+          value
+            ? "bg-green-100 text-green-700 border-green-200"
+            : "bg-primary-50 text-primary-700 border-primary-200"
+        )}>
+          {value ? "Sí" : "No"}
+        </span>
+      )
+    }
+  ]
+
+  const cardLayout: CardLayout<SectorResponse> = {
+    header: [
+      {
+        key: 'id',
+        label: '',
+        showLabel: false,
+        render: (value) => (
+          <p className="text-xs font-mono text-primary-600 mb-1">#{value || "-"}</p>
+        )
+      },
+      {
+        key: 'name',
+        label: '',
+        showLabel: false,
+        render: (value) => (
+          <h3 className="text-base font-semibold text-primary-900">{value}</h3>
+        )
+      }
+    ],
+    content: [
+      {
+        key: 'type',
+        label: 'Tipo',
+        render: (value) => (
+          <span className="text-sm text-primary-600">{SECTOR_TYPES.find(t => t.value === value)?.label || value}</span>
+        )
+      },
+      {
+        key: 'phase',
+        label: 'Fase',
+        render: (value) => (
+          <span className="text-sm text-primary-600">{formatPhase(value)}</span>
+        )
+      },
+      {
+        key: 'productionCapacity',
+        label: 'Capacidad',
+        render: (value) => (
+          <span className="text-sm text-primary-900">{value || "-"}</span>
+        )
+      },
+      {
+        key: 'isTimeActive',
+        label: 'Activo',
+        render: (value) => (
+          <span className={cn(
+            "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
+            value
+              ? "bg-green-100 text-green-700 border-green-200"
+              : "bg-primary-50 text-primary-700 border-primary-200"
+          )}>
+            {value ? "Sí" : "No"}
+          </span>
+        )
+      }
+    ]
+  }
+
+  const actions: TableActions<SectorResponse> = {
+    onEdit: (sector) => setSelected(sector)
+  }
+
   return (
     <>
-      <div className="card p-6 border-2 border-primary-600">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-primary-900">Sectores</h3>
+      <div className="card border-2 border-primary-600 overflow-hidden">
+        <div className="p-6 border-b border-stroke">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-primary-900 mb-1">Sectores</h2>
+              <p className="text-sm text-primary-600">Gestiona los sectores de producción</p>
+            </div>
+            {!loading && !error && (
+              <CreateButton
+                buttonText="Nuevo"
+                modalTitle="Crear Nuevo Sector"
+                ariaLabel="Agregar nuevo sector"
+                isOpen={isCreating}
+                onOpen={openModal}
+              >
+                <SectorForm
+                  onSubmit={handleCreate}
+                  onCancel={closeModal}
+                  isLoading={isCreatingLoading}
+                />
+              </CreateButton>
+            )}
+          </div>
         </div>
 
         {error && (
-          <div className="mb-4">
+          <div className="p-6">
             <ErrorState error={error} />
           </div>
         )}
 
-        {loading && (
+        {loading ? (
           <div className="flex justify-center items-center py-8">
             <LoadingSpinner />
             <p className="ml-4 text-primary-600">Cargando sectores...</p>
           </div>
-        )}
-
-        {/* Tabla desktop */}
-        {!loading && sectors.length > 0 && (
+        ) : (
           <>
-            <div className="hidden md:block overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-left border-b border-primary-200">
-                    <th className="py-2 pr-4 text-primary-700 font-medium">ID</th>
-                    <th className="py-2 pr-4 text-primary-700 font-medium">Nombre</th>
-                    <th className="py-2 pr-4 text-primary-700 font-medium">Tipo</th>
-                    <th className="py-2 pr-4 text-primary-700 font-medium">Fase</th>
-                    <th className="py-2 pr-4 text-primary-700 font-medium">Capacidad</th>
-                    <th className="py-2 pr-4 text-primary-700 font-medium">Activo</th>
-                    <th className="py-2 pr-4 text-primary-700 font-medium">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sectors.map((sector) => (
-                    <tr key={sector.id || `sector-${sector.name}`} className="border-b border-primary-100 last:border-0 hover:bg-primary-50">
-                      <td className="py-3 pr-4">
-                        <span className="text-sm text-primary-600">{sector.id || "-"}</span>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <span className="text-sm font-medium text-primary-900">{sector.name}</span>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <span className="text-sm text-primary-600">{SECTOR_TYPES.find(t => t.value === sector.type)?.label || sector.type}</span>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <span className="text-sm text-primary-600">{formatPhase(sector.phase)}</span>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <span className="text-sm text-primary-600">{sector.productionCapacity || "-"}</span>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <span className={`text-sm ${sector.isTimeActive ? "text-green-600" : "text-primary-600"}`}>
-                          {sector.isTimeActive ? "Sí" : "No"}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <button
-                          onClick={() => setSelected(sector)}
-                          className="p-2 hover:bg-primary-50 rounded-lg transition-colors text-primary-600"
-                          aria-label="Editar"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="hidden md:block">
+              <DataTable
+                data={sectors}
+                columns={columns}
+                actions={actions}
+                emptyMessage="No hay sectores disponibles"
+              />
             </div>
-
-            {/* Cards mobile */}
-            <div className="md:hidden space-y-4">
-              {sectors.map((sector) => (
-                <div key={sector.id || `sector-${sector.name}`} className="bg-surface border border-stroke rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="font-medium text-primary-900">{sector.name}</h4>
-                      <p className="text-sm text-primary-600">
-                        ID: {sector.id || "-"} • {SECTOR_TYPES.find(t => t.value === sector.type)?.label || sector.type}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setSelected(sector)}
-                      className="p-2 hover:bg-primary-50 rounded-lg transition-colors text-primary-600"
-                      aria-label="Editar"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-primary-600">Fase:</span>
-                      <span className="text-primary-900">{formatPhase(sector.phase)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-primary-600">Capacidad:</span>
-                      <span className="text-primary-900">{sector.productionCapacity || "-"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-primary-600">Activo:</span>
-                      <span className={`${sector.isTimeActive ? "text-green-600" : "text-primary-600"}`}>
-                        {sector.isTimeActive ? "Sí" : "No"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="md:hidden">
+              <DataCards
+                data={sectors}
+                layout={cardLayout}
+                actions={actions}
+                emptyMessage="No hay sectores disponibles"
+                className="space-y-4"
+              />
             </div>
           </>
-        )}
-
-        {!loading && sectors.length === 0 && (
-          <div className="text-center py-8 text-primary-600">
-            <p>No hay sectores disponibles.</p>
-          </div>
         )}
       </div>
 

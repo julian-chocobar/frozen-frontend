@@ -1,0 +1,312 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { getSystemConfiguration, updateWorkingDays } from "@/lib/config/api"
+import type { SystemConfigurationResponse, WorkingDay, WorkingDayUpdateRequest, DayOfWeek } from "@/types"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { ErrorState } from "@/components/ui/error-state"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { WorkingDayForm } from "./config-form"
+import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
+import { DataCards, type CardLayout } from "@/components/ui/data-cards"
+import { handleError, showSuccess } from "@/lib/error-handler"
+import { cn } from "@/lib/utils"
+
+// Orden de días de la semana: lunes a domingo
+const DAY_ORDER: Record<DayOfWeek, number> = {
+  'MONDAY': 1,
+  'TUESDAY': 2,
+  'WEDNESDAY': 3,
+  'THURSDAY': 4,
+  'FRIDAY': 5,
+  'SATURDAY': 6,
+  'SUNDAY': 7
+}
+
+// Función para formatear el día de la semana en español
+const formatDayOfWeek = (day: DayOfWeek): string => {
+  const dayMap: Record<DayOfWeek, string> = {
+    'MONDAY': 'Lunes',
+    'TUESDAY': 'Martes',
+    'WEDNESDAY': 'Miércoles',
+    'THURSDAY': 'Jueves',
+    'FRIDAY': 'Viernes',
+    'SATURDAY': 'Sábado',
+    'SUNDAY': 'Domingo'
+  }
+  return dayMap[day] || day
+}
+
+// Función para normalizar valores de hora para inputs HTML
+const normalizeTimeValue = (timeValue: any): string => {
+  if (!timeValue) return ""
+  if (typeof timeValue === 'string') {
+    // Si ya es string, asegurarse de que tenga formato HH:mm
+    if (timeValue.includes(':')) {
+      return timeValue.slice(0, 5) // Tomar solo HH:mm
+    }
+    return timeValue
+  }
+  return ""
+}
+
+// Función para ordenar días sin crear nuevas referencias de objetos
+const sortWorkingDays = (workingDays: WorkingDay[]): WorkingDay[] => {
+  // Crear un nuevo array pero mantener las mismas referencias de objetos
+  // Solo cambiamos el orden, no los objetos en sí
+  const sorted = [...workingDays].sort((a, b) => DAY_ORDER[a.dayOfWeek] - DAY_ORDER[b.dayOfWeek])
+
+  // Normalizar los valores de hora para que sean compatibles con inputs HTML
+  return sorted.map(day => ({
+    ...day,
+    openingHour: normalizeTimeValue(day.openingHour),
+    closingHour: normalizeTimeValue(day.closingHour)
+  }))
+}
+
+export function WorkingDaysTab() {
+  const [data, setData] = useState<SystemConfigurationResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selected, setSelected] = useState<WorkingDay | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const load = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      console.log('Cargando configuración del sistema...')
+
+      // Intentar obtener los datos del backend
+      const res = await getSystemConfiguration()
+      console.log('Respuesta del backend:', res)
+      console.log('Tipo de respuesta:', typeof res)
+      console.log('Keys de respuesta:', res ? Object.keys(res) : 'null')
+
+      // Procesar la respuesta de manera defensiva
+      let processedData: SystemConfigurationResponse | null = null
+
+      if (res && typeof res === 'object') {
+        processedData = {
+          isActive: res.isActive || false,
+          workingDays: []
+        }
+
+        // Procesar workingDays si existen
+        if (res.workingDays && Array.isArray(res.workingDays)) {
+          processedData.workingDays = res.workingDays.map((wd: any, index: number) => {
+            console.log(`Procesando día ${index}:`, wd)
+            return {
+              dayOfWeek: wd.dayOfWeek || `DIA_${index}`,
+              isWorkingDay: wd.isWorkingDay !== undefined ? wd.isWorkingDay : false,
+              openingHour: wd.openingHour || '',
+              closingHour: wd.closingHour || ''
+            }
+          })
+        }
+      }
+
+      console.log('Datos procesados:', processedData)
+      setData(processedData)
+    } catch (e: any) {
+      console.error('Error al cargar configuración del sistema:', e)
+      console.error('Detalles del error:', e?.response?.data || e?.data || e)
+
+      const errorMessage = e?.message || e?.data?.message || 'Error desconocido del backend'
+      setError(`Error al cargar datos: ${errorMessage}`)
+      setData(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  const handleUpdate = async (payload: WorkingDayUpdateRequest) => {
+    try {
+      setSaving(true)
+      console.log('Actualizando día laboral:', payload)
+      
+      // Si no hay hora, enviamos string vacío que el backend puede manejar
+      const formattedPayload: WorkingDayUpdateRequest = {
+        ...payload,
+        openingHour: payload.openingHour || "",
+        closingHour: payload.closingHour || "",
+      }
+
+      console.log('Payload formateado:', formattedPayload)
+      await updateWorkingDays([formattedPayload])
+      console.log('Día laboral actualizado exitosamente')
+      showSuccess('Día laboral actualizado exitosamente')
+      await load()
+      setSelected(null)
+    } catch (e: any) {
+      console.error('Error al actualizar día laboral:', e)
+      console.error('Detalles del error:', e?.response?.data || e?.data || e)
+      handleError(e, { title: 'Error al actualizar día laboral' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const columns: ColumnDef<WorkingDay>[] = [
+    {
+      key: 'dayOfWeek',
+      label: 'Día',
+      render: (value) => (
+        <span className="text-sm font-medium text-primary-900">{formatDayOfWeek(value)}</span>
+      )
+    },
+    {
+      key: 'isWorkingDay',
+      label: 'Estado',
+      render: (value) => (
+        <span className={cn(
+          "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
+          value
+            ? "bg-green-100 text-green-700 border-green-200"
+            : "bg-primary-50 text-primary-700 border-primary-200"
+        )}>
+          {value ? 'Laborable' : 'No laborable'}
+        </span>
+      )
+    },
+    {
+      key: 'openingHour',
+      label: 'Apertura',
+      render: (value) => (
+        <span className="text-sm text-primary-600">
+          {value?.slice(0, 5) || '-'}
+        </span>
+      )
+    },
+    {
+      key: 'closingHour',
+      label: 'Cierre',
+      render: (value) => (
+        <span className="text-sm text-primary-600">
+          {value?.slice(0, 5) || '-'}
+        </span>
+      )
+    }
+  ]
+
+  const cardLayout: CardLayout<WorkingDay> = {
+    header: [
+      {
+        key: 'dayOfWeek',
+        label: '',
+        showLabel: false,
+        render: (value) => (
+          <h3 className="text-base font-semibold text-primary-900">{formatDayOfWeek(value)}</h3>
+        )
+      }
+    ],
+    content: [
+      {
+        key: 'isWorkingDay',
+        label: 'Estado',
+        render: (value) => (
+          <span className={cn(
+            "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
+            value
+              ? "bg-green-100 text-green-700 border-green-200"
+              : "bg-primary-50 text-primary-700 border-primary-200"
+          )}>
+            {value ? 'Laborable' : 'No laborable'}
+          </span>
+        )
+      },
+      {
+        key: 'openingHour',
+        label: 'Apertura',
+        render: (value) => (
+          <span className="text-sm text-primary-900">
+            {value?.slice(0, 5) || '-'}
+          </span>
+        )
+      },
+      {
+        key: 'closingHour',
+        label: 'Cierre',
+        render: (value) => (
+          <span className="text-sm text-primary-900">
+            {value?.slice(0, 5) || '-'}
+          </span>
+        )
+      }
+    ]
+  }
+
+  const actions: TableActions<WorkingDay> = {
+    onEdit: (day) => setSelected({
+      ...day,
+      openingHour: normalizeTimeValue(day.openingHour),
+      closingHour: normalizeTimeValue(day.closingHour)
+    })
+  }
+
+  return (
+    <>
+      <div className="card border-2 border-primary-600 overflow-hidden">
+        <div className="p-6 border-b border-stroke">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-primary-900 mb-1">Días Laborales</h2>
+              <p className="text-sm text-primary-600">Configura los días y horarios de trabajo</p>
+            </div>
+          </div>
+        </div>
+
+        {error && (
+          <div className="p-6">
+            <ErrorState error={error} />
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <LoadingSpinner />
+            <p className="ml-4 text-primary-600">Cargando configuración...</p>
+          </div>
+        ) : data ? (
+          <>
+            <div className="hidden md:block">
+              <DataTable
+                data={sortWorkingDays(data.workingDays || [])}
+                columns={columns}
+                actions={actions}
+                emptyMessage="No hay días laborales configurados"
+              />
+            </div>
+            <div className="md:hidden">
+              <DataCards
+                data={sortWorkingDays(data.workingDays || [])}
+                layout={cardLayout}
+                actions={actions}
+                emptyMessage="No hay días laborales configurados"
+                className="space-y-4"
+              />
+            </div>
+          </>
+        ) : null}
+
+        {/* Modal edición */}
+        <Dialog open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
+          <DialogContent className="max-w-xl border-2 border-primary-200 shadow-2xl">
+            <DialogTitle className="text-xl font-semibold text-primary-900 mb-4">Editar día laboral</DialogTitle>
+            {selected && (
+              <WorkingDayForm
+                initial={selected}
+                onSubmit={handleUpdate}
+                onCancel={() => setSelected(null)}
+                isLoading={saving}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </>
+  )
+}
+

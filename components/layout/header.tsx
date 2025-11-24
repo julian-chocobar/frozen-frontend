@@ -11,6 +11,8 @@ import { useAuth } from "@/contexts/auth-context"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useRouter } from "next/navigation"
 import { handleError } from "@/lib/error-handler"
+import { useTour } from "@/contexts/tour-context"
+import { TourButton } from "@/components/tour/tour-button"
 
 interface HeaderProps {
   title: string
@@ -32,6 +34,7 @@ export function Header({ title, subtitle, actionButton, backButton }: HeaderProp
   
   const { user, logout, isAuthenticated } = useAuth()
   const { stats, isConnected, notifications, error } = useNotifications()
+  const { startTour } = useTour()
 
   // Cerrar menú al hacer clic fuera
   useEffect(() => {
@@ -137,6 +140,14 @@ export function Header({ title, subtitle, actionButton, backButton }: HeaderProp
           {/* Derecha: Botón de acción, Notificaciones y usuario */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
             {actionButton}
+            
+            {/* Botón de Tour Guiado */}
+            <TourButton 
+              onStart={() => startTour()} 
+              variant="ghost"
+              size="sm"
+              showLabel={false}
+            />
 
             {/* Debug info en desarrollo */}
             {process.env.NODE_ENV === 'development' && (

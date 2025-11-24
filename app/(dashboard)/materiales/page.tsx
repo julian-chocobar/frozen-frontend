@@ -105,19 +105,23 @@ export default function MaterialesPage() {
       />
       <div className="p-4 md:p-6 space-y-6">
         {/* Filtros */}
-        <MaterialsFilters />
+        <div data-tour="materials-filters">
+          <MaterialsFilters />
+        </div>
  
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           <div className="order-2 lg:order-1 lg:flex-1">
             <div className="card border-2 border-primary-600 overflow-hidden">
-              <div className="p-6 border-b border-stroke">
+              <div className="p-6 border-b border-stroke" data-tour="materials-header">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-semibold text-primary-900 mb-1">Materias Primas</h2>
                     <p className="text-sm text-primary-600">Gestiona maltas, lúpulos, levaduras y otros insumos</p>
                   </div>
                   {!loading && materialsData && (
-                    <MaterialCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+                    <div data-tour="materials-create">
+                      <MaterialCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+                    </div>
                   )}
                 </div>
               </div>
@@ -148,7 +152,7 @@ export default function MaterialesPage() {
             </div>
           </div>
 
-          <div className="order-1 lg:order-2 lg:flex-none">
+          <div className="order-1 lg:order-2 lg:flex-none" data-tour="materials-warehouse">
             <MaterialsWarehousePanel
               selectedMaterialId={selectedMaterialId}
               onSelectMaterial={(materialId) => {
