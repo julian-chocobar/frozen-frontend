@@ -41,16 +41,95 @@ export function useDriver() {
   const startTour = useCallback((steps: DriverStep[]) => {
     stepsRef.current = steps
 
+    // Función helper para verificar si un elemento está visible
+    const isElementVisible = (element: Element | null): boolean => {
+      if (!element) return false
+      
+      const rect = element.getBoundingClientRect()
+      const style = window.getComputedStyle(element)
+      
+      // Verificar que el elemento tenga dimensiones y esté visible
+      return (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        style.display !== 'none' &&
+        style.visibility !== 'hidden' &&
+        style.opacity !== '0'
+      )
+    }
+
+    // Función helper para resolver selectores múltiples y encontrar el elemento visible
+    const resolveElement = (selector: string): string => {
+      // Si el selector tiene múltiples opciones (separadas por coma)
+      if (selector.includes(',')) {
+        const selectors = selector.split(',').map(s => s.trim())
+        
+        // En mobile, priorizar bottom-bar; en desktop, priorizar sidebar
+        if (typeof window !== 'undefined') {
+          const isMobile = window.innerWidth < 768
+          
+          if (isMobile) {
+            // En mobile, buscar bottom-bar primero
+            const bottomBarSelector = selectors.find(s => s.includes('navigation-bottom-bar'))
+            if (bottomBarSelector) {
+              const element = document.querySelector(bottomBarSelector)
+              if (isElementVisible(element)) {
+                return bottomBarSelector
+              }
+            }
+          } else {
+            // En desktop, buscar sidebar primero
+            const sidebarSelector = selectors.find(s => s.includes('navigation-sidebar'))
+            if (sidebarSelector) {
+              const element = document.querySelector(sidebarSelector)
+              if (isElementVisible(element)) {
+                return sidebarSelector
+              }
+            }
+          }
+          
+          // Si no se encontró el preferido, buscar cualquier elemento visible
+          for (const sel of selectors) {
+            const element = document.querySelector(sel)
+            if (isElementVisible(element)) {
+              return sel
+            }
+          }
+        }
+      }
+      
+      return selector
+    }
+
     // Convertir pasos al formato de Driver.js (sin la propiedad route)
-    const driverSteps = steps.map((step) => ({
-      element: step.element,
-      popover: {
-        title: step.popover.title,
-        description: step.popover.description,
-        side: step.popover.side || 'bottom',
-        align: step.popover.align || 'start',
-      },
-    }))
+    const driverSteps = steps.map((step) => {
+      const resolvedElement = resolveElement(step.element)
+      
+      // Ajustar el side del popover para mobile
+      let popoverSide = step.popover.side || 'bottom'
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        if (resolvedElement.includes('navigation-bottom-bar')) {
+          popoverSide = 'top'
+        } else if (
+          resolvedElement.includes('products-view-button') ||
+          resolvedElement.includes('orders-view-button')
+        ) {
+          // Los botones de visualización están en la esquina superior derecha de las cards
+          // En mobile, es mejor mostrar el popover a la izquierda para evitar que quede fuera de pantalla
+          popoverSide = 'left'
+        }
+      }
+      
+      return {
+        element: resolvedElement,
+        popover: {
+          title: step.popover.title,
+          description: step.popover.description,
+          side: popoverSide,
+          align: step.popover.align || 'start',
+        },
+      }
+    })
 
     // Destruir instancia anterior si existe
     if (driverRef.current) {
@@ -91,6 +170,46 @@ export function useDriver() {
                 driverRef.current.refresh()
               }
             }, 300)
+          }
+          
+          // Hacer scroll automático al elemento si no está completamente visible
+          if (element && typeof window !== 'undefined') {
+            setTimeout(() => {
+              const rect = element.getBoundingClientRect()
+              const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+              const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+              
+              // En mobile, considerar el bottom-bar (64px = 4rem = h-16)
+              const isMobile = viewportWidth < 768
+              const bottomBarHeight = isMobile ? 64 : 0
+              const availableHeight = viewportHeight - bottomBarHeight
+              
+              // Verificar si el elemento está completamente visible (considerando el bottom-bar en mobile)
+              const isVisible = (
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <= availableHeight &&
+                rect.right <= viewportWidth
+              )
+              
+              if (!isVisible) {
+                // Calcular la posición ideal para el elemento
+                const elementTop = rect.top + window.scrollY
+                const elementHeight = rect.height
+                
+                // Calcular el offset para centrar el elemento considerando el bottom-bar
+                // Queremos que el elemento quede centrado en el espacio disponible (viewport - bottom-bar)
+                const idealScrollY = elementTop - (availableHeight / 2) + (elementHeight / 2)
+                
+                // Asegurar que el elemento quede visible pero no quede oculto detrás del bottom-bar
+                const finalScrollY = Math.max(0, idealScrollY)
+                
+                window.scrollTo({
+                  top: finalScrollY,
+                  behavior: 'smooth'
+                })
+              }
+            }, 100)
           }
         }
       },

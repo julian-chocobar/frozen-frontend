@@ -245,8 +245,8 @@ export function QualityParametersSection({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <h4 className="text-sm font-semibold text-primary-700 uppercase tracking-wide">
             Parámetros de Calidad
           </h4>
@@ -255,24 +255,26 @@ export function QualityParametersSection({
           </Badge>
         </div>
         {(canReview || canCreate) && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {canReview && (
-              <div data-tour="phase-evaluate-button">
+              <div data-tour="phase-evaluate-button" className="flex-shrink-0">
                 <Button
                   size="sm"
                   onClick={handleReviewPhase}
                   disabled={isReviewingPhase || !canTriggerReview}
-                  className="gap-2 bg-primary-600 text-white hover:bg-primary-700 disabled:bg-primary-200 disabled:text-primary-400 disabled:cursor-not-allowed"
+                  className="gap-2 bg-primary-600 text-white hover:bg-primary-700 disabled:bg-primary-200 disabled:text-primary-400 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   {isReviewingPhase ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Evaluando...
+                      <span className="hidden sm:inline">Evaluando...</span>
+                      <span className="sm:hidden">Evaluando</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4" />
-                      Evaluar fase
+                      <span className="hidden sm:inline">Evaluar fase</span>
+                      <span className="sm:hidden">Evaluar</span>
                     </>
                   )}
                 </Button>
@@ -281,15 +283,16 @@ export function QualityParametersSection({
             {canCreate && (
               <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                 <DialogTrigger asChild>
-                  <div data-tour="phase-register-parameter-button">
+                  <div data-tour="phase-register-parameter-button" className="flex-shrink-0">
                     <Button
                       size="sm"
                       variant="outline"
                       disabled={!canOpenCreate}
-                      className="gap-2 border-primary-300 text-primary-700 hover:bg-primary-50 disabled:border-primary-200 disabled:text-primary-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                      className="gap-2 border-primary-300 text-primary-700 hover:bg-primary-50 disabled:border-primary-200 disabled:text-primary-300 disabled:hover:bg-transparent disabled:cursor-not-allowed whitespace-nowrap"
                     >
                       <Plus className="w-4 h-4" />
-                      Registrar parámetro
+                      <span className="hidden sm:inline">Registrar parámetro</span>
+                      <span className="sm:hidden">Registrar</span>
                     </Button>
                   </div>
                 </DialogTrigger>

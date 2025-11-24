@@ -191,14 +191,6 @@ export const productsSteps: DriverStep[] = [
       side: 'top',
     },
   },
-  {
-    element: '[data-tour="products-view-button"]',
-    popover: {
-      title: 'Ver Detalle de Producto',
-      description: 'Haz clic en este botón para acceder a la página de detalle del producto, donde podrás ver y configurar sus fases de producción y recetas.',
-      side: 'left',
-    },
-  },
 ]
 
 /**
@@ -245,17 +237,8 @@ export const ordersSteps: DriverStep[] = [
     element: '[data-tour="orders-table"]',
     popover: {
       title: 'Lista de Órdenes',
-      description: 'Visualiza todas las órdenes con su información: estado, producto, cantidad, fechas y cronograma.',
+      description: 'Visualiza todas las órdenes con su información: estado, producto, cantidad, fechas y cronograma. Haz clic en el botón "Ver" (👁️) de cualquier orden para ver sus detalles completos. En el modal de detalles, los gerentes pueden aprobar o rechazar órdenes pendientes. Una vez aprobada, la orden generará lotes automáticamente para iniciar la producción.',
       side: 'top',
-      align: 'start',
-    },
-  },
-  {
-    element: '[data-tour="orders-view-button"]',
-    popover: {
-      title: 'Ver Detalle y Aprobar Orden',
-      description: 'Haz clic en este botón para ver los detalles completos de la orden. En el modal de detalles, los gerentes pueden aprobar o rechazar órdenes pendientes. Una vez aprobada, la orden generará lotes automáticamente para iniciar la producción.',
-      side: 'left',
       align: 'start',
     },
   },
@@ -435,7 +418,8 @@ export const profileSteps: DriverStep[] = [
     popover: {
       title: 'Seguridad',
       description: 'Cambia tu contraseña cuando lo necesites. Asegúrate de usar una contraseña segura.',
-      side: 'bottom',
+      side: 'top',
+      align: 'start',
     },
   },
 ]
@@ -676,8 +660,9 @@ export function getFullTourSteps(
   })
 
   // Paso 2: Explicar navegación (sidebar/bottom-bar)
+  // Usar selector que priorice bottom-bar (aparece primero en el DOM en mobile)
   steps.push({
-    element: '[data-tour="navigation-sidebar"], [data-tour="navigation-bottom-bar"]',
+    element: '[data-tour="navigation-bottom-bar"], [data-tour="navigation-sidebar"]',
     popover: {
       title: 'Navegación del Sistema',
       description: 'Usa el menú lateral (en escritorio) o la barra inferior (en móvil) para navegar entre las diferentes secciones del sistema: Dashboard, Materiales, Movimientos, Productos, Órdenes, Seguimiento y Configuración.',

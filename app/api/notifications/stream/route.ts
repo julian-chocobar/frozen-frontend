@@ -46,9 +46,37 @@ export async function GET(request: NextRequest) {
       async start(controller) {
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
+        let isClosed = false;
+
+        // Helper para cerrar el controller de forma segura
+        const safeClose = () => {
+          if (!isClosed) {
+            try {
+              controller.close();
+              isClosed = true;
+            } catch (error) {
+              // Controller ya estaba cerrado, ignorar
+              isClosed = true;
+            }
+          }
+        };
+
+        // Helper para enviar error de forma segura
+        const safeError = (error: Error) => {
+          if (!isClosed) {
+            try {
+              controller.error(error);
+              isClosed = true;
+            } catch (err) {
+              // Controller ya estaba cerrado, solo loguear
+              console.error('Error al cerrar controller (ya estaba cerrado):', err);
+              isClosed = true;
+            }
+          }
+        };
 
         if (!reader) {
-          controller.close();
+          safeClose();
           return;
         }
 
@@ -57,16 +85,42 @@ export async function GET(request: NextRequest) {
             const { done, value } = await reader.read();
             
             if (done) {
-              controller.close();
+              safeClose();
               break;
             }
 
-            // Reenviar los datos al cliente
-            controller.enqueue(value);
+            // Solo intentar enviar datos si el controller no está cerrado
+            if (!isClosed) {
+              try {
+                controller.enqueue(value);
+              } catch (error) {
+                // Cliente probablemente cerró la conexión
+                console.log('Cliente cerró la conexión SSE');
+                safeClose();
+                break;
+              }
+            } else {
+              // Si ya está cerrado, detener el loop
+              break;
+            }
           }
         } catch (error) {
-          console.error('Error en stream SSE:', error);
-          controller.error(error);
+          // Solo loguear errores que no sean de conexión cerrada
+          if (error instanceof TypeError && error.message.includes('aborted')) {
+            console.log('Conexión SSE abortada por el cliente');
+          } else {
+            console.error('Error en stream SSE:', error);
+          }
+          safeError(error as Error);
+        } finally {
+          // Asegurarse de liberar el reader
+          try {
+            if (reader) {
+              await reader.cancel();
+            }
+          } catch (error) {
+            // Ignorar errores al cancelar el reader
+          }
         }
       },
     });
