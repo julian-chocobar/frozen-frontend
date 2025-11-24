@@ -19,7 +19,7 @@ export default function ConfiguracionPage() {
       <Header title="Configuración" subtitle="Ajusta las preferencias del sistema" />
       <div className="p-4 md:p-6 space-y-6">
         <Tabs defaultValue="working-days" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6" data-tour="config-tabs">
             <TabsTrigger value="working-days" className="flex items-center justify-center gap-1.5 sm:gap-2">
               <Calendar className="w-4 h-4 flex-shrink-0" />
               <span className="hidden md:inline">Días Laborales</span>
@@ -41,19 +41,27 @@ export default function ConfiguracionPage() {
           </TabsList>
 
           <TabsContent value="working-days">
-            <WorkingDaysTab />
+            <div data-tour="config-working-days">
+              <WorkingDaysTab />
+            </div>
           </TabsContent>
 
           <TabsContent value="sectors">
-            <SectorsTab />
+            <div data-tour="config-sectors">
+              <SectorsTab />
+            </div>
           </TabsContent>
 
           <TabsContent value="quality-parameters">
-            <QualityParametersTab />
+            <div data-tour="config-quality-params">
+              <QualityParametersTab />
+            </div>
           </TabsContent>
 
           <TabsContent value="packagings">
-            <PackagingsTab />
+            <div data-tour="config-packagings">
+              <PackagingsTab />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

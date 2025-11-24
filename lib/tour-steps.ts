@@ -1,17 +1,25 @@
 import type { DriverStep } from '@/hooks/use-driver'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
+
+/**
+ * Pasos del tour para explicar la navegación
+ */
+export const navigationSteps: DriverStep[] = [
+  {
+    element: '[data-tour="navigation-sidebar"], [data-tour="navigation-bottom-bar"]',
+    popover: {
+      title: 'Navegación del Sistema',
+      description: 'Usa el menú lateral (desktop) o la barra inferior (móvil) para navegar entre las diferentes secciones del sistema. Cada icono representa una sección diferente.',
+      side: 'right',
+      align: 'start',
+    },
+  },
+]
 
 /**
  * Pasos del tour para el Dashboard
  */
 export const dashboardSteps: DriverStep[] = [
-  {
-    element: 'body',
-    popover: {
-      description: '¡Bienvenido al sistema de gestión de producción cervecera! Este tour te guiará por las principales funcionalidades.',
-      side: 'bottom',
-      align: 'center',
-    },
-  },
   {
     element: '[data-tour="dashboard-stats"]',
     popover: {
@@ -146,8 +154,16 @@ export const productsSteps: DriverStep[] = [
     element: '[data-tour="products-table"]',
     popover: {
       title: 'Lista de Productos',
-      description: 'La tabla muestra todos los productos. Haz clic en uno para ver y configurar sus fases y recetas.',
+      description: 'La tabla muestra todos los productos. Haz clic en el botón "Ver" (👁️) de cualquier producto para acceder a su página de detalle y configurar sus fases y recetas.',
       side: 'top',
+    },
+  },
+  {
+    element: '[data-tour="products-view-button"]',
+    popover: {
+      title: 'Ver Detalle de Producto',
+      description: 'Haz clic en este botón para acceder a la página de detalle del producto, donde podrás ver y configurar sus fases de producción y recetas.',
+      side: 'left',
     },
   },
 ]
@@ -238,8 +254,16 @@ export const batchesSteps: DriverStep[] = [
     element: '[data-tour="batches-grid"]',
     popover: {
       title: 'Lotes en Producción',
-      description: 'Visualiza todos los lotes. Haz clic en uno para ver detalles, fases, parámetros de calidad y generar reportes.',
+      description: 'Visualiza todos los lotes. Haz clic en el botón "Ver Detalle" de cualquier lote para acceder a su página de detalle con información completa, fases, parámetros de calidad y opciones para generar reportes.',
       side: 'top',
+    },
+  },
+  {
+    element: '[data-tour="batches-view-button"]',
+    popover: {
+      title: 'Ver Detalle de Lote',
+      description: 'Haz clic en este botón para acceder a la página de detalle del lote, donde podrás ver información completa, fases de producción, parámetros de calidad y generar reportes.',
+      side: 'left',
     },
   },
 ]
@@ -286,36 +310,6 @@ export const configurationSteps: DriverStep[] = [
       title: 'Packagings',
       description: 'Administra los envases disponibles (latas, botellas, etc.) para los productos.',
       side: 'bottom',
-    },
-  },
-]
-
-/**
- * Pasos del tour para Packagings
- */
-export const packagingsSteps: DriverStep[] = [
-  {
-    element: '[data-tour="packagings-header"]',
-    popover: {
-      title: 'Gestión de Packagings',
-      description: 'Gestiona todos los packagings (envases) disponibles en el sistema.',
-      side: 'bottom',
-    },
-  },
-  {
-    element: '[data-tour="packagings-create"]',
-    popover: {
-      title: 'Crear Packaging',
-      description: 'Crea nuevos packagings definiendo material de envasado, etiquetado y cantidad.',
-      side: 'left',
-    },
-  },
-  {
-    element: '[data-tour="packagings-table"]',
-    popover: {
-      title: 'Lista de Packagings',
-      description: 'Visualiza todos los packagings con su información completa y estado.',
-      side: 'top',
     },
   },
 ]
@@ -419,29 +413,69 @@ export const usersSteps: DriverStep[] = [
 ]
 
 /**
- * Tour completo del sistema (tour general)
+ * Pasos del tour para Detalle de Producto
  */
-export const fullTourSteps: DriverStep[] = [
+export const productDetailSteps: DriverStep[] = [
   {
-    element: 'body',
+    element: '[data-tour="product-detail-info"]',
     popover: {
-      description: '¡Bienvenido! Este tour te mostrará las principales funcionalidades del sistema. Puedes omitirlo en cualquier momento.',
+      title: 'Información del Producto',
+      description: 'Aquí puedes ver la información completa del producto: nombre, tipo (alcohólico/no alcohólico), estado y si está listo para producción.',
       side: 'bottom',
-      align: 'center',
     },
   },
-  ...dashboardSteps.slice(1),
-  ...materialsSteps.slice(0, 2),
-  ...productsSteps.slice(0, 2),
-  ...ordersSteps.slice(0, 2),
-  ...batchesSteps.slice(0, 2),
-  ...configurationSteps.slice(0, 2),
+  {
+    element: '[data-tour="product-detail-phases"]',
+    popover: {
+      title: 'Fases y Recetas',
+      description: 'En esta sección puedes ver y gestionar las fases de producción del producto. Puedes editar fases, agregar ingredientes a cada fase y marcar fases como listas.',
+      side: 'top',
+    },
+  },
+]
+
+/**
+ * Pasos del tour para Detalle de Lote
+ */
+export const batchDetailSteps: DriverStep[] = [
+  {
+    element: '[data-tour="batch-detail-info"]',
+    popover: {
+      title: 'Información del Lote',
+      description: 'Aquí puedes ver la información completa del lote: código, orden de producción, producto, empaque, cantidad y estado. También puedes descargar reportes y cancelar el lote si es necesario.',
+      side: 'bottom',
+    },
+  },
+  {
+    element: '[data-tour="batch-detail-timeline"]',
+    popover: {
+      title: 'Cronología del Lote',
+      description: 'Visualiza las fechas importantes del lote: creación, planificada, inicio, fin estimada y fin real.',
+      side: 'bottom',
+    },
+  },
+  {
+    element: '[data-tour="batch-detail-phases"]',
+    popover: {
+      title: 'Fases de Producción',
+      description: 'En esta sección puedes ver el progreso de cada fase de producción, registrar parámetros de calidad y gestionar el estado de cada fase.',
+      side: 'top',
+    },
+  },
 ]
 
 /**
  * Obtener pasos según la ruta actual
  */
 export function getStepsForRoute(route: string): DriverStep[] {
+  // Rutas dinámicas (con parámetros)
+  if (route.startsWith('/productos/') && route !== '/productos') {
+    return productDetailSteps
+  }
+  if (route.startsWith('/seguimiento/') && route !== '/seguimiento') {
+    return batchDetailSteps
+  }
+
   const routeMap: Record<string, DriverStep[]> = {
     '/': dashboardSteps,
     '/materiales': materialsSteps,
@@ -450,11 +484,118 @@ export function getStepsForRoute(route: string): DriverStep[] {
     '/ordenes': ordersSteps,
     '/seguimiento': batchesSteps,
     '/configuracion': configurationSteps,
-    '/packagings': packagingsSteps,
     '/notificaciones': notificationsSteps,
     '/perfil': profileSteps,
     '/usuarios': usersSteps,
   }
 
   return routeMap[route] || []
+}
+
+/**
+ * Generar pasos del tour completo con navegación
+ * Este tour muestra primero la navegación, luego el dashboard, y luego guía al usuario
+ * a navegar a otras páginas mostrando sus tours respectivos
+ */
+export function getFullTourSteps(
+  currentPath: string,
+  router: AppRouterInstance
+): DriverStep[] {
+  const steps: DriverStep[] = []
+
+  // Paso 1: Bienvenida
+  steps.push({
+    element: 'body',
+    popover: {
+      description: '¡Bienvenido al sistema de gestión de producción cervecera! Este tour te guiará por las principales funcionalidades. Puedes omitirlo en cualquier momento.',
+      side: 'bottom',
+      align: 'center',
+    },
+  })
+
+  // Paso 2: Explicar navegación
+  steps.push({
+    element: '[data-tour="navigation-sidebar"], [data-tour="navigation-bottom-bar"]',
+    popover: {
+      title: 'Navegación del Sistema',
+      description: 'Usa el menú lateral (desktop) o la barra inferior (móvil) para navegar entre las diferentes secciones. Cada icono representa una sección diferente. Te guiaré por las principales secciones.',
+      side: 'right',
+      align: 'start',
+    },
+  })
+
+  // Paso 3-4: Dashboard (si no estamos ya ahí)
+  if (currentPath !== '/') {
+    steps.push({
+      element: 'body',
+      popover: {
+        title: 'Navegando al Dashboard',
+        description: 'Ahora navegaremos al Dashboard para ver las estadísticas principales. Haz clic en "Siguiente" para continuar.',
+        side: 'bottom',
+        align: 'center',
+      },
+      route: '/',
+    })
+  }
+
+  // Pasos del dashboard
+  steps.push(...dashboardSteps)
+
+  // Paso: Navegar a Materiales
+  steps.push({
+    element: '[data-tour="navigation-sidebar"], [data-tour="navigation-bottom-bar"]',
+    popover: {
+      title: 'Navegar a Materiales',
+      description: 'Ahora navegaremos a la sección de Materiales. Haz clic en el icono de "Materias" en el menú, o presiona "Siguiente" para navegar automáticamente.',
+      side: 'right',
+      align: 'start',
+    },
+    route: '/materiales',
+  })
+
+  // Pasos de materiales (solo los primeros 2 para no hacer el tour muy largo)
+  steps.push(...materialsSteps.slice(0, 2))
+
+  // Paso: Navegar a Productos
+  steps.push({
+    element: '[data-tour="navigation-sidebar"], [data-tour="navigation-bottom-bar"]',
+    popover: {
+      title: 'Navegar a Productos',
+      description: 'Ahora veremos la sección de Productos. Haz clic en el icono de "Productos" en el menú, o presiona "Siguiente" para navegar automáticamente.',
+      side: 'right',
+      align: 'start',
+    },
+    route: '/productos',
+  })
+
+  // Pasos de productos (solo los primeros 2)
+  steps.push(...productsSteps.slice(0, 2))
+
+  // Paso: Navegar a Órdenes
+  steps.push({
+    element: '[data-tour="navigation-sidebar"], [data-tour="navigation-bottom-bar"]',
+    popover: {
+      title: 'Navegar a Órdenes',
+      description: 'Ahora veremos la sección de Órdenes de Producción. Haz clic en el icono de "Ordenes" en el menú, o presiona "Siguiente" para navegar automáticamente.',
+      side: 'right',
+      align: 'start',
+    },
+    route: '/ordenes',
+  })
+
+  // Pasos de órdenes (solo los primeros 2)
+  steps.push(...ordersSteps.slice(0, 2))
+
+  // Paso final
+  steps.push({
+    element: 'body',
+    popover: {
+      title: '¡Tour Completado!',
+      description: 'Has completado el tour básico. Puedes explorar las demás secciones usando el menú de navegación. Cada sección tiene su propio tour que puedes iniciar desde el botón de ayuda en el header.',
+      side: 'bottom',
+      align: 'center',
+    },
+  })
+
+  return steps
 }

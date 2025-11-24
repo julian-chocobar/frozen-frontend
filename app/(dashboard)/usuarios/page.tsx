@@ -109,14 +109,16 @@ export default function UsuariosPage() {
       
       <div className="p-4 md:p-6 space-y-6">
         <div className="card border-2 border-primary-600 overflow-hidden">
-          <div className="p-6 border-b border-stroke">
+          <div className="p-6 border-b border-stroke" data-tour="users-header">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-primary-900 mb-1">Usuarios del Sistema</h2>
                 <p className="text-sm text-primary-600">Gestiona roles, permisos y accesos de usuarios</p>
               </div>
               {!loading && usersData && (
-                <UserCreateButton onCreateCallback={handleRefresh} />
+                <div data-tour="users-create">
+                  <UserCreateButton onCreateCallback={handleRefresh} />
+                </div>
               )}
             </div>
           </div>
@@ -132,10 +134,12 @@ export default function UsuariosPage() {
               <UsersLoadingState count={USER_PAGINATION.DEFAULT_PAGE_SIZE} />
             </div>
           ) : usersData ? (
-            <UsersClient 
-              users={usersData.users} 
-              pagination={usersData.pagination}
-            />
+            <div data-tour="users-table">
+              <UsersClient 
+                users={usersData.users} 
+                pagination={usersData.pagination}
+              />
+            </div>
           ) : null}
         </div>
       </div>

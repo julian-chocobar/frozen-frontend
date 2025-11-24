@@ -124,10 +124,10 @@ export default function OrdenesPage() {
         title="Planificación de Producción"
         subtitle="Gestiona las órdenes de producción de cerveza"
       />
-      
       <div className="p-4 md:p-6 space-y-6 text-primary-900">
         {/* Tarjetas de estadísticas - Carrusel horizontal */}
-        <StatsCarousel>
+        <div data-tour="orders-stats">
+          <StatsCarousel>
           <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
             <StatCard 
               title="Total de Órdenes" 
@@ -186,7 +186,7 @@ export default function OrdenesPage() {
 
         {/* Recuadro con título, filtros y botón de nueva orden */}
         <div className="card border-2 border-primary-600 p-6 overflow-hidden">
-          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4" data-tour="orders-header">
             {/* Título y subtítulo */}
             <div className="flex-shrink-0 min-w-0">
               <h2 className="text-xl font-semibold text-primary-900 mb-1">Órdenes de Producción</h2>
@@ -196,12 +196,12 @@ export default function OrdenesPage() {
             {/* Contenedor para filtros y botón - alineados horizontalmente */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto xl:ml-auto ">
               {/* Filtros */}
-              <div className="flex-shrink-0 w-full sm:w-auto">
+              <div className="flex-shrink-0 w-full sm:w-auto" data-tour="orders-filters">
                 <OrdersFilters />
               </div>
 
               {/* Botón de Nueva Orden */}
-              <div className="flex-shrink-0 w-full sm:w-auto sm:self-center">
+              <div className="flex-shrink-0 w-full sm:w-auto sm:self-center" data-tour="orders-create">
                 <OrderCreateButton onCreateCallback={handleRefresh} />
               </div>
             </div>
@@ -217,18 +217,21 @@ export default function OrdenesPage() {
         ) : loading ? (
           <OrdersLoadingState count={6} />
         ) : ordersData && ordersData.productionOrders.length > 0 ? (
-          <OrderClient
-            orders={ordersData.productionOrders}
-            pagination={ordersData.pagination}
-            autoOpenId={autoOpenId}
-            onRefresh={handleRefresh}
-          />
+          <div data-tour="orders-table">
+            <OrderClient
+              orders={ordersData.productionOrders}
+              pagination={ordersData.pagination}
+              autoOpenId={autoOpenId}
+              onRefresh={handleRefresh}
+            />
+          </div>
         ) : (
           <div className="card border-2 border-primary-600 p-8">
             <p className="text-center text-primary-600">No hay órdenes para mostrar</p>
           </div>
         )}
       </div>
+    </div>
     </>
   )
 }

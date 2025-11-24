@@ -104,7 +104,7 @@ export default function NotificationsPage() {
 
       <div className="p-4 md:p-6 space-y-6">
         {/* Panel de resumen */}
-        <div className="card border-2 border-border p-6 space-y-4">
+        <div className="card border-2 border-border p-6 space-y-4" data-tour="notifications-header">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary-50 border border-primary-200 rounded-lg">
@@ -146,7 +146,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-tour="notifications-stats">
           <div className="card border-2 border-border p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary-50 border border-primary-200 rounded-lg">
@@ -185,7 +185,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* Filtros */}
-        <div className="card border-2 border-border p-4">
+        <div className="card border-2 border-border p-4" data-tour="notifications-filters">
           <div className="flex flex-wrap items-center gap-2">
             <Filter className="w-4 h-4 text-primary-500" />
             <span className="text-sm font-medium text-primary-700">Filtrar:</span>
@@ -231,7 +231,7 @@ export default function NotificationsPage() {
         )}
 
         {/* Lista de notificaciones */}
-        <div className="card border-2 border-border overflow-hidden">
+        <div className="card border-2 border-border overflow-hidden" data-tour="notifications-list">
           {isLoading ? (
             <NotificationsLoadingState />
           ) : notifications.length === 0 ? (

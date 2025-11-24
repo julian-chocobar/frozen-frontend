@@ -1,9 +1,9 @@
 "use client"
 
-import { createContext, useContext, ReactNode } from 'react'
-import { usePathname } from 'next/navigation'
+import { createContext, useContext, ReactNode, useCallback } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useDriver, type DriverStep } from '@/hooks/use-driver'
-import { getStepsForRoute, fullTourSteps } from '@/lib/tour-steps'
+import { getStepsForRoute, navigationSteps, getFullTourSteps } from '@/lib/tour-steps'
 
 interface TourContextType {
   startTour: (route?: string) => void
@@ -16,24 +16,36 @@ const TourContext = createContext<TourContextType | undefined>(undefined)
 
 export function TourProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const { startTour: startDriverTour, stopTour: stopDriverTour, isActive } = useDriver()
 
-  const startTour = (route?: string) => {
+  const startTour = useCallback((route?: string) => {
     const targetRoute = route || pathname
     const routeSteps = getStepsForRoute(targetRoute)
     
     if (routeSteps.length > 0) {
-      startDriverTour(routeSteps)
+      // Si la ruta objetivo es diferente a la actual, navegar primero
+      if (targetRoute !== pathname) {
+        router.push(targetRoute)
+        // Esperar a que la navegación se complete antes de iniciar el tour
+        setTimeout(() => {
+          startDriverTour(routeSteps)
+        }, 300)
+      } else {
+        startDriverTour(routeSteps)
+      }
     }
-  }
+  }, [pathname, router, startDriverTour])
 
-  const startFullTour = () => {
-    startDriverTour(fullTourSteps)
-  }
+  const startFullTour = useCallback(() => {
+    // Obtener los pasos del tour completo que incluyen navegación
+    const fullSteps = getFullTourSteps(pathname, router)
+    startDriverTour(fullSteps)
+  }, [pathname, router, startDriverTour])
 
-  const stopTour = () => {
+  const stopTour = useCallback(() => {
     stopDriverTour()
-  }
+  }, [stopDriverTour])
 
   return (
     <TourContext.Provider

@@ -34,11 +34,6 @@ export const navItems: NavItem[] = [
     icon: ArrowRightLeft,
   },
   {
-    label: "Packagings",
-    href: "/packagings",
-    icon: Package2,
-  },
-  {
     label: "Productos",
     href: "/productos",
     icon: BeerIcon,
@@ -73,11 +68,6 @@ export const mobileNavItems: NavItem[] = [
     icon: Package,
   },
   {
-    label: "Movimientos",
-    href: "/movimientos",
-    icon: ArrowRightLeft,
-  },
-  {
     label: "Productos",
     href: "/productos",
     icon: BeerIcon,
@@ -85,6 +75,11 @@ export const mobileNavItems: NavItem[] = [
   {
     label: "Ordenes",
     href: "/ordenes",
+    icon: ClipboardList,
+  },
+  {
+    label: "Seguimiento",
+    href: "/seguimiento",
     icon: ClipboardList,
   },
 ]
@@ -113,7 +108,10 @@ export function Navigation({ variant, className }: NavigationProps) {
 
   if (variant === 'sidebar') {
     return (
-      <aside className={cn("hidden md:flex flex-col bg-background border-r border-stroke w-[72px]", className)}>
+      <aside 
+        className={cn("hidden md:flex flex-col bg-background border-r border-stroke w-[72px]", className)}
+        data-tour="navigation-sidebar"
+      >
         {/* Logo */}
         <NavLink href="/" className="flex items-center justify-center h-16 hover:bg-surface-secondary transition-colors">
           <div className="w-15 h-15 flex items-center justify-center overflow-hidden">
@@ -177,6 +175,7 @@ export function Navigation({ variant, className }: NavigationProps) {
       )}
       role="navigation"
       aria-label="Navegación principal móvil"
+      data-tour="navigation-bottom-bar"
     >
       <ul className="flex items-center justify-around h-16">
         {mobileNavItems.map((item) => {

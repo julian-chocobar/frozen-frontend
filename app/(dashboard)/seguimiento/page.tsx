@@ -152,7 +152,8 @@ export default function SeguimientoPage() {
       
       <div className="p-4 md:p-6 space-y-6 text-primary-900">
         {/* Tarjetas de estadísticas - Carrusel horizontal */}
-        <StatsCarousel>
+        <div data-tour="batches-stats">
+          <StatsCarousel>
           <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
             <StatCard 
               title="Total de Lotes" 
@@ -211,7 +212,7 @@ export default function SeguimientoPage() {
 
         {/* Recuadro con título, filtros */}
         <div className="card border-2 border-primary-600 p-6 overflow-hidden">
-          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4" data-tour="batches-header">
             {/* Título y subtítulo */}
             <div className="flex-shrink-0 min-w-0">
               <h2 className="text-xl font-semibold text-primary-900 mb-1">Lotes de Producción</h2>
@@ -221,7 +222,7 @@ export default function SeguimientoPage() {
             {/* Botón de procesar y filtros */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto xl:ml-auto">
               {/* Botón para iniciar producción - Solo gerentes */}
-              <div className="flex-shrink-0 w-full sm:w-auto">
+              <div className="flex-shrink-0 w-full sm:w-auto" data-tour="batches-process">
                 <Button
                   onClick={handleProcessBatchesToday}
                   disabled={processingBatches}
@@ -234,7 +235,7 @@ export default function SeguimientoPage() {
               </div>
 
               {/* Filtros */}
-              <div className="flex-shrink-0 w-full sm:w-auto">
+              <div className="flex-shrink-0 w-full sm:w-auto" data-tour="batches-filters">
                 <BatchesFilters />
               </div>
             </div>
@@ -251,11 +252,14 @@ export default function SeguimientoPage() {
         ) : loading ? (
           <BatchesLoadingState count={BATCH_PAGINATION.DEFAULT_PAGE_SIZE} variant="grid" />
         ) : batchesData ? (
-          <BatchesClient
-            batches={batchesData.batches}
-            pagination={batchesData.pagination}
-          />
+          <div data-tour="batches-grid">
+            <BatchesClient
+              batches={batchesData.batches}
+              pagination={batchesData.pagination}
+            />
+          </div>
         ) : null}
+      </div>
       </div>
     </>
   )

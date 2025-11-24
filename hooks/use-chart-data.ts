@@ -143,10 +143,12 @@ export function useChartData({
         
         // Agregar filtro adicional si existe (tiene prioridad sobre additionalFilters)
         if (additionalFilterKey && additionalFilterId) {
-          finalFilters[additionalFilterKey] = additionalFilterId
-        } else if (additionalFilterKey && filters[additionalFilterKey]) {
+          // Type assertion needed because TypeScript can't infer the exact property type
+          // when using dynamic key access. The value is a string which matches most properties.
+          (finalFilters as Record<string, string | boolean | undefined>)[additionalFilterKey] = additionalFilterId
+        } else if (additionalFilterKey && filters[additionalFilterKey] !== undefined) {
           // Usar el valor de filters si no hay additionalFilterId
-          finalFilters[additionalFilterKey] = filters[additionalFilterKey]
+          (finalFilters as Record<string, string | boolean | undefined>)[additionalFilterKey] = filters[additionalFilterKey] as string | boolean | undefined
         }
         
         const monthlyData = await loadFunction(finalFilters)

@@ -103,6 +103,7 @@ export function BatchCard({ lote }: BatchCardProps) {
       <NavLink
         href={`/seguimiento/${lote.id}`}
         className="block w-full py-2.5 text-center text-sm font-medium text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300"
+        data-tour="batches-view-button"
       >
         Ver Detalle
       </NavLink>

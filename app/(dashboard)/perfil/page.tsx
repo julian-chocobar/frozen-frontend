@@ -183,7 +183,7 @@ export default function PerfilPage() {
           {/* Card principal */}
           <div className="bg-surface border-2 border-border rounded-lg p-6 md:p-8 shadow-card space-y-8">
           {/* Avatar fijo */}
-          <div>
+          <div data-tour="profile-identity">
             <h3 className="text-lg font-semibold text-foreground mb-4">Identidad</h3>
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="relative">
@@ -201,7 +201,7 @@ export default function PerfilPage() {
           <div className="border-t border-stroke" />
 
           {/* Información personal */}
-          <div>
+          <div data-tour="profile-info">
             <h3 className="text-lg font-semibold text-foreground mb-4">Información Personal</h3>
             <div className="space-y-4">
               {/* Nombre */}
@@ -281,7 +281,7 @@ export default function PerfilPage() {
           <div className="border-t border-stroke" />
 
           {/* Seguridad */}
-          <div>
+          <div data-tour="profile-security">
             <div className="flex items-center justify-between gap-4 mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-foreground">Seguridad</h3>

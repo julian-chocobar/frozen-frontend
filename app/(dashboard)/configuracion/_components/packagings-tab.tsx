@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { getPackagings } from "@/lib/packagings"
-import { PackagingsTable } from "@/app/(dashboard)/packagings/_components/packagings-table"
-import { PackagingsCards } from "@/app/(dashboard)/packagings/_components/packagings-cards"
-import { PackagingForm } from "@/app/(dashboard)/packagings/_components/packaging-form"
-import { PackagingCreateButton } from "@/app/(dashboard)/packagings/_components/create-button"
+import { PackagingsTable } from "@/app/(dashboard)/configuracion/packagings/_components/packagings-table"
+import { PackagingsCards } from "@/app/(dashboard)/configuracion/packagings/_components/packagings-cards"
+import { PackagingForm } from "@/app/(dashboard)/configuracion/packagings/_components/packaging-form"
+import { PackagingCreateButton } from "@/app/(dashboard)/configuracion/packagings/_components/create-button"
 import { 
   updatePackaging, 
   togglePackagingActive 

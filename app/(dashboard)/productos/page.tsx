@@ -97,16 +97,20 @@ export default function ProductosPage() {
             />
             <div className="p-4 md:p-6 space-y-6">
                 {/* Filtros */}
-                <ProductsFilters />
+                <div data-tour="products-filters">
+                    <ProductsFilters />
+                </div>
                 <div className="card border-2 border-primary-600 overflow-hidden">
-                    <div className="p-6 border-b border-stroke">
+                    <div className="p-6 border-b border-stroke" data-tour="products-header">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-semibold text-primary-900 mb-1">Productos</h2>
                                 <p className="text-sm text-primary-600">Gestiona tus productos</p>
                             </div>
                             {!loading && productsData && (
-                                <ProductCreateButton onCreateCallback={handleRefresh} />
+                                <div data-tour="products-create">
+                                    <ProductCreateButton onCreateCallback={handleRefresh} />
+                                </div>
                             )}
                         </div>
                     </div>
@@ -124,10 +128,12 @@ export default function ProductosPage() {
                           <ProductsLoadingState count={6} />
                         </div>
                     ) : productsData ? (
-                        <ProductsClient 
-                            productos={productsData.products} 
-                            pagination={productsData.pagination} 
-                        />
+                        <div data-tour="products-table">
+                            <ProductsClient 
+                                productos={productsData.products} 
+                                pagination={productsData.pagination} 
+                            />
+                        </div>
                     ) : null}
                 </div>
             </div>

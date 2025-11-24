@@ -208,9 +208,9 @@ export default function BatchDetailPage() {
                 backButton={{ href: "/seguimiento" }}
             />
             
-            <div className="p-4 md:p-6 space-y-6">
+            <div className="p-4 md:p-6 space-y-6" data-tour="batch-detail-container">
                 {/* Información básica del lote */}
-                <div className="card border-2 border-primary-600 p-6">
+                <div className="card border-2 border-primary-600 p-6" data-tour="batch-detail-info">
                     <div className="flex items-start justify-between mb-4">
                         <h2 className="text-xl font-semibold text-primary-900">Información del Lote</h2>
                         <div className="flex items-center gap-2">
@@ -298,7 +298,7 @@ export default function BatchDetailPage() {
                 </div>
 
                 {/* Fechas importantes */}
-                <div className="card border-2 border-primary-600 p-6">
+                <div className="card border-2 border-primary-600 p-6" data-tour="batch-detail-timeline">
                     <h2 className="text-xl font-semibold text-primary-900 mb-4">Cronología</h2>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -328,19 +328,21 @@ export default function BatchDetailPage() {
                 </div>
 
                 {/* Componente para fases de producción y calidad */}
-                <BatchDetailClient 
-                    batchId={batch.id} 
-                    productId={batch.productId}
-                    onBatchUpdate={async () => {
-                        // Recargar los datos del lote cuando cambie el estado
-                        try {
-                            const updatedBatch = await getBatchById(id)
-                            setBatch(updatedBatch)
-                        } catch (err) {
-                            console.error('Error al actualizar lote:', err)
-                        }
-                    }}
-                />
+                <div data-tour="batch-detail-phases">
+                    <BatchDetailClient 
+                        batchId={batch.id} 
+                        productId={batch.productId}
+                        onBatchUpdate={async () => {
+                            // Recargar los datos del lote cuando cambie el estado
+                            try {
+                                const updatedBatch = await getBatchById(id)
+                                setBatch(updatedBatch)
+                            } catch (err) {
+                                console.error('Error al actualizar lote:', err)
+                            }
+                        }}
+                    />
+                </div>
             </div>
 
             {/* Modal para ver detalles de la orden */}

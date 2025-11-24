@@ -936,5 +936,3 @@ Administración completa de usuarios del sistema, incluyendo creación, edición
 - **Trazabilidad**: Capacidad de rastrear el historial completo de un lote desde su origen hasta el producto final
 
 ---
-
-_Última actualización: Manual generado automáticamente basado en el análisis del código fuente_

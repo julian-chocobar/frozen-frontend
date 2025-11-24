@@ -188,17 +188,20 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     return (
         <div className="space-y-6">
             {/* Información del producto unificada */}
-            <ProductInfoCard 
-                product={product} 
-                onToggleReady={handleToggleProductReady}
-                allPhasesReady={allPhasesReady}
-                phasesCount={phases.length}
-                readyPhasesCount={phases.filter(p => p.isReady).length}
-                recipesCount={Object.values(recipesByPhase).flat().length}
-            />
+            <div data-tour="product-detail-info">
+                <ProductInfoCard 
+                    product={product} 
+                    onToggleReady={handleToggleProductReady}
+                    allPhasesReady={allPhasesReady}
+                    phasesCount={phases.length}
+                    readyPhasesCount={phases.filter(p => p.isReady).length}
+                    recipesCount={Object.values(recipesByPhase).flat().length}
+                />
+            </div>
 
             {/* Lista de fases */}
-            <PhasesList 
+            <div data-tour="product-detail-phases">
+                <PhasesList 
                 phases={phases}
                 recipesByPhase={recipesByPhase}
                 onEditPhase={setEditingPhase}
@@ -208,6 +211,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 onDeleteRecipe={handleDeleteRecipe}
                 updatingPhase={updatingPhase}
             />
+            </div>
 
             {/* Formulario de edición de fase */}
             {editingPhase && (
