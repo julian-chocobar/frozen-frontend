@@ -126,7 +126,7 @@ export default function OrdenesPage() {
       />
       <div className="p-4 md:p-6 space-y-6 text-primary-900">
         {/* Tarjetas de estadísticas - Carrusel horizontal */}
-        <div data-tour="orders-stats">
+        <div className="w-full" data-tour="orders-stats">
           <StatsCarousel>
           <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
             <StatCard 
@@ -183,9 +183,10 @@ export default function OrdenesPage() {
             />
           </div>
         </StatsCarousel>
+        </div>
 
         {/* Recuadro con título, filtros y botón de nueva orden */}
-        <div className="card border-2 border-primary-600 p-6 overflow-hidden">
+        <div className="card border-2 border-primary-600 p-6 overflow-hidden mb-6">
           <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4" data-tour="orders-header">
             {/* Título y subtítulo */}
             <div className="flex-shrink-0 min-w-0">
@@ -217,7 +218,7 @@ export default function OrdenesPage() {
         ) : loading ? (
           <OrdersLoadingState count={6} />
         ) : ordersData && ordersData.productionOrders.length > 0 ? (
-          <div data-tour="orders-table">
+          <div className="w-full" data-tour="orders-table">
             <OrderClient
               orders={ordersData.productionOrders}
               pagination={ordersData.pagination}
@@ -231,7 +232,6 @@ export default function OrdenesPage() {
           </div>
         )}
       </div>
-    </div>
     </>
   )
 }

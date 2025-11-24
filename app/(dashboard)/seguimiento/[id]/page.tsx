@@ -214,35 +214,39 @@ export default function BatchDetailPage() {
                     <div className="flex items-start justify-between mb-4">
                         <h2 className="text-xl font-semibold text-primary-900">Información del Lote</h2>
                         <div className="flex items-center gap-2">
-                            <Button
-                                onClick={handleDownloadReport}
-                                disabled={isDownloadingPdf}
-                                variant="outline"
-                                size="sm"
-                                className="gap-2 border-primary-600 text-primary-600 hover:bg-primary-50"
-                            >
-                                {isDownloadingPdf ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Descargando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <FileText className="w-4 h-4" />
-                                        Reporte
-                                    </>
-                                )}
-                            </Button>
-                            <Button
-                                onClick={() => setShowCancelDialog(true)}
-                                disabled={batch.status === "CANCELADO" || batch.status === "COMPLETADO" || isCancelling}
-                                variant="outline"
-                                size="sm"
-                                className="gap-2 border-red-600 text-red-600 hover:bg-red-50 disabled:border-primary-200 disabled:text-primary-300"
-                            >
-                                <XCircle className="w-4 h-4" />
-                                Cancelar
-                            </Button>
+                            <div data-tour="batch-report-button">
+                                <Button
+                                    onClick={handleDownloadReport}
+                                    disabled={isDownloadingPdf}
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2 border-primary-600 text-primary-600 hover:bg-primary-50"
+                                >
+                                    {isDownloadingPdf ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Descargando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FileText className="w-4 h-4" />
+                                            Reporte
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                            <div data-tour="batch-cancel-button">
+                                <Button
+                                    onClick={() => setShowCancelDialog(true)}
+                                    disabled={batch.status === "CANCELADO" || batch.status === "COMPLETADO" || isCancelling}
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2 border-red-600 text-red-600 hover:bg-red-50 disabled:border-primary-200 disabled:text-primary-300"
+                                >
+                                    <XCircle className="w-4 h-4" />
+                                    Cancelar
+                                </Button>
+                            </div>
                         </div>
                     </div>
                     

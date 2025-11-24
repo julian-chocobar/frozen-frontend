@@ -49,7 +49,7 @@ export const navItems: NavItem[] = [
     icon: Activity,
   },
   {
-    label: "Config",
+    label: "Configuracion",
     href: "/configuracion",
     icon: Settings,
   },

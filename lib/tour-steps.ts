@@ -26,14 +26,43 @@ export const dashboardSteps: DriverStep[] = [
       title: 'Estadísticas Principales',
       description: 'Aquí puedes ver las estadísticas principales: lotes en progreso, completados, producción total y desperdicios.',
       side: 'bottom',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="dashboard-view-selector"]',
+    popover: {
+      title: 'Selector de Vista',
+      description: 'Cambia entre diferentes vistas de análisis: Cuadrícula (muestra todos los gráficos en una cuadrícula), Pestañas (organiza los gráficos en pestañas) o Lista (muestra los gráficos en una lista vertical).',
+      side: 'bottom',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="dashboard-chart-type-selector"]',
+    popover: {
+      title: 'Tipo de Gráfico',
+      description: 'Cada gráfico permite cambiar entre visualización de Líneas (ideal para ver tendencias a lo largo del tiempo) o Barras (útil para comparar valores entre períodos).',
+      side: 'bottom',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="dashboard-date-filters"]',
+    popover: {
+      title: 'Filtros por Fecha',
+      description: 'Filtra los datos por rango de fechas. Puedes elegir un período predefinido (Este Mes, Últimos 3 Meses, Este Año, etc.) o seleccionar "Personalizado" para elegir fechas específicas. Presiona "Buscar" para aplicar los filtros.',
+      side: 'bottom',
+      align: 'start',
     },
   },
   {
     element: '[data-tour="dashboard-charts"]',
     popover: {
       title: 'Análisis de Datos',
-      description: 'Los gráficos muestran análisis de producción, consumo de materiales y desperdicios. Puedes cambiar entre vista de cuadrícula, pestañas o lista.',
+      description: 'Los gráficos muestran análisis detallados de producción, consumo de materiales y desperdicios. Cada gráfico tiene sus propios controles para cambiar el tipo de visualización y filtrar datos.',
       side: 'top',
+      align: 'start',
     },
   },
 ]
@@ -94,6 +123,7 @@ export const movementsSteps: DriverStep[] = [
       title: 'Movimientos de Stock',
       description: 'Aquí gestionas el historial de entradas y salidas de stock de materiales.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
@@ -102,6 +132,7 @@ export const movementsSteps: DriverStep[] = [
       title: 'Filtros',
       description: 'Filtra los movimientos por tipo (entrada/salida), material, fecha o motivo.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
@@ -110,6 +141,7 @@ export const movementsSteps: DriverStep[] = [
       title: 'Crear Movimiento',
       description: 'Crea nuevos movimientos de stock para registrar entradas o salidas de materiales.',
       side: 'left',
+      align: 'start',
     },
   },
   {
@@ -118,6 +150,7 @@ export const movementsSteps: DriverStep[] = [
       title: 'Historial de Movimientos',
       description: 'Visualiza todos los movimientos con detalles como fecha, material, cantidad y usuario responsable.',
       side: 'top',
+      align: 'start',
     },
   },
 ]
@@ -178,6 +211,7 @@ export const ordersSteps: DriverStep[] = [
       title: 'Estadísticas de Órdenes',
       description: 'Estadísticas de órdenes: totales, pendientes, aprobadas, rechazadas y canceladas.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
@@ -186,6 +220,7 @@ export const ordersSteps: DriverStep[] = [
       title: 'Órdenes de Producción',
       description: 'Gestiona las órdenes de producción. Los supervisores crean órdenes y los gerentes las aprueban.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
@@ -194,6 +229,7 @@ export const ordersSteps: DriverStep[] = [
       title: 'Filtros',
       description: 'Filtra órdenes por estado o producto para encontrar rápidamente lo que buscas.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
@@ -202,14 +238,25 @@ export const ordersSteps: DriverStep[] = [
       title: 'Crear Orden',
       description: 'Crea nuevas órdenes de producción. Una vez aprobadas, se generan lotes automáticamente.',
       side: 'left',
+      align: 'start',
     },
   },
   {
     element: '[data-tour="orders-table"]',
     popover: {
       title: 'Lista de Órdenes',
-      description: 'Visualiza todas las órdenes. Las pendientes pueden ser aprobadas o rechazadas por gerentes.',
+      description: 'Visualiza todas las órdenes con su información: estado, producto, cantidad, fechas y cronograma.',
       side: 'top',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="orders-view-button"]',
+    popover: {
+      title: 'Ver Detalle y Aprobar Orden',
+      description: 'Haz clic en este botón para ver los detalles completos de la orden. En el modal de detalles, los gerentes pueden aprobar o rechazar órdenes pendientes. Una vez aprobada, la orden generará lotes automáticamente para iniciar la producción.',
+      side: 'left',
+      align: 'start',
     },
   },
 ]
@@ -224,6 +271,7 @@ export const batchesSteps: DriverStep[] = [
       title: 'Estadísticas de Lotes',
       description: 'Estadísticas de lotes: totales, pendientes, en producción, completados y volumen total.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
@@ -232,6 +280,7 @@ export const batchesSteps: DriverStep[] = [
       title: 'Seguimiento de Lotes',
       description: 'Monitorea el progreso de los lotes en tiempo real y gestiona los parámetros de calidad.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
@@ -240,6 +289,7 @@ export const batchesSteps: DriverStep[] = [
       title: 'Iniciar Producción',
       description: 'Los gerentes pueden iniciar la producción de lotes programados para hoy.',
       side: 'left',
+      align: 'start',
     },
   },
   {
@@ -248,6 +298,7 @@ export const batchesSteps: DriverStep[] = [
       title: 'Filtros',
       description: 'Filtra lotes por estado o producto para un seguimiento más eficiente.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
@@ -256,6 +307,7 @@ export const batchesSteps: DriverStep[] = [
       title: 'Lotes en Producción',
       description: 'Visualiza todos los lotes. Haz clic en el botón "Ver Detalle" de cualquier lote para acceder a su página de detalle con información completa, fases, parámetros de calidad y opciones para generar reportes.',
       side: 'top',
+      align: 'start',
     },
   },
   {
@@ -264,6 +316,7 @@ export const batchesSteps: DriverStep[] = [
       title: 'Ver Detalle de Lote',
       description: 'Haz clic en este botón para acceder a la página de detalle del lote, donde podrás ver información completa, fases de producción, parámetros de calidad y generar reportes.',
       side: 'left',
+      align: 'start',
     },
   },
 ]
@@ -276,40 +329,45 @@ export const configurationSteps: DriverStep[] = [
     element: '[data-tour="config-tabs"]',
     popover: {
       title: 'Configuración del Sistema',
-      description: 'La configuración del sistema se organiza en 4 pestañas principales.',
+      description: 'La configuración del sistema se organiza en 4 pestañas principales. Cada pestaña permite gestionar un aspecto diferente de la configuración.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
-    element: '[data-tour="config-working-days"]',
+    element: '[data-tour="config-tab-working-days"]',
     popover: {
       title: 'Días Laborales',
-      description: 'Configura qué días son laborables y sus horarios de trabajo.',
+      description: 'Configura qué días de la semana son laborables y define los horarios de trabajo (hora de apertura y cierre) para cada día. Esta configuración se utiliza para calcular tiempos de producción y planificación.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
-    element: '[data-tour="config-sectors"]',
+    element: '[data-tour="config-tab-sectors"]',
     popover: {
       title: 'Sectores',
-      description: 'Gestiona los sectores de producción, calidad y almacén con sus supervisores.',
+      description: 'Gestiona los sectores de la empresa (producción, calidad, almacén, etc.) y asigna supervisores a cada sector. Los sectores organizan la estructura operativa y definen responsabilidades.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
-    element: '[data-tour="config-quality-params"]',
+    element: '[data-tour="config-tab-quality-params"]',
     popover: {
       title: 'Parámetros de Calidad',
-      description: 'Define los parámetros base que se usarán en el control de calidad.',
+      description: 'Define los parámetros base de calidad que se utilizarán en el control de calidad durante la producción. Puedes crear parámetros por fase, marcarlos como críticos y establecer unidades de medida. Estos parámetros se usarán cuando los operarios registren mediciones en las fases de producción.',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
-    element: '[data-tour="config-packagings"]',
+    element: '[data-tour="config-tab-packagings"]',
     popover: {
       title: 'Packagings',
-      description: 'Administra los envases disponibles (latas, botellas, etc.) para los productos.',
+      description: 'Administra los tipos de envases disponibles para los productos (latas, botellas, barriles, etc.). Define las características de cada packaging que luego se asociarán a los productos durante la creación de órdenes de producción.',
       side: 'bottom',
+      align: 'start',
     },
   },
 ]
@@ -422,14 +480,52 @@ export const productDetailSteps: DriverStep[] = [
       title: 'Información del Producto',
       description: 'Aquí puedes ver la información completa del producto: nombre, tipo (alcohólico/no alcohólico), estado y si está listo para producción.',
       side: 'bottom',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="product-ready-button"]',
+    popover: {
+      title: 'Botón Listo / No Listo',
+      description: 'Este botón permite marcar el producto como "Listo" para producción o "No Listo". Solo puedes marcar un producto como listo cuando todas sus fases estén completas y marcadas como listas.',
+      side: 'left',
+      align: 'start',
     },
   },
   {
     element: '[data-tour="product-detail-phases"]',
     popover: {
-      title: 'Fases y Recetas',
-      description: 'En esta sección puedes ver y gestionar las fases de producción del producto. Puedes editar fases, agregar ingredientes a cada fase y marcar fases como listas.',
+      title: 'Fases del Producto',
+      description: 'Aquí puedes ver todas las fases de producción del producto. Cada fase muestra su estado, información de entrada/salida y los ingredientes asociados.',
       side: 'top',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="phase-edit-button"]',
+    popover: {
+      title: 'Editar Fase',
+      description: 'Haz clic en este botón para editar los detalles de una fase: entrada, salida, unidad de salida y horas estimadas. Esto te permite ajustar los parámetros de producción de cada fase.',
+      side: 'left',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="phase-add-ingredient-button"]',
+    popover: {
+      title: 'Agregar Ingrediente',
+      description: 'Usa este botón para agregar ingredientes (materiales) a la fase. Puedes especificar qué material y en qué cantidad se necesita para esta fase de producción.',
+      side: 'left',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="phase-mark-ready-button"]',
+    popover: {
+      title: 'Marcar Fase como Lista',
+      description: 'Este botón permite marcar una fase como "Lista" cuando está completa y lista para producción, o "No lista" si necesitas hacer cambios. Una fase solo puede marcarse como lista si tiene al menos un ingrediente agregado.',
+      side: 'left',
+      align: 'start',
     },
   },
 ]
@@ -442,24 +538,90 @@ export const batchDetailSteps: DriverStep[] = [
     element: '[data-tour="batch-detail-info"]',
     popover: {
       title: 'Información del Lote',
-      description: 'Aquí puedes ver la información completa del lote: código, orden de producción, producto, empaque, cantidad y estado. También puedes descargar reportes y cancelar el lote si es necesario.',
+      description: 'Aquí puedes ver la información completa del lote: código, orden de producción, producto, empaque, cantidad y estado.',
       side: 'bottom',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="batch-report-button"]',
+    popover: {
+      title: 'Botón de Reporte',
+      description: 'Descarga un reporte PDF con la trazabilidad completa del lote. El reporte incluye toda la información del lote, fases de producción y parámetros de calidad registrados.',
+      side: 'left',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="batch-cancel-button"]',
+    popover: {
+      title: 'Botón de Cancelación',
+      description: 'Cancela el lote si es necesario. Esta acción solo está disponible para lotes que no estén completados o cancelados. Una vez cancelado, el lote no puede reactivarse.',
+      side: 'left',
+      align: 'start',
     },
   },
   {
     element: '[data-tour="batch-detail-timeline"]',
     popover: {
       title: 'Cronología del Lote',
-      description: 'Visualiza las fechas importantes del lote: creación, planificada, inicio, fin estimada y fin real.',
+      description: 'Visualiza las fechas importantes del lote: fecha de creación, fecha planificada, fecha de inicio real, fecha estimada de fin y fecha real de finalización (si está completado).',
       side: 'bottom',
+      align: 'start',
     },
   },
   {
     element: '[data-tour="batch-detail-phases"]',
     popover: {
       title: 'Fases de Producción',
-      description: 'En esta sección puedes ver el progreso de cada fase de producción, registrar parámetros de calidad y gestionar el estado de cada fase.',
+      description: 'En esta sección puedes ver el progreso de cada fase de producción. Cada fase muestra su estado, valores de input/output, y permite gestionar parámetros de calidad.',
       side: 'top',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="phase-send-review-button"]',
+    popover: {
+      title: 'Enviar a Revisión',
+      description: 'Los supervisores de producción pueden enviar una fase a revisión cuando está en proceso. Debes confirmar los valores de input y output medidos antes de enviarla al equipo de calidad.',
+      side: 'right',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="phase-quality-tab"]',
+    popover: {
+      title: 'Parámetros de Calidad',
+      description: 'En esta pestaña puedes ver y gestionar los parámetros de calidad registrados para la fase. Los operarios de calidad pueden registrar nuevos parámetros y los supervisores pueden aprobarlos o desaprobarlos.',
+      side: 'bottom',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="phase-register-parameter-button"]',
+    popover: {
+      title: 'Registrar Parámetro',
+      description: 'Los operarios de calidad pueden registrar nuevos parámetros de calidad cuando la fase está bajo revisión. Selecciona el parámetro y registra el valor medido.',
+      side: 'right',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="phase-evaluate-button"]',
+    popover: {
+      title: 'Evaluar Fase',
+      description: 'Los supervisores de calidad pueden evaluar una fase cuando está bajo revisión. El sistema evaluará automáticamente todos los parámetros registrados y actualizará el estado de la fase (completada, rechazada o en ajuste) según los resultados.',
+      side: 'right',
+      align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="phase-info-tab"]',
+    popover: {
+      title: 'Información de Fase',
+      description: 'En esta pestaña puedes ver la información detallada de la fase: valores estándar de input/output, horas estimadas y los ingredientes (materiales) configurados para esta fase del producto.',
+      side: 'bottom',
+      align: 'start',
     },
   },
 ]
@@ -507,91 +669,62 @@ export function getFullTourSteps(
   steps.push({
     element: 'body',
     popover: {
-      description: '¡Bienvenido al sistema de gestión de producción cervecera! Este tour te guiará por las principales funcionalidades. Puedes omitirlo en cualquier momento.',
+      description: '¡Bienvenido al sistema de gestión de producción cervecera! Este tour te mostrará los elementos principales de navegación e interfaz.',
       side: 'bottom',
       align: 'center',
     },
   })
 
-  // Paso 2: Explicar navegación
+  // Paso 2: Explicar navegación (sidebar/bottom-bar)
   steps.push({
     element: '[data-tour="navigation-sidebar"], [data-tour="navigation-bottom-bar"]',
     popover: {
       title: 'Navegación del Sistema',
-      description: 'Usa el menú lateral (desktop) o la barra inferior (móvil) para navegar entre las diferentes secciones. Cada icono representa una sección diferente. Te guiaré por las principales secciones.',
+      description: 'Usa el menú lateral (en escritorio) o la barra inferior (en móvil) para navegar entre las diferentes secciones del sistema: Dashboard, Materiales, Movimientos, Productos, Órdenes, Seguimiento y Configuración.',
       side: 'right',
       align: 'start',
     },
   })
 
-  // Paso 3-4: Dashboard (si no estamos ya ahí)
-  if (currentPath !== '/') {
-    steps.push({
-      element: 'body',
-      popover: {
-        title: 'Navegando al Dashboard',
-        description: 'Ahora navegaremos al Dashboard para ver las estadísticas principales. Haz clic en "Siguiente" para continuar.',
-        side: 'bottom',
-        align: 'center',
-      },
-      route: '/',
-    })
-  }
-
-  // Pasos del dashboard
-  steps.push(...dashboardSteps)
-
-  // Paso: Navegar a Materiales
+  // Paso 3: Panel de notificaciones
   steps.push({
-    element: '[data-tour="navigation-sidebar"], [data-tour="navigation-bottom-bar"]',
+    element: '[data-tour="header-notifications"]',
     popover: {
-      title: 'Navegar a Materiales',
-      description: 'Ahora navegaremos a la sección de Materiales. Haz clic en el icono de "Materias" en el menú, o presiona "Siguiente" para navegar automáticamente.',
-      side: 'right',
+      title: 'Panel de Notificaciones',
+      description: 'Haz clic en el icono de campana para ver tus notificaciones. Aquí recibirás alertas sobre cambios importantes en el sistema, actualizaciones de lotes, órdenes y más. El contador rojo indica cuántas notificaciones no leídas tienes.',
+      side: 'bottom',
       align: 'start',
     },
-    route: '/materiales',
   })
 
-  // Pasos de materiales (solo los primeros 2 para no hacer el tour muy largo)
-  steps.push(...materialsSteps.slice(0, 2))
-
-  // Paso: Navegar a Productos
+  // Paso 4: Menú de usuario
   steps.push({
-    element: '[data-tour="navigation-sidebar"], [data-tour="navigation-bottom-bar"]',
+    element: '[data-tour="header-user-menu"]',
     popover: {
-      title: 'Navegar a Productos',
-      description: 'Ahora veremos la sección de Productos. Haz clic en el icono de "Productos" en el menú, o presiona "Siguiente" para navegar automáticamente.',
-      side: 'right',
+      title: 'Menú de Usuario',
+      description: 'Haz clic en tu avatar para acceder al menú de usuario. Desde aquí puedes ver tu perfil, gestionar usuarios (si eres administrador) y cerrar sesión.',
+      side: 'bottom',
       align: 'start',
     },
-    route: '/productos',
   })
 
-  // Pasos de productos (solo los primeros 2)
-  steps.push(...productsSteps.slice(0, 2))
-
-  // Paso: Navegar a Órdenes
+  // Paso 5: Botón de tour
   steps.push({
-    element: '[data-tour="navigation-sidebar"], [data-tour="navigation-bottom-bar"]',
+    element: '[data-tour="header-tour-button"]',
     popover: {
-      title: 'Navegar a Órdenes',
-      description: 'Ahora veremos la sección de Órdenes de Producción. Haz clic en el icono de "Ordenes" en el menú, o presiona "Siguiente" para navegar automáticamente.',
-      side: 'right',
+      title: 'Tour Guiado',
+      description: 'Este botón está disponible en cada página del sistema. Haz clic en él para iniciar un tour específico que te mostrará las funcionalidades y características de la página actual. Úsalo cuando necesites ayuda para entender cómo funciona una sección.',
+      side: 'bottom',
       align: 'start',
     },
-    route: '/ordenes',
   })
-
-  // Pasos de órdenes (solo los primeros 2)
-  steps.push(...ordersSteps.slice(0, 2))
 
   // Paso final
   steps.push({
     element: 'body',
     popover: {
       title: '¡Tour Completado!',
-      description: 'Has completado el tour básico. Puedes explorar las demás secciones usando el menú de navegación. Cada sección tiene su propio tour que puedes iniciar desde el botón de ayuda en el header.',
+      description: 'Ya conoces los elementos principales de navegación e interfaz. Explora las diferentes secciones usando el menú de navegación y usa el botón de tour en cada página para conocer sus funcionalidades específicas.',
       side: 'bottom',
       align: 'center',
     },

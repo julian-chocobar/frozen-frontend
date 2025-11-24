@@ -100,17 +100,21 @@ export default function MovimientosPage() {
       
       <div className="p-4 md:p-6 space-y-6">
         {/* Filtros */}
-        <MovementsFilters />
+        <div data-tour="movements-filters">
+          <MovementsFilters />
+        </div>
 
         <div className="card border-2 border-primary-600 overflow-hidden">
           <div className="p-6 border-b border-stroke">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between" data-tour="movements-header">
               <div>
                 <h2 className="text-xl font-semibold text-primary-900 mb-1">Movimientos de Stock</h2>
                 <p className="text-sm text-primary-600">Historial de entradas y salidas de materiales</p>
               </div>
               {!loading && movementsData && (
-                <MovementCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+                <div data-tour="movements-create">
+                  <MovementCreateButton onCreateCallback={() => setRefreshKey(prev => prev + 1)} />
+                </div>
               )}
             </div>
           </div>
@@ -123,11 +127,13 @@ export default function MovimientosPage() {
               <p className="mt-4 text-primary-600">Cargando movimientos...</p>
             </div>
           ) : movementsData ? (
-            <MovementsClient 
-              movements={movementsData.movements} 
-              pagination={movementsData.pagination}
-              autoOpenId={autoOpenId}
-            />
+            <div data-tour="movements-table">
+              <MovementsClient 
+                movements={movementsData.movements} 
+                pagination={movementsData.pagination}
+                autoOpenId={autoOpenId}
+              />
+            </div>
           ) : null}
         </div>
       </div>

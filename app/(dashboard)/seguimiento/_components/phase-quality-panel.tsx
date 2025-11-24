@@ -254,40 +254,44 @@ export function QualityParametersSection({
             {qualities.length} parámetro{qualities.length !== 1 && "s"}
           </Badge>
         </div>
-        {(canTriggerReview || canCreate) && (
+        {(canReview || canCreate) && (
           <div className="flex items-center gap-2">
-            {canTriggerReview && (
-              <Button
-                size="sm"
-                onClick={handleReviewPhase}
-                disabled={isReviewingPhase}
-                className="gap-2 bg-primary-600 text-white hover:bg-primary-700 disabled:bg-primary-200"
-              >
-                {isReviewingPhase ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Evaluando...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    Evaluar fase
-                  </>
-                )}
-              </Button>
+            {canReview && (
+              <div data-tour="phase-evaluate-button">
+                <Button
+                  size="sm"
+                  onClick={handleReviewPhase}
+                  disabled={isReviewingPhase || !canTriggerReview}
+                  className="gap-2 bg-primary-600 text-white hover:bg-primary-700 disabled:bg-primary-200 disabled:text-primary-400 disabled:cursor-not-allowed"
+                >
+                  {isReviewingPhase ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Evaluando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Evaluar fase
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
             {canCreate && (
               <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                 <DialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={!phaseAllowsRegistration}
-                    className="gap-2 border-primary-300 text-primary-700 hover:bg-primary-50 disabled:border-primary-200 disabled:text-primary-300 disabled:hover:bg-transparent"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Registrar parámetro
-                  </Button>
+                  <div data-tour="phase-register-parameter-button">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!canOpenCreate}
+                      className="gap-2 border-primary-300 text-primary-700 hover:bg-primary-50 disabled:border-primary-200 disabled:text-primary-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Registrar parámetro
+                    </Button>
+                  </div>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>

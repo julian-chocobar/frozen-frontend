@@ -21,6 +21,7 @@ export function TourButton({
 }: TourButtonProps) {
   return (
     <Button
+      data-tour="header-tour-button"
       onClick={onStart}
       variant={variant}
       size={size}

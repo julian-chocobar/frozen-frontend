@@ -162,6 +162,7 @@ export function Header({ title, subtitle, actionButton, backButton }: HeaderProp
             {/* Notificaciones */}
             <div className="relative">
               <button
+                data-tour="header-notifications"
                 className={cn(
                   "relative p-2 sm:p-3 hover:bg-surface-secondary rounded-lg transition-colors",
                   "focus:outline-none focus:ring-2 focus:ring-primary-300",
@@ -199,6 +200,7 @@ export function Header({ title, subtitle, actionButton, backButton }: HeaderProp
             {/* Avatar de usuario con menú desplegable */}
             <div className="relative" ref={userMenuRef}>
               <button
+                data-tour="header-user-menu"
                 className={cn(
                   "flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 pr-3 sm:pr-4 hover:bg-surface-secondary rounded-lg transition-colors border border-stroke",
                   "focus:outline-none focus:ring-2 focus:ring-primary-300"

@@ -20,21 +20,21 @@ export default function ConfiguracionPage() {
       <div className="p-4 md:p-6 space-y-6">
         <Tabs defaultValue="working-days" className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-6" data-tour="config-tabs">
-            <TabsTrigger value="working-days" className="flex items-center justify-center gap-1.5 sm:gap-2">
+            <TabsTrigger value="working-days" className="flex items-center justify-center gap-1.5 sm:gap-2" data-tour="config-tab-working-days">
               <Calendar className="w-4 h-4 flex-shrink-0" />
               <span className="hidden md:inline">Días Laborales</span>
               <span className="hidden sm:inline md:hidden">Días</span>
             </TabsTrigger>
-            <TabsTrigger value="sectors" className="flex items-center justify-center gap-1.5 sm:gap-2">
+            <TabsTrigger value="sectors" className="flex items-center justify-center gap-1.5 sm:gap-2" data-tour="config-tab-sectors">
               <Building2 className="w-4 h-4 flex-shrink-0" />
               <span className="hidden sm:inline">Sectores</span>
             </TabsTrigger>
-            <TabsTrigger value="quality-parameters" className="flex items-center justify-center gap-1.5 sm:gap-2">
+            <TabsTrigger value="quality-parameters" className="flex items-center justify-center gap-1.5 sm:gap-2" data-tour="config-tab-quality-params">
               <CheckSquare className="w-4 h-4 flex-shrink-0" />
               <span className="hidden md:inline">Parámetros</span>
               <span className="hidden sm:inline md:hidden">Parám.</span>
             </TabsTrigger>
-            <TabsTrigger value="packagings" className="flex items-center justify-center gap-1.5 sm:gap-2">
+            <TabsTrigger value="packagings" className="flex items-center justify-center gap-1.5 sm:gap-2" data-tour="config-tab-packagings">
               <Package className="w-4 h-4 flex-shrink-0" />
               <span className="hidden sm:inline">Packagings</span>
             </TabsTrigger>

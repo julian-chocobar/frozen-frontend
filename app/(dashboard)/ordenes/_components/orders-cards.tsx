@@ -141,6 +141,7 @@ export function OrdersCards({
               className="p-2 hover:bg-primary-50 rounded-lg transition-colors text-primary-600 flex-shrink-0"
                 onClick={() => onView(order)}
                 aria-label="Ver detalle"
+                data-tour="orders-view-button"
               >
                 <Eye className="w-5 h-5" />
               </button>

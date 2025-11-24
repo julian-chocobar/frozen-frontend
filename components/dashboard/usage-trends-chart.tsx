@@ -47,9 +47,13 @@ export function UsageTrendsChart() {
   })
 
   const handleFiltersChange = useCallback((newFilters: AnalyticsFiltersState) => {
-    setFilters(newFilters)
-    if (newFilters.materialId !== undefined) {
-      setMaterialId(newFilters.materialId)
+    // Solo actualizar si hay valores reales, no valores vacíos por defecto
+    // Esto evita que se resetee el componente hijo cuando se inicializa
+    if (newFilters.preset || newFilters.startDate || newFilters.endDate) {
+      setFilters(newFilters)
+      if (newFilters.materialId !== undefined) {
+        setMaterialId(newFilters.materialId)
+      }
     }
   }, [])
 
@@ -95,46 +99,52 @@ export function UsageTrendsChart() {
     )
   }
 
-  if (data.length === 0) {
-    return <ChartEmptyState icon={Box} message="No hay datos disponibles" />
-  }
-
   return (
     <div className="p-6">
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <div>
-            <div className="flex items-baseline gap-2 mb-1">
-              <p className="text-3xl font-bold text-primary-900 font-mono">{total.toFixed(2)} kg</p>
-              <span className="text-sm font-medium text-primary-600">Total del período</span>
+          {data.length > 0 ? (
+            <div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <p className="text-3xl font-bold text-primary-900 font-mono">{total.toFixed(2)} kg</p>
+                <span className="text-sm font-medium text-primary-600">Total del período</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <p className="text-lg font-medium text-primary-600">No hay datos disponibles</p>
+              </div>
+            </div>
+          )}
 
           {/* Selector de tipo de gráfico */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setChartType("line")}
-              className={cn(
-                "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm",
-                chartType === "line"
-                  ? "bg-orange-600 text-white shadow-md"
-                  : "bg-white text-primary-700 border border-gray-200 hover:bg-gray-50 hover:shadow-md"
-              )}
-            >
-              Líneas
-            </button>
-            <button
-              onClick={() => setChartType("bar")}
-              className={cn(
-                "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm",
-                chartType === "bar"
-                  ? "bg-orange-600 text-white shadow-md"
-                  : "bg-white text-primary-700 border border-gray-200 hover:bg-gray-50 hover:shadow-md"
-              )}
-            >
-              Barras
-            </button>
-          </div>
+          {data.length > 0 && (
+            <div className="flex gap-2" data-tour="dashboard-chart-type-selector">
+              <button
+                onClick={() => setChartType("line")}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm",
+                  chartType === "line"
+                    ? "bg-orange-600 text-white shadow-md"
+                    : "bg-white text-primary-700 border border-gray-200 hover:bg-gray-50 hover:shadow-md"
+                )}
+              >
+                Líneas
+              </button>
+              <button
+                onClick={() => setChartType("bar")}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm",
+                  chartType === "bar"
+                    ? "bg-orange-600 text-white shadow-md"
+                    : "bg-white text-primary-700 border border-gray-200 hover:bg-gray-50 hover:shadow-md"
+                )}
+              >
+                Barras
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Filtros */}
@@ -151,13 +161,17 @@ export function UsageTrendsChart() {
                 placeholder="Buscar material..."
               />
             }
+            currentMaterialId={materialId}
           />
         </div>
       </div>
 
-      <div className="h-[400px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          {chartType === "bar" ? (
+      {data.length === 0 ? (
+        <ChartEmptyState icon={Box} message="No hay datos disponibles" />
+      ) : (
+        <div className="h-[400px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            {chartType === "bar" ? (
             <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.05)" />
               <XAxis 
@@ -210,8 +224,9 @@ export function UsageTrendsChart() {
               />
             </LineChart>
           )}
-        </ResponsiveContainer>
-      </div>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   )
 }

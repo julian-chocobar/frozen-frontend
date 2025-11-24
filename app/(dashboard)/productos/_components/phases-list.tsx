@@ -105,6 +105,7 @@ export function PhasesList({
                                                 onClick={() => onEditPhase(phase.id)}
                                                 className="border-primary-300 text-primary-600 hover:bg-primary-50 h-8 px-2 lg:px-3"
                                                 title="Editar fase"
+                                                data-tour="phase-edit-button"
                                             >
                                                 <Edit className="w-4 h-4 lg:mr-1" />
                                                 <span className="hidden lg:inline">Editar</span>
@@ -116,6 +117,7 @@ export function PhasesList({
                                                 onClick={() => onCreateRecipe(phase.id)}
                                                 className="border-primary-300 text-primary-600 hover:bg-primary-50 h-8 px-2 lg:px-3"
                                                 title="Agregar ingrediente"
+                                                data-tour="phase-add-ingredient-button"
                                             >
                                                 <Plus className="w-4 h-4 lg:mr-1" />
                                                 <span className="hidden lg:inline">Agregar</span>
@@ -127,6 +129,7 @@ export function PhasesList({
                                                 onClick={() => onTogglePhaseReady(phase.id, !phase.isReady)}
                                                 className={`${phase.isReady ? "bg-yellow-200 hover:bg-yellow-300" : "bg-blue-200 hover:bg-blue-300"} h-8 px-2 lg:px-3`}
                                                 title={phase.isReady ? "Marcar como no lista" : "Marcar como lista"}
+                                                data-tour="phase-mark-ready-button"
                                             >
                                                 <CheckCircle className="w-4 h-4 lg:mr-1" />
                                                 <span className="hidden lg:inline">{phase.isReady ? "No lista" : "Lista"}</span>

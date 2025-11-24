@@ -285,13 +285,14 @@ export function BatchDetailClient({ batchId, productId, onBatchUpdate }: BatchDe
                         </div>
                       </div>
                     </div>
-                    {canSendUnderReview && (
-                      <div className="flex items-center gap-2">
+                    {isProductionSupervisor && (
+                      <div className="flex items-center gap-2" data-tour="phase-send-review-button">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleOpenUnderReview(phase)}
-                          className="gap-2 border-primary-300 text-primary-700 hover:bg-primary-50"
+                          disabled={!canSendUnderReview}
+                          className="gap-2 border-primary-300 text-primary-700 hover:bg-primary-50 disabled:border-primary-200 disabled:text-primary-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                         >
                           <RotateCcw className="w-4 h-4" />
                           Enviar a revisión
@@ -333,12 +334,14 @@ export function BatchDetailClient({ batchId, productId, onBatchUpdate }: BatchDe
                         <TabsTrigger 
                           value="quality" 
                           className="data-[state=active]:bg-primary-600 data-[state=active]:text-white text-primary-700"
+                          data-tour="phase-quality-tab"
                         >
                           Parámetros de Calidad
                         </TabsTrigger>
                         <TabsTrigger 
                           value="info" 
                           className="data-[state=active]:bg-primary-600 data-[state=active]:text-white text-primary-700"
+                          data-tour="phase-info-tab"
                         >
                           Información de Fase
                         </TabsTrigger>

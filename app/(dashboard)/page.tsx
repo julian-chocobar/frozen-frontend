@@ -174,7 +174,7 @@ export default function DashboardPage() {
             {/* Selector de vista */}
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-primary-900">Análisis de Datos</h2>
-              <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-1.5 border border-gray-200/50 shadow-sm">
+              <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-1.5 border border-gray-200/50 shadow-sm" data-tour="dashboard-view-selector">
                 <button
                   onClick={() => setViewMode("grid")}
                   className={cn(

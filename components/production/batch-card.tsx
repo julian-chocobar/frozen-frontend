@@ -91,10 +91,16 @@ export function BatchCard({ lote }: BatchCardProps) {
               <span>Fin estimado: {formatearFecha(lote.fechaFinEstimada)}</span>
             </div>
           )}
-          {lote.fechaFinReal && (
+          {lote.fechaFinReal ? (
             <div className="flex items-center gap-2 text-xs text-primary-700">
               <Calendar className="w-4 h-4" />
-              <span>Fin real: {formatearFecha(lote.fechaFinReal)}</span>
+              <span>Fin real: {lote.fechaFinReal ? formatearFecha(lote.fechaFinReal) : "A definir"}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-xs text-primary-700">
+              <Calendar className="w-4 h-4" />
+              <span>Fin real: A definir</span>
             </div>
           )}
         </div>

@@ -80,7 +80,7 @@ export function ProductInfoCard({
                     </div>
                 </div>
                 {/* Botón responsive con texto visible */}
-                <div className="w-full md:w-auto">
+                <div className="w-full md:w-auto" data-tour="product-ready-button">
                     <Button
                         variant="outline"
                         size="sm"

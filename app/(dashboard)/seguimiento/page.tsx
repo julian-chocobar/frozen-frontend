@@ -152,7 +152,7 @@ export default function SeguimientoPage() {
       
       <div className="p-4 md:p-6 space-y-6 text-primary-900">
         {/* Tarjetas de estadísticas - Carrusel horizontal */}
-        <div data-tour="batches-stats">
+        <div className="w-full" data-tour="batches-stats">
           <StatsCarousel>
           <div className="flex-shrink-0 w-[85vw] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
             <StatCard 
@@ -209,9 +209,10 @@ export default function SeguimientoPage() {
             />
           </div>
         </StatsCarousel>
+        </div>
 
         {/* Recuadro con título, filtros */}
-        <div className="card border-2 border-primary-600 p-6 overflow-hidden">
+        <div className="card border-2 border-primary-600 p-6 overflow-hidden mb-6">
           <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4" data-tour="batches-header">
             {/* Título y subtítulo */}
             <div className="flex-shrink-0 min-w-0">
@@ -252,14 +253,13 @@ export default function SeguimientoPage() {
         ) : loading ? (
           <BatchesLoadingState count={BATCH_PAGINATION.DEFAULT_PAGE_SIZE} variant="grid" />
         ) : batchesData ? (
-          <div data-tour="batches-grid">
+          <div className="w-full" data-tour="batches-grid">
             <BatchesClient
               batches={batchesData.batches}
               pagination={batchesData.pagination}
             />
           </div>
         ) : null}
-      </div>
       </div>
     </>
   )
