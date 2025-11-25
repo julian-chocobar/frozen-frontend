@@ -6,7 +6,6 @@ import type { Phase } from './phases'
 import type { MaterialType } from './materials'
 import type { MovementResponse } from './movements'
 import type { Material } from './materials'
-import type { LoteProduccion } from './batches'
 import type { RegistroCalidad, RegistroDesperdicio } from './quality'
 
 // ============================================
@@ -58,14 +57,3 @@ export interface AnalyticsFilters {
   transferOnly?: boolean
 }
 
-// ============================================
-// TRAZABILIDAD
-// ============================================
-
-export interface TrazabilidadLote {
-  lote: LoteProduccion
-  materiales: Material[]
-  movimientos: MovementResponse[]
-  registrosCalidad: RegistroCalidad[]
-  desperdicios: RegistroDesperdicio[]
-}
