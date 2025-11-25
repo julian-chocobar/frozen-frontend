@@ -39,6 +39,15 @@ export const dashboardSteps: DriverStep[] = [
     },
   },
   {
+    element: '[data-tour="dashboard-pdf-generator"]',
+    popover: {
+      title: 'Generar Reporte PDF',
+      description: 'Genera un reporte PDF completo con todas las analíticas del dashboard. El reporte incluye producción, consumo de materiales, desperdicios (general, por transferencias y por fase), eficiencia (general y por fase), y un resumen de fases problemáticas. El reporte usa los períodos de fechas establecidos en los filtros de los gráficos.',
+      side: 'bottom',
+      align: 'start',
+    },
+  },
+  {
     element: '[data-tour="dashboard-chart-type-selector"]',
     popover: {
       title: 'Tipo de Gráfico',

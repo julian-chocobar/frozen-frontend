@@ -13,6 +13,7 @@ import { InventoryChart } from "@/components/dashboard/inventory-chart"
 import { UsageTrendsChart } from "@/components/dashboard/usage-trends-chart"
 import { WasteChart } from "@/components/dashboard/waste-chart"
 import { EfficiencyChart } from "@/components/dashboard/efficiency-chart"
+import { ReportPdfGenerator } from "@/components/dashboard/report-pdf-generator"
 import { Package, TrendingUp, AlertTriangle, Beaker, XCircle, Box, BarChart3, LayoutGrid, List, SquareStack } from "lucide-react"
 import { analyticsApi } from "@/lib/analytics"
 import { DashboardStatsDTO } from "@/types"
@@ -173,9 +174,11 @@ export default function DashboardPage() {
           {/* Gráficos con selector de vista */}
           <div className="space-y-4" data-tour="dashboard-charts">
             {/* Selector de vista */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <h2 className="text-xl font-bold text-primary-900">Análisis de Datos</h2>
-              <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-1.5 border border-gray-200/50 shadow-sm" data-tour="dashboard-view-selector">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <ReportPdfGenerator className="w-full sm:w-auto" />
+                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-1.5 border border-gray-200/50 shadow-sm" data-tour="dashboard-view-selector">
                 <button
                   onClick={() => setViewMode("grid")}
                   className={cn(
@@ -216,6 +219,7 @@ export default function DashboardPage() {
                   <List className="w-4 h-4" />
                   <span className="hidden sm:inline">Lista</span>
                 </button>
+                </div>
               </div>
             </div>
 
