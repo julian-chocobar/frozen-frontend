@@ -96,10 +96,11 @@ export function EfficiencyChart() {
   // Calcular total y formatear datos para el gráfico usando useMemo
   const sortedData = useMemo(() => sortMonthlyData(data), [data])
   
-  const total = useMemo(
-    () => data.reduce((sum, item) => sum + (item.total || 0), 0),
-    [data]
-  )
+  const total = useMemo(() => {
+    if (data.length === 0) return 0
+    const sum = data.reduce((sum, item) => sum + (item.total || 0), 0)
+    return sum / data.length // Promedio de los porcentajes
+  }, [data])
 
   const chartData = useMemo(
     () => sortedData.map(item => ({
