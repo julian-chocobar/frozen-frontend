@@ -122,7 +122,7 @@ export function WasteChart() {
   }
 
   if (loading) {
-    return <ChartLoadingState color="red" />
+    return <ChartLoadingState color="blue" />
   }
 
   if (error) {

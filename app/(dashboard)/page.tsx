@@ -12,6 +12,7 @@ import { StatsCarousel } from "@/components/ui/stats-carousel"
 import { InventoryChart } from "@/components/dashboard/inventory-chart"
 import { UsageTrendsChart } from "@/components/dashboard/usage-trends-chart"
 import { WasteChart } from "@/components/dashboard/waste-chart"
+import { EfficiencyChart } from "@/components/dashboard/efficiency-chart"
 import { Package, TrendingUp, AlertTriangle, Beaker, XCircle, Box, BarChart3, LayoutGrid, List, SquareStack } from "lucide-react"
 import { analyticsApi } from "@/lib/analytics"
 import { DashboardStatsDTO } from "@/types"
@@ -223,7 +224,7 @@ export default function DashboardPage() {
               <div className="card border-2 border-primary-200/60 bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl overflow-hidden">
                 <Tabs defaultValue="production" className="w-full">
                   <div className="p-6 pb-0">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                       <TabsTrigger 
                         value="production"
                         className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:border-blue-200 text-primary-600 border border-transparent"
@@ -248,6 +249,14 @@ export default function DashboardPage() {
                         <span className="hidden sm:inline">Desperdicios</span>
                         <span className="sm:hidden">Desp.</span>
                       </TabsTrigger>
+                      <TabsTrigger 
+                        value="efficiency"
+                        className="data-[state=active]:bg-green-50 data-[state=active]:text-green-900 data-[state=active]:border-green-200 text-primary-600 border border-transparent"
+                      >
+                        <TrendingUp className="w-4 h-4" />
+                        <span className="hidden sm:inline">Eficiencia</span>
+                        <span className="sm:hidden">Efic.</span>
+                      </TabsTrigger>
                     </TabsList>
                   </div>
 
@@ -266,6 +275,12 @@ export default function DashboardPage() {
                   <TabsContent value="waste" className="mt-0">
                     <div className="bg-red-50/50">
                       <WasteChart />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="efficiency" className="mt-0">
+                    <div className="bg-green-50/50">
+                      <EfficiencyChart />
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -297,7 +312,18 @@ export default function DashboardPage() {
                     <UsageTrendsChart />
                   </div>
                 </div>
-                <div className="card border-2 border-red-200 bg-red-50/80 backdrop-blur-sm shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl lg:col-span-2">
+                <div className="card border-2 border-green-200 bg-green-50/80 backdrop-blur-sm shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                  <div className="p-4 border-b border-green-200/60">
+                    <div className="flex items-center gap-2 text-green-900">
+                      <TrendingUp className="w-5 h-5" />
+                      <h3 className="text-lg font-semibold">Eficiencia</h3>
+                    </div>
+                  </div>
+                  <div className="bg-green-50/50">
+                    <EfficiencyChart />
+                  </div>
+                </div>
+                <div className="card border-2 border-red-200 bg-red-50/80 backdrop-blur-sm shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
                   <div className="p-4 border-b border-red-200/60">
                     <div className="flex items-center gap-2 text-red-900">
                       <AlertTriangle className="w-5 h-5" />
@@ -334,6 +360,17 @@ export default function DashboardPage() {
                   </div>
                   <div className="bg-orange-50/50">
                     <UsageTrendsChart />
+                  </div>
+                </div>
+                <div className="card border-2 border-green-200 bg-green-50/80 backdrop-blur-sm shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                  <div className="p-4 border-b border-green-200/60">
+                    <div className="flex items-center gap-2 text-green-900">
+                      <TrendingUp className="w-5 h-5" />
+                      <h3 className="text-lg font-semibold">Eficiencia</h3>
+                    </div>
+                  </div>
+                  <div className="bg-green-50/50">
+                    <EfficiencyChart />
                   </div>
                 </div>
                 <div className="card border-2 border-red-200 bg-red-50/80 backdrop-blur-sm shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl">

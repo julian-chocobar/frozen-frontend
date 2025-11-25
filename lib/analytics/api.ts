@@ -63,6 +63,24 @@ export const analyticsApi = {
   },
 
   /**
+   * Obtiene la eficiencia mensual agregada
+   * @param filters - Filtros opcionales: startDate, endDate, productId, phase
+   */
+  getMonthlyEfficiency: async (filters?: {
+    startDate?: string
+    endDate?: string
+    productId?: string
+    phase?: string
+  }): Promise<MonthlyTotalDTO[]> => {
+    const params: Record<string, string> = {}
+    if (filters?.startDate) params.startDate = filters.startDate
+    if (filters?.endDate) params.endDate = filters.endDate
+    if (filters?.productId) params.productId = filters.productId
+    if (filters?.phase) params.phase = filters.phase
+    return api.get<MonthlyTotalDTO[]>('/api/analytics/monthly-efficiency', params)
+  },
+
+  /**
    * Obtiene un resumen estadístico del último mes
    */
   getDashboardMonthly: async (): Promise<DashboardStatsDTO> => {

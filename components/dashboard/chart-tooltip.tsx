@@ -8,7 +8,7 @@
  * @param props.active - Si el tooltip está activo (mostrado)
  * @param props.payload - Datos del punto seleccionado
  * @param props.label - Label del eje X
- * @param props.unit - Unidad de medida ('L' o 'kg') - Por defecto: 'L'
+ * @param props.unit - Unidad de medida ('L' o 'kg' o '%') - Por defecto: 'L'
  * @param props.labelText - Texto personalizado para el label del valor - Por defecto: 'Valor'
  * @param props.color - Color del borde del tooltip
  * 
@@ -22,9 +22,9 @@ import { ChartTooltipProps } from '@/types/recharts'
 export function ChartTooltip({ active, payload, label, unit = 'L', labelText, color }: ChartTooltipProps) {
   // Validar props en desarrollo
   if (process.env.NODE_ENV === 'development') {
-    if (unit && !['L', 'kg'].includes(unit)) {
+    if (unit && !['L', 'kg', '%'].includes(unit)) {
       console.warn(
-        `[ChartTooltip] Prop 'unit' debe ser 'L' o 'kg'. Recibido: ${unit}`
+        `[ChartTooltip] Prop 'unit' debe ser 'L' o 'kg' o '%'. Recibido: ${unit}`
       )
     }
   }

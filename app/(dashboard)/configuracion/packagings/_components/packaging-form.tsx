@@ -237,7 +237,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
 
                     {/* Dropdown de resultados */}
                     {showPackagingDropdown && packagingSearchTerm && (
-                        <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
+                        <div className="absolute z-50 w-155 mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
                             {packagingMaterials.length === 0 && !loadingPackagingMaterials ? (
                                 <div className="px-3 py-2 text-sm text-primary-600">
                                     No se encontraron materiales de envasado
@@ -311,7 +311,7 @@ export function PackagingForm({ packaging, onSubmit, onCancel, isLoading = false
 
                     {/* Dropdown de resultados */}
                     {showLabelingDropdown && labelingSearchTerm && (
-                        <div className="absolute z-50 w-full mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
+                        <div className="absolute z-50 w-155 mt-1 max-h-32 overflow-y-auto border border-stroke rounded-lg bg-white shadow-lg">
                             {labelingMaterials.length === 0 && !loadingLabelingMaterials ? (
                                 <div className="px-3 py-2 text-sm text-primary-600">
                                     No se encontraron materiales de etiquetado

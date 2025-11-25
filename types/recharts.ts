@@ -18,7 +18,7 @@ export interface ChartTooltipProps extends TooltipProps<number, string> {
     payload?: any
   }>
   label?: string
-  unit?: 'L' | 'kg'
+  unit?: 'L' | 'kg' | '%'
   labelText?: string
   color?: string
 }

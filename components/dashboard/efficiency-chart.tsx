@@ -1,21 +1,21 @@
 "use client"
 
 /**
- * Componente InventoryChart - Gráfico de producción mensual
+ * Componente EfficiencyChart - Gráfico de eficiencia mensual
  * 
- * Muestra la producción mensual usando datos reales del backend con filtros.
- * Incluye visualización en gráficos de líneas y barras, filtros por producto y fechas,
+ * Muestra la eficiencia mensual usando datos reales del backend con filtros.
+ * Incluye visualización en gráficos de líneas y barras, filtros por producto, fechas y fase,
  * y estadísticas del total del período.
  * 
  * @example
  * ```tsx
- * <InventoryChart />
+ * <EfficiencyChart />
  * ```
  * 
  * @remarks
  * Este componente utiliza el hook `useChartData` para cargar datos del backend
  * y Recharts para renderizar gráficos interactivos. Los datos se pueden filtrar
- * por producto y rango de fechas.
+ * por producto, rango de fechas y fase.
  */
 import { useState, useMemo, useCallback } from "react"
 import {
@@ -29,7 +29,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import { BarChart3 } from "lucide-react"
+import { TrendingUp } from "lucide-react"
 import { analyticsApi } from "@/lib/analytics"
 import { MonthlyTotalDTO } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
@@ -43,45 +43,25 @@ import { useChartData } from "@/hooks/use-chart-data"
 
 type ChartType = "bar" | "line"
 
-export function InventoryChart() {
-  // Función para obtener productId desde sessionStorage o valor por defecto
-  const getInitialProductId = () => {
-    if (typeof window === 'undefined') return ""
-    try {
-      const stored = sessionStorage.getItem('inventory-chart-productId')
-      return stored || ""
-    } catch {
-      return ""
-    }
-  }
-
+export function EfficiencyChart() {
   const [filters, setFilters] = useState<AnalyticsFiltersState>({})
-  const [productId, setProductIdState] = useState<string>(getInitialProductId)
+  const [productId, setProductId] = useState<string>("")
+  const [phase, setPhase] = useState<string>("")
   const [chartType, setChartType] = useState<ChartType>("line")
 
-  // Wrapper para setProductId que también persiste en sessionStorage
-  const setProductId = (value: string) => {
-    setProductIdState(value)
-    if (typeof window !== 'undefined') {
-      try {
-        if (value) {
-          sessionStorage.setItem('inventory-chart-productId', value)
-        } else {
-          sessionStorage.removeItem('inventory-chart-productId')
-        }
-      } catch (e) {
-        console.warn('Error al guardar productId:', e)
-      }
-    }
-  }
+  // Memoizar filtros adicionales para evitar recreaciones innecesarias
+  const additionalFilters = useMemo(() => ({
+    phase: phase || filters.phase || undefined,
+  }), [phase, filters.phase])
 
   // Usar hook personalizado para carga de datos
   const { data, loading, error, reload } = useChartData({
-    loadFunction: analyticsApi.getMonthlyProduction,
+    loadFunction: analyticsApi.getMonthlyEfficiency,
     filters,
     additionalFilterId: productId,
     additionalFilterKey: 'productId',
-    errorMessage: 'No se pudo cargar la producción mensual',
+    additionalFilters,
+    errorMessage: 'No se pudo cargar la eficiencia mensual',
   })
 
   const handleFiltersChange = useCallback((newFilters: AnalyticsFiltersState) => {
@@ -92,6 +72,9 @@ export function InventoryChart() {
       if (newFilters.productId !== undefined) {
         setProductId(newFilters.productId)
       }
+      if (newFilters.phase !== undefined) {
+        setPhase(newFilters.phase)
+      }
     }
   }, [])
 
@@ -99,12 +82,14 @@ export function InventoryChart() {
     setFilters({
       ...searchFilters,
       productId: productId || searchFilters.productId || undefined,
+      phase: phase || searchFilters.phase || undefined,
     })
     reload()
-  }, [productId, reload])
+  }, [productId, phase, reload])
 
   const handleClear = useCallback(() => {
-    setProductId("") // Esto ya limpia el sessionStorage
+    setProductId("")
+    setPhase("")
     reload()
   }, [reload])
 
@@ -144,7 +129,7 @@ export function InventoryChart() {
           {data.length > 0 ? (
             <div>
               <div className="flex items-baseline gap-2 mb-1">
-                <p className="text-3xl font-bold text-primary-900 font-mono">{total.toFixed(2)} L</p>
+                <p className="text-3xl font-bold text-primary-900 font-mono">{total.toFixed(2)}%</p>
                 <span className="text-sm font-medium text-primary-600">Total del período</span>
               </div>
             </div>
@@ -164,7 +149,7 @@ export function InventoryChart() {
                 className={cn(
                   "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm",
                   chartType === "line"
-                    ? "bg-blue-600 text-white shadow-md"
+                    ? "bg-green-600 text-white shadow-md"
                     : "bg-white text-primary-700 border border-gray-200 hover:bg-gray-50 hover:shadow-md"
                 )}
               >
@@ -175,7 +160,7 @@ export function InventoryChart() {
                 className={cn(
                   "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm",
                   chartType === "bar"
-                    ? "bg-blue-600 text-white shadow-md"
+                    ? "bg-green-600 text-white shadow-md"
                     : "bg-white text-primary-700 border border-gray-200 hover:bg-gray-50 hover:shadow-md"
                 )}
               >
@@ -192,6 +177,7 @@ export function InventoryChart() {
             onSearch={handleSearch}
             onClear={handleClear}
             showProductFilter={true}
+            showPhaseFilter={true}
             productFilterComponent={
               <ProductSearchFilter
                 value={productId}
@@ -205,7 +191,7 @@ export function InventoryChart() {
       </div>
 
       {data.length === 0 ? (
-        <ChartEmptyState icon={BarChart3} message="No hay datos disponibles" />
+        <ChartEmptyState icon={TrendingUp} message="No hay datos disponibles" />
       ) : (
         <div className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -223,12 +209,12 @@ export function InventoryChart() {
               <YAxis 
                 tick={{ fill: 'rgba(0, 0, 0, 0.6)', fontSize: 11 }}
                 stroke="rgba(0, 0, 0, 0.1)"
-                tickFormatter={(value) => `${value} L`}
+                tickFormatter={(value) => `${value}%`}
               />
-              <Tooltip content={<ChartTooltip unit="L" labelText="Producción" color="#3b82f6" />} />
+              <Tooltip content={<ChartTooltip unit="%" labelText="Eficiencia" color="#22c55e" />} />
               <Bar 
                 dataKey="value" 
-                fill="#3b82f6"
+                fill="#22c55e"
                 radius={[8, 8, 0, 0]}
                 fillOpacity={0.8}
               />
@@ -247,17 +233,17 @@ export function InventoryChart() {
               <YAxis 
                 tick={{ fill: 'rgba(0, 0, 0, 0.6)', fontSize: 11 }}
                 stroke="rgba(0, 0, 0, 0.1)"
-                tickFormatter={(value) => `${value} L`}
+                tickFormatter={(value) => `${value}%`}
               />
-              <Tooltip content={<ChartTooltip unit="L" labelText="Producción" color="#3b82f6" />} />
+              <Tooltip content={<ChartTooltip unit="%" labelText="Eficiencia" color="#22c55e" />} />
               <Line 
                 type="monotone" 
                 dataKey="value" 
-                stroke="#3b82f6" 
+                stroke="#22c55e" 
                 strokeWidth={3}
-                fill="#3b82f6"
+                fill="#22c55e"
                 fillOpacity={0.1}
-                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
                 activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}
               />
             </LineChart>
@@ -268,3 +254,4 @@ export function InventoryChart() {
     </div>
   )
 }
+

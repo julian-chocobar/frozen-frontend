@@ -33,9 +33,36 @@ import { useChartData } from "@/hooks/use-chart-data"
 type ChartType = "line" | "bar"
 
 export function UsageTrendsChart() {
+  // Función para obtener materialId desde sessionStorage o valor por defecto
+  const getInitialMaterialId = () => {
+    if (typeof window === 'undefined') return ""
+    try {
+      const stored = sessionStorage.getItem('usage-trends-chart-materialId')
+      return stored || ""
+    } catch {
+      return ""
+    }
+  }
+
   const [filters, setFilters] = useState<AnalyticsFiltersState>({})
-  const [materialId, setMaterialId] = useState<string>("")
+  const [materialId, setMaterialIdState] = useState<string>(getInitialMaterialId)
   const [chartType, setChartType] = useState<ChartType>("line")
+
+  // Wrapper para setMaterialId que también persiste en sessionStorage
+  const setMaterialId = (value: string) => {
+    setMaterialIdState(value)
+    if (typeof window !== 'undefined') {
+      try {
+        if (value) {
+          sessionStorage.setItem('usage-trends-chart-materialId', value)
+        } else {
+          sessionStorage.removeItem('usage-trends-chart-materialId')
+        }
+      } catch (e) {
+        console.warn('Error al guardar materialId:', e)
+      }
+    }
+  }
 
   // Usar hook personalizado para carga de datos
   const { data, loading, error, reload } = useChartData({
@@ -66,7 +93,7 @@ export function UsageTrendsChart() {
   }, [materialId, reload])
 
   const handleClear = useCallback(() => {
-    setMaterialId("")
+    setMaterialId("") // Esto ya limpia el sessionStorage
     reload()
   }, [reload])
 
@@ -88,7 +115,7 @@ export function UsageTrendsChart() {
   )
 
   if (loading) {
-    return <ChartLoadingState color="orange" />
+    return <ChartLoadingState color="blue" />
   }
 
   if (error) {

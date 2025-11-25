@@ -3,11 +3,11 @@
 /**
  * Componente de filtros reutilizable para analytics
  * Incluye rangos de fechas predefinidos y selectores de entidades
- * Similar a compact-filters.tsx - requiere presionar "Buscar" para aplicar cambios
+ * Ejecuta búsquedas automáticamente cuando cambian los filtros (con debounce de 500ms)
  */
 
-import { useState, useEffect, useRef, memo } from "react"
-import { Calendar, X, Search } from "lucide-react"
+import { useState, useEffect, useRef, memo, useCallback } from "react"
+import { Calendar, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, subYears, format } from "date-fns"
 
@@ -219,21 +219,25 @@ function AnalyticsFiltersComponent({
     persistState(stateRef.current)
   }
   const setProductId = (value: string) => {
+    hasUserInteracted.current = true
     stateRef.current.productId = value
     setProductIdState(value)
     persistState(stateRef.current)
   }
   const setMaterialId = (value: string) => {
+    hasUserInteracted.current = true
     stateRef.current.materialId = value
     setMaterialIdState(value)
     persistState(stateRef.current)
   }
   const setPhase = (value: string) => {
+    hasUserInteracted.current = true
     stateRef.current.phase = value
     setPhaseState(value)
     persistState(stateRef.current)
   }
   const setTransferOnly = (value: boolean) => {
+    hasUserInteracted.current = true
     stateRef.current.transferOnly = value
     setTransferOnlyState(value)
     persistState(stateRef.current)
@@ -246,6 +250,8 @@ function AnalyticsFiltersComponent({
   const isInitialized = useRef(false)
   // Flag para saber si el usuario ya ha interactuado con los filtros
   const hasUserInteracted = useRef(false)
+  // Ref para el timeout del debounce
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Sincronizar estado desde el ref si el componente se remonta
   useEffect(() => {
@@ -354,7 +360,7 @@ function AnalyticsFiltersComponent({
   }
 
   // Ejecutar búsqueda con los valores actuales
-  const handleSearch = () => {
+  const executeSearch = useCallback(() => {
     hasUserInteracted.current = true
     
     // Usar valores de componentes personalizados si están disponibles, sino usar estado local
@@ -418,7 +424,84 @@ function AnalyticsFiltersComponent({
     
     // Los valores del estado local (preset, startDate, endDate, etc.) se mantienen
     // NO se modifican aquí para preservar lo que el usuario seleccionó
-  }
+  }, [
+    preset,
+    startDate,
+    endDate,
+    phase,
+    transferOnly,
+    productId,
+    materialId,
+    showProductFilter,
+    showMaterialFilter,
+    showPhaseFilter,
+    showTransferOnly,
+    productFilterComponent,
+    materialFilterComponent,
+    currentProductId,
+    currentMaterialId,
+    onFiltersChange,
+    onSearch,
+  ])
+
+  // Detectar cambios en componentes personalizados (productos y materiales)
+  // Usar refs para rastrear valores anteriores y detectar cambios
+  const prevProductIdRef = useRef<string | undefined>(currentProductId)
+  const prevMaterialIdRef = useRef<string | undefined>(currentMaterialId)
+
+  useEffect(() => {
+    if (productFilterComponent && currentProductId !== prevProductIdRef.current) {
+      prevProductIdRef.current = currentProductId
+      if (currentProductId !== undefined) {
+        hasUserInteracted.current = true
+      }
+    }
+  }, [currentProductId, productFilterComponent])
+
+  useEffect(() => {
+    if (materialFilterComponent && currentMaterialId !== prevMaterialIdRef.current) {
+      prevMaterialIdRef.current = currentMaterialId
+      if (currentMaterialId !== undefined) {
+        hasUserInteracted.current = true
+      }
+    }
+  }, [currentMaterialId, materialFilterComponent])
+
+  // Ejecutar búsqueda automáticamente cuando cambien los filtros (con debounce)
+  useEffect(() => {
+    // No ejecutar en el montaje inicial si el usuario no ha interactuado
+    if (!hasUserInteracted.current) {
+      return
+    }
+
+    // Limpiar timeout anterior
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    // Ejecutar búsqueda después de un debounce de 500ms
+    searchTimeoutRef.current = setTimeout(() => {
+      executeSearch()
+    }, 500)
+
+    // Cleanup
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [
+    preset,
+    startDate,
+    endDate,
+    phase,
+    transferOnly,
+    productId,
+    materialId,
+    currentProductId,
+    currentMaterialId,
+    executeSearch,
+  ])
 
   // Limpiar filtros y volver a valores iniciales por defecto
   const handleClear = () => {
@@ -471,9 +554,10 @@ function AnalyticsFiltersComponent({
 
   return (
     <div className={cn("flex flex-wrap items-center gap-3 p-4 bg-surface-secondary rounded-lg", className)}>
-      {/* Selector de preset con fechas personalizadas al lado (solo si es Personalizado) */}
-      <div className="flex items-center gap-3 flex-wrap" data-tour="dashboard-date-filters">
-        <div className="flex items-center gap-2">
+      {/* Contenedor de filtros - ocupa el espacio disponible */}
+      <div className="flex items-center gap-3 flex-wrap flex-1 min-w-0" data-tour="dashboard-date-filters">
+        {/* Selector de preset */}
+        <div className="flex items-center gap-2 shrink-0">
           <Calendar className="w-4 h-4 text-primary-600" />
           <select
             value={preset}
@@ -494,7 +578,7 @@ function AnalyticsFiltersComponent({
 
         {/* Fechas personalizadas - solo se muestran cuando el preset es "Personalizado" */}
         {preset === "Personalizado" && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <input
               type="date"
               value={startDate}
@@ -521,16 +605,42 @@ function AnalyticsFiltersComponent({
           </div>
         )}
 
+        {/* Filtro de fase - debe aparecer antes de productos y materiales */}
+        {showPhaseFilter && (
+          <div className="flex items-center gap-2 shrink-0">
+            <select
+              value={phase}
+              onChange={(e) => setPhase(e.target.value)}
+              className={cn(
+                "px-3 py-2 border border-stroke rounded-lg",
+                "focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-600",
+                "text-sm text-primary-900 bg-white"
+              )}
+            >
+              <option value="">Todas las fases</option>
+              <option value="MOLIENDA">Molienda</option>
+              <option value="MACERACION">Maceración</option>
+              <option value="FILTRACION">Filtración</option>
+              <option value="COCCION">Cocción</option>
+              <option value="FERMENTACION">Fermentación</option>
+              <option value="MADURACION">Maduración</option>
+              <option value="GASIFICACION">Gasificación</option>
+              <option value="ENVASADO">Envasado</option>
+              <option value="DESALCOHOLIZACION">Desalcoholización</option>
+            </select>
+          </div>
+        )}
+
         {/* Filtro de producto al lado del período */}
         {showProductFilter && productFilterComponent && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 max-w-48 shrink-0">
             {productFilterComponent}
           </div>
         )}
 
         {/* Filtro de producto simple (si no hay componente personalizado) */}
         {showProductFilter && !productFilterComponent && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <input
               type="text"
               value={productId}
@@ -544,101 +654,62 @@ function AnalyticsFiltersComponent({
             />
           </div>
         )}
-      </div>
 
-      {/* Filtro de material */}
-      {showMaterialFilter && materialFilterComponent && (
-        <div className="flex items-center gap-2">
-          {materialFilterComponent}
-        </div>
-      )}
+        {/* Filtro de material */}
+        {showMaterialFilter && materialFilterComponent && (
+          <div className="flex items-center gap-2 max-w-48 shrink-0">
+            {materialFilterComponent}
+          </div>
+        )}
 
-      {/* Filtro de material simple (si no hay componente personalizado) */}
-      {showMaterialFilter && !materialFilterComponent && (
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={materialId}
-            onChange={(e) => setMaterialId(e.target.value)}
-            placeholder="ID Material"
-            className={cn(
-              "px-3 py-2 border border-stroke rounded-lg",
-              "focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-600",
-              "text-sm text-primary-900 bg-white w-32"
-            )}
-          />
-        </div>
-      )}
-
-      {/* Filtro de fase */}
-      {showPhaseFilter && (
-        <div className="flex items-center gap-2">
-          <select
-            value={phase}
-            onChange={(e) => setPhase(e.target.value)}
-            className={cn(
-              "px-3 py-2 border border-stroke rounded-lg",
-              "focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-600",
-              "text-sm text-primary-900 bg-white"
-            )}
-          >
-            <option value="">Todas las fases</option>
-            <option value="MOLIENDA">Molienda</option>
-            <option value="MACERACION">Maceración</option>
-            <option value="FILTRACION">Filtración</option>
-            <option value="COCCION">Cocción</option>
-            <option value="FERMENTACION">Fermentación</option>
-            <option value="MADURACION">Maduración</option>
-            <option value="GASIFICACION">Gasificación</option>
-            <option value="ENVASADO">Envasado</option>
-            <option value="DESALCOHOLIZACION">Desalcoholización</option>
-          </select>
-        </div>
-      )}
-
-      {/* Toggle transferOnly */}
-      {showTransferOnly && (
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-sm text-primary-900 cursor-pointer">
+        {/* Filtro de material simple (si no hay componente personalizado) */}
+        {showMaterialFilter && !materialFilterComponent && (
+          <div className="flex items-center gap-2 shrink-0">
             <input
-              type="checkbox"
-              checked={transferOnly}
-              onChange={(e) => setTransferOnly(e.target.checked)}
-              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-300"
+              type="text"
+              value={materialId}
+              onChange={(e) => setMaterialId(e.target.value)}
+              placeholder="ID Material"
+              className={cn(
+                "px-3 py-2 border border-stroke rounded-lg",
+                "focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-600",
+                "text-sm text-primary-900 bg-white w-32"
+              )}
             />
-            <span>Solo transferencias</span>
-          </label>
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* Botones de acción */}
-      <div className="ml-auto flex items-center gap-2">
-        <button
-          onClick={handleSearch}
-          className={cn(
-            "px-3 py-2 bg-primary-600 text-white rounded-lg shrink-0",
-            "hover:bg-primary-700 transition-colors font-medium text-sm",
-            "focus:outline-none focus:ring-2 focus:ring-primary-300",
-            "flex items-center gap-2 whitespace-nowrap"
-          )}
-        >
-          <Search className="w-4 h-4" />
-          Buscar
-        </button>
-        
+        {/* Toggle transferOnly */}
+        {showTransferOnly && (
+          <div className="flex items-center gap-2 shrink-0">
+            <label className="flex items-center gap-2 text-sm text-primary-900 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={transferOnly}
+                onChange={(e) => setTransferOnly(e.target.checked)}
+                className="w-4 h-4 text-primary-600 rounded focus:ring-primary-300"
+              />
+              <span>Solo transferencias</span>
+            </label>
+          </div>
+        )}
+
+        {/* Botón de limpiar - se comporta como el resto de los filtros */}
         {hasActiveFilters() && (
-          <button
-            onClick={handleClear}
-            className={cn(
-              "px-3 py-2 bg-gray-500 text-white rounded-lg shrink-0",
-              "hover:bg-gray-600 transition-colors font-medium text-sm",
-              "focus:outline-none focus:ring-2 focus:ring-gray-300",
-              "flex items-center justify-center whitespace-nowrap"
-            )}
-            title="Limpiar filtros"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleClear}
+              className={cn(
+                "p-2 bg-gray-500 text-white rounded-lg shrink-0",
+                "hover:bg-gray-600 transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-gray-300",
+                "flex items-center justify-center"
+              )}
+              title="Limpiar filtros"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         )}
       </div>
     </div>
