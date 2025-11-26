@@ -23,7 +23,7 @@ import type { MaterialType, WarehouseZone, MaterialWarehouseLocation, WarehouseI
 // Configuración del mapa
 const WAREHOUSE_WIDTH = 1000
 const WAREHOUSE_HEIGHT = 600
-const INITIAL_ZOOM = 0
+const INITIAL_ZOOM = -2
 const MIN_ZOOM = -1.5
 const MAX_ZOOM = 2.5
 

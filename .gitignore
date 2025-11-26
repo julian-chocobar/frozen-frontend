@@ -35,9 +35,8 @@ Documentación Sistema de Gestión de Producción PyM 291cf0f7c6d280df970cf549ae
 # docs
 /docs
 
+# macos
+DS_Store
+
 # test
 test-results/
-
-
-# md
-eficiencia.md
