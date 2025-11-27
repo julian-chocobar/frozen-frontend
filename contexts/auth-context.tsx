@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         dispatch({ type: 'AUTH_SUCCESS', payload: user });
       } else {
-        dispatch({ type: 'AUTH_FAILURE', payload: 'No autenticado' });
+        dispatch({ type: 'AUTH_FAILURE', payload: 'Autentícate para ingresar' });
       }
     } catch (error) {
       console.error('🔐 Session check error:', error);
@@ -110,7 +110,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       dispatch({ type: 'AUTH_SUCCESS', payload: user });
     } catch (error: any) {
-      const message = error.message || 'Error en el login';
+      // Normalizar mensajes de error de autenticación
+      let message = error.message || 'Error en el login';
+      
+      // Cambiar mensajes comunes de "No autenticado" a un mensaje más amigable
+      if (message.toLowerCase().includes('no autenticado') || 
+          message.toLowerCase().includes('unauthorized') ||
+          message === 'No autenticado') {
+        message = 'Autentícate para ingresar';
+      }
+      
       dispatch({ type: 'AUTH_FAILURE', payload: message });
       throw error;
     }

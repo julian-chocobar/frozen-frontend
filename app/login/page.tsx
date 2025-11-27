@@ -134,11 +134,26 @@ export default function LoginPage() {
             </div>
 
             {/* Mostrar errores */}
-            {error && (
-              <div className="rounded-md bg-red-50 p-4 border border-red-200">
-                <div className="text-sm text-red-700">{error}</div>
-              </div>
-            )}
+            {error && (() => {
+              const isAuthError = error === "No autenticado" || error.toLowerCase().includes("no autenticado") || error === "Autentícate para ingresar";
+              const displayMessage = isAuthError ? "Autentícate para ingresar" : error;
+              
+              return (
+                <div className={`rounded-md p-4 border ${
+                  isAuthError 
+                    ? "bg-blue-50 border-blue-200" 
+                    : "bg-red-50 border-red-200"
+                }`}>
+                  <div className={`text-sm font-medium text-center ${
+                    isAuthError 
+                      ? "text-blue-700" 
+                      : "text-red-700"
+                  }`}>
+                    {displayMessage}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Botón de inicio de sesión */}
             <Button
