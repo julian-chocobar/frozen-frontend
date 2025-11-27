@@ -1,1153 +1,860 @@
-# Documentación del Proyecto - Frozen Frontend
+# Arquitectura del Frontend
 
-## 📋 Índice
+El frontend de Frozen constituye la capa de presentación del sistema de gestión de producción. Está desarrollado en **Next.js** con **React** y **TypeScript**, implementando una arquitectura modular y escalable orientada a la separación de responsabilidades entre componentes, vistas, servicios y estilos.
 
-1. [Visión General](#visión-general)
-2. [Estructura del Proyecto](#estructura-del-proyecto)
-3. [Arquitectura y Diseño](#arquitectura-y-diseño)
-4. [Flujos Principales](#flujos-principales)
-5. [Sistema de Diseño](#sistema-de-diseño)
-6. [Componentes Clave](#componentes-clave)
-7. [APIs y Comunicación](#apis-y-comunicación)
-8. [Tecnologías Utilizadas](#tecnologías-utilizadas)
+El objetivo principal de esta aplicación es ofrecer una interfaz administrativa moderna para gestionar materiales, movimientos, órdenes de producción, lotes, embalajes, recetas, productos y fases, en correspondencia con las entidades del modelo de datos del backend.
 
----
+El frontend de la aplicación está desarrollado utilizando Next.js 14 con el nuevo App Router, que representa una evolución significativa respecto a versiones anteriores al permitir un modelo híbrido de renderizado. Esta tecnología se combina con React 18, aprovechando sus últimas características como Server Components, Suspense mejorado y transiciones concurrentes.
 
-## 🎯 Visión General
+La elección de Next.js responde a la necesidad del renderizado del lado del servidor (SSR), que mejora significativamente los tiempos de carga inicial, lo cual es esencial para operarios que necesitan acceder rápidamente a información de producción.
 
-**Frozen** es una aplicación web de gestión de producción cervecera desarrollada con **Next.js 15** y **React 19**. El sistema permite gestionar materiales, productos, órdenes de producción, lotes, seguimiento de calidad y análisis de datos en tiempo real.
+La arquitectura está diseñada siguiendo un patrón **feature-based**, en el cual cada módulo funcional (ej. "materiales", "movimientos") posee sus propios componentes, formularios y páginas.
 
-### Características Principales
+## Stack Tecnológico
 
-- ✅ Autenticación con Spring Security
-- ✅ Notificaciones en tiempo real (Server-Sent Events)
-- ✅ Dashboard con gráficos interactivos (Recharts)
-- ✅ Gestión completa de inventario
-- ✅ Seguimiento de producción y calidad
-- ✅ Sistema de roles y permisos
-- ✅ Diseño responsive (mobile-first)
-- ✅ Tema beige minimalista con tipografía monoespaciada
+| Categoría            | Tecnología      | Versión | Propósito                   |
+| -------------------- | --------------- | ------- | --------------------------- |
+| **Framework**        | Next.js         | 15.1.4  | Framework React con SSR/SSG |
+| **Librería UI**      | React           | 19.0.0  | Librería de componentes     |
+| **Lenguaje**         | TypeScript      | 5.x     | Tipado estático             |
+| **Estilos**          | Tailwind CSS    | 3.4.1   | Framework CSS utility-first |
+| **Componentes UI**   | shadcn/ui       | -       | Componentes reutilizables   |
+| **Iconos**           | Lucide React    | 0.468.0 | Sistema de iconos           |
+| **Formularios**      | React Hook Form | -       | Gestión de formularios      |
+| **Validación**       | Zod             | -       | Validación de schemas       |
+| **Notificaciones**   | Sonner          | -       | Sistema de toasts           |
+| **Testing**          | Playwright      | -       | Testing E2E                 |
+| **State Management** | React Hooks     | -       | Estado local y compartido   |
 
----
-
-## 📁 Estructura del Proyecto
+## Estructura de Carpetas
 
 ```
 frozen-frontend/
-├── app/                          # Next.js App Router
-│   ├── (dashboard)/              # Grupo de rutas protegidas
-│   │   ├── page.tsx              # Dashboard principal
-│   │   ├── layout.tsx            # Layout del dashboard
-│   │   ├── materiales/            # Gestión de materiales
-│   │   ├── productos/            # Gestión de productos
-│   │   ├── ordenes/              # Órdenes de producción
-│   │   ├── seguimiento/          # Seguimiento de lotes
-│   │   ├── movimientos/          # Movimientos de almacén
-│   │   ├── packagings/           # Gestión de packagings
-│   │   ├── usuarios/             # Gestión de usuarios
-│   │   ├── configuracion/        # Configuración del sistema
-│   │   ├── perfil/               # Perfil de usuario
-│   │   └── ...
-│   ├── login/                    # Página de login
-│   ├── api/                      # API Routes (Next.js)
-│   │   ├── notifications/stream/ # Proxy SSE para notificaciones
-│   │   └── backend-config/       # Configuración del backend
-│   ├── layout.tsx                # Layout raíz
-│   └── globals.css               # Estilos globales
+├── app/                                    # App Router de Next.js
+│   ├── (dashboard)/                       # Grupo de rutas con layout compartido
+│   │   ├── layout.tsx                     # Layout del dashboard
+│   │   ├── loading.tsx                    # Loading UI global
+│   │   ├── page.tsx                       # Dashboard principal
+│   │   │
+│   │   ├── materiales/                    # Módulo de materiales
+│   │   │   ├── page.tsx                   # Lista de materiales (Server Component)
+│   │   │   ├── loading.tsx                # Loading específico
+│   │   │   └── _components/               # Componentes privados del módulo
+│   │   │       ├── materials-client.tsx   # Lógica del cliente
+│   │   │       ├── materials-table.tsx    # Tabla desktop
+│   │   │       ├── materials-cards.tsx    # Cards mobile
+│   │   │       ├── materials-filters.tsx  # Filtros de búsqueda
+│   │   │       ├── material-form.tsx      # Formulario crear/editar
+│   │   │       └── create-button.tsx      # Botón de creación
+│   │   │
+│   │   ├── productos/                     # Módulo de productos
+│   │   │   ├── page.tsx                   # Lista de productos
+│   │   │   ├── loading.tsx                # Loading UI
+│   │   │   ├── [id]/                      # Ruta dinámica para detalle
+│   │   │   │   ├── page.tsx               # Detalle del producto
+│   │   │   │   └── loading.tsx            # Loading del detalle
+│   │   │   └── _components/               # Componentes del módulo
+│   │   │       ├── products-client.tsx
+│   │   │       ├── products-table.tsx
+│   │   │       ├── products-cards.tsx
+│   │   │       ├── products-filters.tsx
+│   │   │       ├── product-form.tsx
+│   │   │       ├── product-detail-client.tsx
+│   │   │       ├── product-info-card.tsx
+│   │   │       ├── phases-list.tsx
+│   │   │       ├── phase-form.tsx
+│   │   │       ├── recipe-form.tsx
+│   │   │       └── recipe-edit-form.tsx
+│   │   │
+│   │   ├── movimientos/                   # Módulo de movimientos
+│   │   ├── ordenes/                       # Módulo de órdenes de producción
+│   │   ├── packagings/                    # Módulo de empaques
+│   │   ├── seguimiento/                   # Módulo de seguimiento de lotes
+│   │   ├── reportes/                      # Módulo de reportes
+│   │   └── configuracion/                 # Configuración del sistema
+│   │
+│   ├── layout.tsx                         # Layout raíz de la aplicación
+│   └── globals.css                        # Estilos globales
 │
-├── components/                    # Componentes React
-│   ├── auth/                     # Componentes de autenticación
-│   ├── dashboard/                # Componentes del dashboard
-│   │   ├── inventory-chart.tsx   # Gráfico de producción (Recharts)
-│   │   ├── usage-trends-chart.tsx # Gráfico de consumo (Recharts)
-│   │   ├── waste-chart.tsx       # Gráfico de desperdicios (Recharts)
-│   │   └── stat-card.tsx         # Tarjetas de estadísticas
-│   ├── layout/                    # Componentes de layout
-│   │   ├── header.tsx            # Header con navegación
-│   │   ├── sidebar.tsx           # Sidebar (desktop)
-│   │   ├── bottom-bar.tsx        # Barra inferior (mobile)
-│   │   └── navigation.tsx        # Sistema de navegación
-│   ├── materials/                # Componentes de estado (materiales)
-│   │   ├── materials-loading-state.tsx
-│   │   ├── materials-empty-state.tsx
-│   │   └── materials-error-state.tsx
-│   ├── movements/                # Componentes de estado (movimientos)
-│   ├── orders/                   # Componentes de estado (órdenes)
-│   ├── products/                 # Componentes de estado (productos)
-│   ├── batches/                  # Componentes de estado (lotes)
-│   ├── packagings/               # Componentes de estado (packagings)
-│   ├── users/                    # Componentes de estado (usuarios)
-│   ├── ui/                       # Componentes UI reutilizables
-│   │   ├── chart.tsx             # Wrapper para Recharts
-│   │   ├── tabs.tsx              # Componente de pestañas
-│   │   ├── button.tsx            # Botones
-│   │   └── ...                   # Otros componentes shadcn/ui
-│   └── production/               # Componentes de producción
+├── components/                            # Componentes compartidos
+│   ├── layout/                           # Componentes de layout
+│   │   ├── header.tsx                    # Header con navegación
+│   │   ├── sidebar.tsx                   # Sidebar desktop
+│   │   ├── bottom-bar.tsx                # Navegación móvil
+│   │   ├── navigation.tsx                # Links de navegación
+│   │   └── navigation-loader.tsx         # Indicador de carga
+│   │
+│   ├── ui/                               # Componentes UI base (shadcn)
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── dialog.tsx
+│   │   ├── table.tsx
+│   │   ├── data-table.tsx                # Tabla de datos genérica
+│   │   ├── data-cards.tsx                # Cards genéricas
+│   │   ├── pagination-client.tsx         # Paginación
+│   │   ├── empty-state.tsx               # Estado vacío
+│   │   ├── error-state.tsx               # Estado de error
+│   │   ├── loading-spinner.tsx           # Spinner de carga
+│   │   └── ...                           # Otros componentes UI
+│   │
+│   ├── dashboard/                        # Componentes del dashboard
+│   │   ├── stat-card.tsx                 # Tarjetas de estadísticas
+│   │   ├── inventory-chart.tsx           # Gráfico de inventario
+│   │   └── stock-alerts.tsx              # Alertas de stock
+│   │
+│   └── production/                       # Componentes de producción
+│       ├── batch-card.tsx
+│       ├── batch-stats.tsx
+│       └── order-card.tsx
 │
-├── contexts/                      # React Contexts
-│   ├── auth-context.tsx          # Contexto de autenticación
-│   └── notifications-context.tsx # Contexto de notificaciones
+├── lib/                                  # Utilidades y lógica de negocio
+│   ├── fetcher.ts                       # Cliente HTTP para API
+│   ├── api-error.ts                     # Manejo de errores de API
+│   ├── error-handler.ts                 # Handler global de errores
+│   ├── type-validation.ts               # Validadores de tipos
+│   ├── utils.ts                         # Utilidades generales
+│   │
+│   ├── materials-api.ts                 # API de materiales
+│   ├── products-api.ts                  # API de productos
+│   ├── product-phases-api.ts            # API de fases
+│   ├── recipes-api.ts                   # API de recetas
+│   ├── movements-api.ts                 # API de movimientos
+│   ├── production-orders-api.ts         # API de órdenes
+│   ├── batches-api.ts                   # API de lotes
+│   └── packagings-api.ts                # API de empaques
 │
-├── hooks/                         # Custom Hooks
-│   ├── use-notifications.ts      # Hook para notificaciones SSE
-│   ├── use-toast.ts              # Hook para toasts
-│   └── use-mobile.ts             # Hook para detección móvil
+├── types/                               # Definiciones de tipos TypeScript
+│   └── index.ts                         # Tipos compartidos
 │
-├── lib/                           # Utilidades y APIs (organizadas por módulo)
-│   ├── config.ts                 # Configuración centralizada
-│   ├── constants.ts              # Constantes centralizadas (~1350 líneas)
-│   ├── utils.ts                  # Utilidades compartidas
-│   ├── fetcher.ts                # Cliente HTTP para backend
-│   ├── error-handler.ts          # Manejo centralizado de errores
-│   ├── prop-validation.ts        # Validación de props en desarrollo
-│   ├── analytics-api.ts          # API de análisis y gráficos
-│   ├── materials/                # Módulo de materiales
-│   │   ├── api.ts                # API con JSDoc completo
-│   │   ├── utils.ts              # ~20 funciones utilitarias
-│   │   └── index.ts              # Barrel export
-│   ├── movements/                # Módulo de movimientos
-│   │   ├── api.ts
-│   │   ├── utils.ts
-│   │   └── index.ts
-│   ├── orders/                   # Módulo de órdenes
-│   │   ├── api.ts
-│   │   ├── utils.ts
-│   │   └── index.ts
-│   ├── products/                 # Módulo de productos
-│   │   ├── api.ts
-│   │   ├── utils.ts
-│   │   └── index.ts
-│   ├── batches/                  # Módulo de lotes
-│   │   ├── api.ts
-│   │   ├── utils.ts
-│   │   └── index.ts
-│   ├── packagings/               # Módulo de packagings
-│   │   ├── api.ts
-│   │   ├── utils.ts
-│   │   └── index.ts
-│   ├── users/                    # Módulo de usuarios
-│   │   ├── api.ts
-│   │   ├── utils.ts
-│   │   └── index.ts
-│   └── ...                       # Otros módulos
+├── hooks/                               # Custom React Hooks
+│   ├── use-mobile.ts                    # Hook para detección móvil
+│   └── use-toast.ts                     # Hook para notificaciones
 │
-├── types/                         # Definiciones TypeScript (organizadas por entidad)
-│   ├── index.ts                  # Barrel export principal
-│   ├── common.ts                 # Tipos compartidos
-│   ├── materials.ts              # Tipos de materiales
-│   ├── warehouse.ts              # Tipos de almacén
-│   ├── movements.ts              # Tipos de movimientos
-│   ├── packagings.ts             # Tipos de packagings
-│   ├── products.ts               # Tipos de productos
-│   ├── phases.ts                 # Tipos de fases
-│   ├── recipes.ts                # Tipos de recetas
-│   ├── orders.ts                 # Tipos de órdenes
-│   ├── batches.ts                # Tipos de lotes
-│   ├── production.ts             # Tipos de producción
-│   ├── quality.ts                # Tipos de calidad
-│   ├── users.ts                  # Tipos de usuarios
-│   ├── notifications.ts          # Tipos de notificaciones
-│   ├── sectors.ts                # Tipos de sectores
-│   ├── analytics.ts              # Tipos de análisis
-│   ├── config.ts                 # Tipos de configuración
-│   ├── auth.ts                   # Tipos de autenticación
-│   └── recharts.ts               # Tipos para Recharts
+├── docs/                                # Documentación técnica
+│   ├── FRONTEND_ARCHITECTURE.md         # Arquitectura del frontend
+│   ├── COMPONENT_PATTERNS.md            # Patrones de componentes
+│   ├── DESIGN_SYSTEM.md                 # Sistema de diseño
+│   ├── SSR_OPTIMIZATION.md              # Optimizaciones SSR
+│   ├── NAVIGATION_LOADING.md            # Sistema de navegación
+│   ├── BACKEND_INTEGRATION_GUIDE.md     # Integración con backend
+│   └── PROJECT_CONTEXT.md               # Contexto del proyecto
 │
-└── public/                        # Archivos estáticos
-    └── ...                        # Imágenes y assets
-```
-
----
-
-## 🏗️ Arquitectura y Diseño
-
-### Arquitectura General
-
-```
-┌────────────────────────────────────────────────────────┐
-│                    Next.js Frontend                    │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   App Router │  │  Components  │  │   Contexts   │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-│         │                │                │            │
-│         └────────────────┼────────────────┘            │
-│                          │                             │
-│         ┌────────────────┴───────────────┐             │
-│         │      API Layer (lib/)          │             │
-│         └────────────────┬───────────────┘             │
-└──────────────────────────┼─────────────────────────────┘
-                           │
-         ┌─────────────────┴─────────────────┐
-         │   Next.js API Routes (Proxy)      │
-         └─────────────────┬─────────────────┘
-                           │
-         ┌─────────────────┴─────────────────┐
-         │   Spring Boot Backend (Java)      │
-         └───────────────────────────────────┘
-```
-
-### Principios de Diseño
-
-1. **Component-Based Architecture**: Componentes reutilizables y modulares
-2. **Server-Side Rendering (SSR)**: Next.js App Router para mejor SEO y rendimiento
-3. **Client-Side State Management**: React Context API para estado global
-4. **Type Safety**: TypeScript en todo el proyecto
-5. **Responsive Design**: Mobile-first con breakpoints adaptativos
-
----
-
-## 🔄 Flujos Principales
-
-### 1. Flujo de Autenticación
+├── tests/                               # Tests E2E con Playwright
+│   ├── home/                            # Tests del dashboard
+│   ├── materials/                       # Tests de materiales
+│   ├── products/                        # Tests de productos
+│   ├── movements/                       # Tests de movimientos
+│   └── packagings/                      # Tests de empaques
+│
+├── public/                              # Archivos estáticos
+│   ├── Frozen-icon.png                  # Logo de la aplicación
+│   └── Frozen-loading.png               # Logo para loading
+│
+├── next.config.mjs                      # Configuración de Next.js
+├── tailwind.config.ts                   # Configuración de Tailwind
+├── tsconfig.json                        # Configuración de TypeScript
+└── package.json                         # Dependencias del proyecto
 
 ```
-Usuario → Login Page
-    ↓
-Ingresa credenciales
-    ↓
-AuthContext.login()
-    ↓
-auth-api.login() → Backend (/api/auth/login)
-    ↓
-Backend valida → Retorna JSESSIONID cookie
-    ↓
-AuthContext obtiene usuario actual (/api/auth/me)
-    ↓
-Estado actualizado → Usuario autenticado
-    ↓
-Redirección a Dashboard
+
+## Patrones de Arquitectura
+
+### Server Components vs Client Components
+
+Next.js 14 introduce un modelo híbrido donde los componentes son **Server Components** por defecto, lo que permite:
+
+- **Renderizado en el servidor**: Genera HTML en el servidor para mejorar SEO y tiempo de carga inicial
+- **Menor bundle JavaScript**: Solo se envía JavaScript necesario al cliente
+- **Acceso directo a datos**: Pueden hacer fetch directamente en el servidor sin exponer credenciales
+
+**Server Components (por defecto):**
+
+```tsx
+// app/(dashboard)/productos/page.tsx
+export default async function ProductosPage({
+  searchParams,
+}: ProductosPageProps) {
+  const params = await searchParams;
+  const page = parseInt(params.page || "0");
+
+  // Fetch directo en el servidor
+  const productsData = await getProducts({ page, size: 10 });
+
+  return (
+    <>
+      <Header title="Productos" />
+      <ProductsClient productos={productsData.products} />
+    </>
+  );
+}
 ```
 
-**Archivos clave:**
+**Client Components (cuando se necesita interactividad):**
 
-- `app/login/page.tsx` - Página de login
-- `contexts/auth-context.tsx` - Gestión de estado de autenticación
-- `lib/auth-api.ts` - Llamadas API de autenticación
-- `components/auth/protected-route.tsx` - Protección de rutas
+```tsx
+// _components/products-client.tsx
+"use client";
 
-### 2. Flujo de Notificaciones en Tiempo Real
+export function ProductsClient({ productos }: ProductsClientProps) {
+  const [selectedProduct, setSelectedProduct] =
+    useState<ProductResponse | null>(null);
+  const router = useRouter();
 
-```
-Cliente → Hook useNotifications
-    ↓
-Conecta a /api/notifications/stream (SSE)
-    ↓
-Next.js API Route → Proxy al backend
-    ↓
-Backend SSE → Envía eventos en tiempo real
-    ↓
-Cliente recibe eventos:
-    - 'connected': Conexión establecida
-    - 'initial': Notificaciones iniciales
-    - 'notification': Nueva notificación
-    - 'stats-update': Actualización de estadísticas
-    ↓
-Estado actualizado → UI refleja cambios
+  const handleEdit = async (id: string, data: ProductUpdateRequest) => {
+    await updateProduct(id, data);
+    router.refresh(); // Refresca datos del servidor
+  };
+
+  return <ProductsTable productos={productos} onEdit={handleEdit} />;
+}
 ```
 
-**Archivos clave:**
+**Cuándo usar Client Components:**
 
-- `hooks/use-notifications.ts` - Hook para SSE
-- `app/api/notifications/stream/route.ts` - Proxy SSE
-- `components/layout/notifications-panel.tsx` - Panel de notificaciones
+- Hooks de React (useState, useEffect, useContext)
+- Event handlers (onClick, onChange)
+- APIs del navegador (localStorage, window)
+- Hooks de Next.js (useRouter, usePathname)
 
-### 3. Flujo de Datos del Dashboard
+### Sistema de Navegación
 
-```
-Dashboard Page
-    ↓
-Carga estadísticas (analytics-api.getDashboardMonthly)
-    ↓
-Muestra StatCards (carrusel horizontal)
-    ↓
-Gráficos con Recharts:
-    - InventoryChart (Producción - Azul)
-    - UsageTrendsChart (Consumo - Naranja)
-    - WasteChart (Desperdicios - Rojo)
-    ↓
-Vistas configurables:
-    - Tabs: Pestañas individuales
-    - Grid: Cuadrícula 2 columnas
-    - List: Lista vertical
-```
+El sistema implementa una navegación optimizada con feedback visual:
 
-**Archivos clave:**
+**Componentes de navegación:**
 
-- `app/(dashboard)/page.tsx` - Dashboard principal
-- `components/dashboard/*-chart.tsx` - Componentes de gráficos
-- `lib/analytics-api.ts` - API de análisis
+1. **Sidebar (Desktop)**: Navegación lateral con íconos y etiquetas
+2. **BottomBar (Mobile)**: Barra inferior con íconos para pantallas pequeñas
+3. **NavigationLoader**: Barra de progreso que indica cambios de ruta
 
-### 4. Flujo de Gestión de Materiales
+```tsx
+// components/layout/sidebar.tsx
+"use client";
 
-```
-Materiales Page
-    ↓
-Carga materiales (materials-api.getMaterials)
-    ↓
-Filtros y búsqueda (MaterialsFilters)
-    ↓
-Vista de tarjetas o tabla (MaterialsClient)
-    ↓
-Acciones:
-    - Crear material (MaterialForm)
-    - Editar material (Modal)
-    - Ver detalles (Modal)
-    - Panel de almacén (WarehousePanel)
+export function Sidebar() {
+  const pathname = usePathname();
+  const isActive = (path: string) => pathname === path;
+
+  return (
+    <aside className="hidden md:flex flex-col w-64 bg-primary-900">
+      <Navigation isActive={isActive} />
+    </aside>
+  );
+}
+
+// components/layout/bottom-bar.tsx
+("use client");
+
+export function BottomBar() {
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
+      {/* Navegación móvil con íconos */}
+    </nav>
+  );
+}
 ```
 
-**Archivos clave:**
+### Loading UI y Streaming
 
-- `app/(dashboard)/materiales/page.tsx`
-- `app/(dashboard)/materiales/_components/*`
-- `lib/materials-api.ts`
+Next.js permite definir estados de carga específicos para cada ruta mediante archivos `loading.tsx`:
 
----
-
-## 🎨 Sistema de Diseño
-
-### Paleta de Colores
-
-**Colores Principales:**
-
-- **Fondo**: Beige claro (`#faf9f6`) - `--color-background`
-- **Primario**: Azul índigo (`#2563eb`) - `--color-primary-600`
-- **Alerta**: Rojo (`#ef4444`) - `--color-alert-500`
-- **Éxito**: Verde (`#22c55e`) - `--color-success-500`
-
-**Colores por Sección (Dashboard):**
-
-- **Producción**: Azul (`blue-50`, `blue-600`)
-- **Consumo**: Naranja (`orange-50`, `orange-600`)
-- **Desperdicios**: Rojo (`red-50`, `red-600`)
-
-### Tipografía
-
-- **Fuente Principal**: JetBrains Mono (monoespaciada)
-- **Pesos**: 400 (normal), 500 (medium), 600 (semibold), 700 (bold)
-- **Tamaños**: Responsive con breakpoints móvil/tablet/desktop
-
-### Componentes de Diseño
-
-**Cards:**
-
-- Fondo blanco con borde de 2px
-- Sombras sutiles con hover
-- Bordes redondeados (`rounded-2xl`)
-- Efecto glassmorphism en algunos casos
-
-**Gráficos:**
-
-- Tooltips oscuros con bordes de color
-- Grids sutiles (`rgba(0, 0, 0, 0.05)`)
-- Colores consistentes por categoría
-- Responsive con `ResponsiveContainer`
-
-**Navegación:**
-
-- Sidebar en desktop (fijo)
-- Bottom bar en mobile (fijo)
-- Header sticky con notificaciones
-
----
-
-## 🧩 Componentes Clave
-
-### Layout Components
-
-#### `Header` (`components/layout/header.tsx`)
-
-- Título y subtítulo dinámicos
-- Botón de acción opcional
-- Notificaciones con contador
-- Menú de usuario con roles
-- Botón de menú móvil
-
-#### `Sidebar` (`components/layout/sidebar.tsx`)
-
-- Navegación principal
-- Iconos con Lucide React
-- Indicador de ruta activa
-- Solo visible en desktop
-
-#### `BottomBar` (`components/layout/bottom-bar.tsx`)
-
-- Navegación móvil simplificada
-- Iconos principales
-- Solo visible en mobile
-
-### State Components (Componentes de Estado)
-
-Cada módulo tiene 3 componentes de estado reutilizables siguiendo un patrón consistente:
-
-#### Componentes de Carga (`*-loading-state.tsx`)
-
-- Muestra skeleton loaders mientras se cargan datos
-- Prop `count` para controlar cantidad de elementos
-- Estilos consistentes con el módulo
-- **Ejemplos**: `MaterialsLoadingState`, `OrdersLoadingState`, `UsersLoadingState`
-
-#### Componentes Vacíos (`*-empty-state.tsx`)
-
-- Se muestra cuando no hay datos o resultados
-- Props opcionales: `title`, `description`, `onAction`, `actionLabel`
-- Icono contextual del módulo
-- Botón de acción opcional (ej: "Crear Material")
-- **Ejemplos**: `MaterialsEmptyState`, `ProductsEmptyState`, `PackagingsEmptyState`
-
-#### Componentes de Error (`*-error-state.tsx`)
-
-- Muestra errores con mensajes descriptivos
-- Props: `message`, `onRetry`, `isRetrying`
-- Botón de reintentar con indicador de loading
-- Alert con estilo destructivo
-- **Ejemplos**: `MaterialsErrorState`, `BatchesErrorState`, `MovementsErrorState`
-
-**Módulos con componentes de estado**:
-
-- Materials (materiales)
-- Movements (movimientos)
-- Orders (órdenes)
-- Products (productos)
-- Batches (lotes)
-- Packagings (packagings)
-- Users (usuarios)
-
-### Dashboard Components
-
-#### `StatCard` (`components/dashboard/stat-card.tsx`)
-
-- Tarjeta de estadística
-- Variantes: default, primary, success, alert
-- Icono opcional
-- Gradiente sutil de fondo
-- Hover con elevación
-
-#### `InventoryChart` (`components/dashboard/inventory-chart.tsx`)
-
-- Gráfico de producción mensual
-- Tipos: Línea, Barras
-- Filtros por producto y fechas
-- Color azul (`#3b82f6`)
-
-#### `UsageTrendsChart` (`components/dashboard/usage-trends-chart.tsx`)
-
-- Gráfico de consumo de materiales
-- Tipos: Línea, Barras
-- Filtros por material y fechas
-- Color naranja (`#f97316`)
-
-#### `WasteChart` (`components/dashboard/waste-chart.tsx`)
-
-- Gráfico de desperdicios
-- Tipos: Línea, Barras, Torta
-- Filtros por fase y transferOnly
-- Color rojo (`#ef4444`)
-
-### UI Components
-
-Todos los componentes UI están basados en **shadcn/ui** y **Radix UI**:
-
-- Accesibilidad integrada
-- Temas personalizables
-- TypeScript completo
-- Composición flexible
-
----
-
-## 🔌 APIs y Comunicación
-
-### Cliente HTTP (`lib/fetcher.ts`)
-
-**Características:**
-
-- Manejo automático de cookies JSESSIONID
-- Proxy Next.js para desarrollo
-- Conexión directa al backend en producción
-- Manejo de errores centralizado
-- Logging condicional
-
-**Uso:**
-
-```typescript
-import { api } from "@/lib/materials"; // Módulo específico
-
-const data = await api.get<Material[]>("/api/materials", {
-  page: "0",
-  size: "10",
-});
+```tsx
+// app/(dashboard)/productos/loading.tsx
+export default function ProductosLoading() {
+  return (
+    <>
+      <Header title="Productos" subtitle="Cargando productos..." />
+      <PageLoader />
+    </>
+  );
+}
 ```
 
-### APIs por Módulo (Estructura Modular)
+**Beneficios:**
 
-Todas las APIs están organizadas en módulos con estructura consistente:
+- Feedback visual inmediato al cambiar de ruta
+- Streaming SSR: el servidor envía HTML progresivamente
+- Mejora la percepción de velocidad
 
-**Materiales** (`lib/materials/`):
+## Sistema de Tipos TypeScript
 
-- `getMaterials()` - Listar materiales con paginación
-- `getMaterialById()` - Obtener material por ID
-- `createMaterial()` - Crear nuevo material
-- `updateMaterial()` - Actualizar material existente
-- `toggleMaterialActive()` - Activar/desactivar material
-- `getUnitMeasurements()` - Obtener unidades de medida
-- **Utils**: 20 funciones (formateo, validación, filtrado, estadísticas)
-- **Documentación**: JSDoc completo con ejemplos
+El sistema define tipos estrictos para todas las entidades del dominio:
 
-**Movimientos** (`lib/movements/`):
+```tsx
+// types/index.ts
 
-- `getMovements()` - Listar movimientos con filtros
-- `getMovementById()` - Obtener movimiento por ID
-- `createMovement()` - Registrar nuevo movimiento
-- `getMovementTypes()` - Tipos de movimiento disponibles
-- **Utils**: 22 funciones (formateo de tipo/fecha, iconos, validación, estadísticas)
-- **Documentación**: JSDoc completo
+// Enums
+export type MaterialType = "MALTA" | "LUPULO" | "LEVADURA" | "ENVASE" | "OTROS";
+export type MovementType = "INGRESO" | "EGRESO" | "RESERVA" | "DEVUELTO";
+export type BatchStatus =
+  | "PENDIENTE"
+  | "EN_PRODUCCION"
+  | "COMPLETADO"
+  | "CANCELADO";
+export type ProductionOrderStatus =
+  | "PENDIENTE"
+  | "APROBADA"
+  | "RECHAZADA"
+  | "CANCELADA";
 
-**Órdenes** (`lib/orders/`):
+// DTOs de Response
+export interface MaterialResponse {
+  id: string;
+  name: string;
+  type: MaterialType;
+  supplier: string | null;
+  stock: number;
+  reservedStock: number;
+  unitMeasurement: UnitMeasurement;
+  threshold: number;
+  isActive: boolean;
+  creationDate: string;
+}
 
-- `getProductionOrders()` - Listar órdenes de producción
-- `getProductionOrderById()` - Obtener orden por ID
-- `createProductionOrder()` - Crear nueva orden
-- `updateProductionOrder()` - Actualizar orden
-- `approveProductionOrder()` - Aprobar orden
-- `rejectProductionOrder()` - Rechazar orden
-- **Utils**: 18 funciones (estado, formateo de fechas, validación, estadísticas)
-- **Documentación**: JSDoc completo
+export interface ProductResponse {
+  id: string;
+  name: string;
+  isAlcoholic: boolean;
+  isActive: boolean;
+  isReady: boolean;
+  standardQuantity: number;
+  unitMeasurement: UnitMeasurement;
+  creationDate: string;
+}
 
-**Productos** (`lib/products/`):
+// DTOs de Request
+export interface MaterialCreateRequest {
+  name: string;
+  type: MaterialType;
+  supplier?: string;
+  stock: number;
+  unitMeasurement: UnitMeasurement;
+  threshold: number;
+}
 
-- `getProducts()` - Listar productos con paginación
-- `getProductById()` - Obtener producto por ID
-- `createProduct()` - Crear nuevo producto
-- `updateProduct()` - Actualizar producto
-- `toggleProductActive()` - Activar/desactivar producto
-- `getProductsIdNameList()` - Lista simplificada para dropdowns
-- **Utils**: 25 funciones (alcoholic text, iconos, formateo, validación, filtrado, estadísticas)
-- **Documentación**: JSDoc completo
+export interface ProductUpdateRequest {
+  name?: string;
+  isAlcoholic?: boolean;
+  standardQuantity?: number;
+  unitMeasurement?: UnitMeasurement;
+}
 
-**Lotes** (`lib/batches/`):
+// Respuestas paginadas
+export interface PageResponse<T> {
+  content: T[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  size: number;
+  isFirst: boolean;
+  isLast: boolean;
+}
+```
 
-- `getBatches()` - Listar lotes con filtros
-- `getBatchById()` - Obtener lote por ID
-- `updateBatch()` - Actualizar información del lote
-- `cancelBatch()` - Cancelar lote
-- `getBatchStatusOptions()` - Opciones de estado disponibles
-- **Utils**: 27 funciones (estado, iconos, formateo de fechas, validación, estadísticas, progreso)
-- **Documentación**: JSDoc completo
+## Comunicación con el Backend
 
-**Packagings** (`lib/packagings/`):
+### Fetcher: Cliente HTTP Centralizado
 
-- `getPackagings()` - Listar packagings con paginación
-- `getPackagingById()` - Obtener packaging por ID
-- `createPackaging()` - Crear nuevo packaging
-- `updatePackaging()` - Actualizar packaging
-- `togglePackagingActive()` - Activar/desactivar packaging
-- `getPackagingsIdNameList()` - Lista simplificada
-- `getUnitMeasurements()` - Unidades de medida disponibles
-- **Utils**: 17 funciones (formateo, validación, filtrado, estadísticas)
-- **Documentación**: JSDoc completo
+El sistema utiliza un cliente HTTP centralizado que maneja autenticación, errores y serialización:
 
-**Usuarios** (`lib/users/`):
+```tsx
+// lib/fetcher.ts
 
-- `getUsers()` - Listar usuarios con paginación
-- `getUserById()` - Obtener usuario por ID
-- `createUser()` - Crear nuevo usuario
-- `updateUser()` - Actualizar información de usuario
-- `updateUserRoles()` - Actualizar roles
-- `updateUserPassword()` - Cambiar contraseña
-- `toggleUserActive()` - Activar/desactivar usuario
-- `getRoles()` - Lista de roles disponibles
-- **Utils**: 25 funciones (formateo de nombre, iconos por rol, badges, validación, búsqueda, estadísticas)
-- **Documentación**: JSDoc completo
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "<http://localhost:8080>";
 
-**Análisis** (`lib/analytics-api.ts`):
+// Credenciales de Spring Security
+const DEFAULT_USERNAME = "user";
+const DEFAULT_PASSWORD = "1234";
 
-- `getDashboardMonthly()` - Estadísticas del dashboard
-- `getMonthlyProduction()` - Producción mensual
-- `getMonthlyMaterialConsumption()` - Consumo mensual
-- `getMonthlyWaste()` - Desperdicios mensuales
+export async function fetcher<T>(
+  endpoint: string,
+  options: FetcherOptions = {}
+): Promise<T> {
+  const { params, auth, ...fetchOptions } = options;
 
-**Autenticación** (`lib/auth/api.ts`):
+  // Construir URL con parámetros
+  let url = `${BACKEND_URL}${endpoint}`;
+  if (params) {
+    const searchParams = new URLSearchParams(params);
+    url += `?${searchParams.toString()}`;
+  }
 
-- `login()` - Iniciar sesión
-- `logout()` - Cerrar sesión
-- `getCurrentUser()` - Usuario actual
-- `validateSession()` - Validar sesión
+  // Autenticación básica
+  const username = auth?.username || DEFAULT_USERNAME;
+  const password = auth?.password || DEFAULT_PASSWORD;
+  const basicAuth = btoa(`${username}:${password}`);
 
-### Manejo de Errores
+  const response = await fetch(url, {
+    ...fetchOptions,
+    headers: {
+      Authorization: `Basic ${basicAuth}`,
+      "Content-Type": "application/json",
+      ...fetchOptions.headers,
+    },
+  });
 
-**Sistema centralizado** (`lib/error-handler.ts`):
+  // Manejo de errores
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new ApiError(
+      errorData.message,
+      response.status,
+      response.statusText,
+      errorData
+    );
+  }
 
-- Detección de tipos de error
-- Mensajes amigables
-- Toasts automáticos
-- Logging en consola
+  if (response.status === 204) return null as T;
 
-**Componente de Error** (`components/ui/error-state.tsx`):
+  return await response.json();
+}
 
-- Estados de error visuales
-- Botones de reintento
-- Detección de errores de conexión
+// API helpers
+export const api = {
+  get: <T,>(endpoint: string, params?: Record<string, string>) =>
+    fetcher<T>(endpoint, { method: "GET", params }),
 
----
+  post: <T,>(endpoint: string, data?: unknown) =>
+    fetcher<T>(endpoint, { method: "POST", body: JSON.stringify(data) }),
 
-## 🛠️ Tecnologías Utilizadas
+  patch: <T,>(endpoint: string, data?: unknown) =>
+    fetcher<T>(endpoint, { method: "PATCH", body: JSON.stringify(data) }),
 
-### Core
+  delete: <T,>(endpoint: string) => fetcher<T>(endpoint, { method: "DELETE" }),
+};
+```
 
-- **Next.js 15.2.4** - Framework React con App Router
-- **React 19** - Biblioteca UI
-- **TypeScript 5** - Tipado estático
+### APIs por Módulo
 
-### UI y Estilos
+Cada módulo tiene su propio archivo de API con funciones específicas:
 
-- **Tailwind CSS 4.1.9** - Framework CSS utility-first
-- **Radix UI** - Componentes accesibles sin estilos
-- **shadcn/ui** - Componentes UI construidos sobre Radix
-- **Lucide React** - Iconos
-- **Recharts** - Gráficos interactivos
+```tsx
+// lib/products-api.ts
 
-### Estado y Datos
+export async function getProducts(
+  filters: {
+    page?: number;
+    size?: number;
+    name?: string;
+    estado?: string;
+    alcoholic?: string;
+    ready?: string;
+  } = {}
+) {
+  const apiFilters = mapFiltersToAPI(filters);
+  const urlParams: Record<string, string> = {};
 
-- **React Context API** - Estado global
-- **React Hooks** - Lógica reutilizable
-- **React Hook Form** - Manejo de formularios
-- **Zod** - Validación de esquemas
+  if (apiFilters.page !== undefined)
+    urlParams.page = apiFilters.page.toString();
+  if (apiFilters.size !== undefined)
+    urlParams.size = apiFilters.size.toString();
+  if (apiFilters.name) urlParams.name = apiFilters.name;
+  if (apiFilters.isActive !== undefined)
+    urlParams.isActive = apiFilters.isActive.toString();
 
-### Utilidades
+  const response = await api.get<ProductPageResponse>(
+    "/api/products",
+    urlParams
+  );
 
-- **date-fns** - Manipulación de fechas
-- **class-variance-authority** - Variantes de componentes
-- **tailwind-merge** - Merge de clases CSS
+  return {
+    products: response.content,
+    pagination: {
+      currentPage: response.currentPage,
+      totalPages: response.totalPages,
+      totalElements: response.totalItems,
+      size: response.size,
+      first: response.isFirst,
+      last: response.isLast,
+    },
+  };
+}
 
-### Testing
+export async function getProductById(id: string) {
+  return await api.get<ProductResponse>(`/api/products/${id}`);
+}
 
-- **Playwright** - Testing E2E
+export async function createProduct(data: ProductCreateRequest) {
+  return await api.post<ProductResponse>("/api/products", data);
+}
 
----
+export async function updateProduct(id: string, data: ProductUpdateRequest) {
+  return await api.patch<ProductResponse>(`/api/products/${id}`, data);
+}
 
-## 📱 Responsive Design
+export async function toggleProductActive(id: string) {
+  return await api.patch<ProductResponse>(`/api/products/${id}/toggle-active`);
+}
+```
+
+## Componentes Reutilizables
+
+### DataTable: Tabla Genérica
+
+Componente genérico para mostrar datos tabulares con acciones:
+
+```tsx
+// components/ui/data-table.tsx
+
+interface DataTableProps<T> {
+  data: T[];
+  columns: ColumnDef<T>[];
+  actions?: TableActions<T>;
+  emptyMessage?: string;
+}
+
+export function DataTable<T extends Record<string, any>>({
+  data,
+  columns,
+  actions,
+  emptyMessage,
+}: DataTableProps<T>) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr>
+            {columns.map((col) => (
+              <th key={col.key}>{col.label}</th>
+            ))}
+            {actions && <th>Acciones</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {data.length === 0 ? (
+            <tr>
+              <td colSpan={columns.length + 1}>
+                {emptyMessage || "No hay datos"}
+              </td>
+            </tr>
+          ) : (
+            data.map((item, index) => (
+              <tr key={index}>
+                {columns.map((col) => (
+                  <td key={col.key}>
+                    {col.render
+                      ? col.render(item[col.key], item)
+                      : item[col.key]}
+                  </td>
+                ))}
+                {actions && (
+                  <td>
+                    <ActionButtons item={item} actions={actions} />
+                  </td>
+                )}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+```
+
+### Patrón Tabla/Cards Responsive
+
+Cada módulo implementa dos vistas: tabla para desktop y cards para móvil:
+
+```tsx
+// _components/products-client.tsx
+
+export function ProductsClient({ productos }: ProductsClientProps) {
+  return (
+    <>
+      {/* Desktop: Tabla */}
+      <ProductsTable
+        productos={productos}
+        onEdit={handleEdit}
+        className="hidden md:block"
+      />
+
+      {/* Mobile: Cards */}
+      <ProductsCards
+        productos={productos}
+        onEdit={handleEdit}
+        className="md:hidden"
+      />
+    </>
+  );
+}
+```
+
+## Diseño Responsive y Mobile-First
+
+El sistema sigue un enfoque **mobile-first**, optimizado para pantallas desde 320px:
 
 ### Breakpoints
 
-- **Mobile**: `< 768px` - Bottom bar, navegación simplificada
-- **Tablet**: `768px - 1024px` - Sidebar colapsable
-- **Desktop**: `> 1024px` - Sidebar completo, layout completo
+```css
+/* Tailwind CSS breakpoints */
+xs: < 640px     /* Móviles pequeños */
+sm: 640px       /* Móviles grandes */
+md: 768px       /* Tablets */
+lg: 1024px      /* Desktop pequeño */
+xl: 1280px      /* Desktop grande */
+2xl: 1536px     /* Desktop extra grande */
 
-### Estrategia Mobile-First
-
-- Diseño base para móvil
-- Mejoras progresivas para pantallas grandes
-- Componentes adaptativos (cards, tablas, gráficos)
-- Navegación contextual según dispositivo
-
----
-
-## 🔐 Seguridad
-
-### Autenticación
-
-- **Spring Security** en el backend
-- **Cookies JSESSIONID** para sesiones
-- **Protected Routes** en el frontend
-- **Validación de sesión** al cargar la app
-
-### Protección de Rutas
-
-```typescript
-// app/(dashboard)/layout.tsx
-<ProtectedRoute>{/* Contenido protegido */}</ProtectedRoute>
 ```
 
-El componente `ProtectedRoute`:
+### Patrones Responsive
 
-- Verifica autenticación
-- Redirige a login si no está autenticado
-- Muestra loading durante verificación
+**1. Layout adaptativo:**
 
----
+```tsx
+<div className="flex flex-col md:flex-row gap-4">
+  {/* Vertical en móvil, horizontal en desktop */}
+</div>
+```
 
-## 📊 Gráficos y Visualización
+**2. Tipografía responsive:**
 
-### Recharts
+```tsx
+<h1 className="text-xl md:text-2xl font-bold">{/* Más pequeño en móvil */}</h1>
+```
 
-Todos los gráficos usan **Recharts** para:
+**3. Padding y spacing:**
 
-- Mejor integración con React
-- Rendimiento optimizado
-- Estilos personalizables
-- Responsive automático
+```tsx
+<div className="p-4 md:p-6 gap-3 md:gap-6">{/* Menos padding en móvil */}</div>
+```
 
-### Tipos de Gráficos
+**4. Componentes condicionales:**
 
-1. **LineChart**: Líneas suaves con área rellena
-2. **BarChart**: Barras con bordes redondeados
-3. **PieChart**: Gráfico de pastel (solo desperdicios)
+```tsx
+{
+  /* Solo desktop */
+}
+<Sidebar className="hidden md:flex" />;
 
-### Personalización
+{
+  /* Solo móvil */
+}
+<BottomBar className="md:hidden" />;
+```
 
-- Tooltips personalizados con estilos oscuros
-- Colores por categoría (azul/naranja/rojo)
-- Grids sutiles
-- Ejes con formato personalizado
+**5. Botones responsive:**
 
----
+```tsx
+<Button className="w-full md:w-auto text-xs md:text-sm">
+  <Icon className="w-4 h-4 mr-1.5 md:mr-2" />
+  <span>Texto visible en todas las pantallas</span>
+</Button>
+```
 
-## 🚀 Scripts Disponibles
+## Manejo de Errores
+
+### Sistema Centralizado de Errores
+
+```tsx
+// lib/error-handler.ts
+
+export function handleError(error: unknown, options?: ErrorOptions) {
+  if (ApiError.isApiError(error)) {
+    // Error de la API
+    toast.error(options?.title || "Error", {
+      description: error.message,
+      duration: 5000,
+    });
+  } else if (error instanceof Error) {
+    // Error genérico
+    toast.error(options?.title || "Error", {
+      description: error.message,
+    });
+  } else {
+    // Error desconocido
+    toast.error("Error", {
+      description: "Ha ocurrido un error inesperado",
+    });
+  }
+}
+
+export function showSuccess(message: string) {
+  toast.success("Éxito", {
+    description: message,
+    duration: 3000,
+  });
+}
+```
+
+### Uso en componentes:
+
+```tsx
+try {
+  await updateProduct(id, data);
+  showSuccess("Producto actualizado exitosamente");
+  router.refresh();
+} catch (error) {
+  handleError(error, {
+    title: "Error al actualizar producto",
+  });
+}
+```
+
+## Optimizaciones de Rendimiento
+
+### 1. Llamadas Paralelas al Backend
+
+**Problema:** Llamadas secuenciales lentas
+
+```tsx
+// ❌ LENTO: Llamadas secuenciales
+for (const phase of phases) {
+  const recipes = await getRecipes(phase.id); // Espera una por una
+}
+```
+
+**Solución:** Usar `Promise.all()`
+
+```tsx
+// ✅ RÁPIDO: Llamadas en paralelo
+const recipePromises = phases.map((phase) => getRecipes(phase.id));
+const results = await Promise.all(recipePromises);
+```
+
+**Impacto:** 4-5x más rápido con 5 fases (de ~3-5s a ~500ms-1s)
+
+### 2. Loading UI Específicos
+
+Cada ruta tiene su propio `loading.tsx` para feedback inmediato:
+
+```tsx
+// app/(dashboard)/productos/loading.tsx
+export default function ProductosLoading() {
+  return <PageLoader message="Cargando productos..." />;
+}
+```
+
+### 3. Prefetching Automático
+
+Next.js precarga automáticamente rutas visibles:
+
+```tsx
+<Link href="/productos/123">
+  {" "}
+  {/* Se precarga automáticamente */}
+  Ver Producto
+</Link>
+```
+
+### 4. Code Splitting
+
+Cada ruta carga solo el JavaScript necesario automáticamente.
+
+## Testing End-to-End
+
+El sistema incluye tests E2E con Playwright:
+
+```jsx
+// tests/products/productsTest.test.js
+
+const { test, expect } = require("@playwright/test");
+
+test("Crear producto exitosamente", async ({ page }) => {
+  await page.goto("<http://localhost:3000/productos>");
+
+  // Click en botón crear
+  await page.click('[data-testid="create-product-btn"]');
+
+  // Llenar formulario
+  await page.fill('input[name="name"]', "Cerveza IPA");
+  await page.selectOption('select[name="unitMeasurement"]', "LT");
+  await page.fill('input[name="standardQuantity"]', "100");
+
+  // Enviar formulario
+  await page.click('button[type="submit"]');
+
+  // Verificar éxito
+  await expect(page.locator("text=Producto creado exitosamente")).toBeVisible();
+});
+```
+
+### Módulos con Tests
+
+- Home / Dashboard
+- Materiales (CRUD completo)
+- Productos (crear, editar, buscar)
+- Movimientos (crear, filtrar, detalles)
+- Packagings (crear)
+
+## Sistema de Diseño
+
+### Paleta de Colores
+
+```css
+/* colors del tema principal (verde cervecero) */
+--primary-50: #F0FDF4
+--primary-100: #DCFCE7
+--primary-600: #16A34A  /* Color principal */
+--primary-700: #15803D
+--primary-900: #14532D
+
+/* Colores de estado */
+--success: #10B981   /* Verde */
+--warning: #F59E0B   /* Amarillo */
+--error: #EF4444     /* Rojo */
+--info: #3B82F6      /* Azul */
+
+```
+
+### Componentes Base
+
+Todos los componentes UI están basados en **shadcn/ui**, permitiendo:
+
+- **Personalización completa**: Los componentes se copian al proyecto
+- **Consistencia**: Mismo diseño en toda la aplicación
+- **Accesibilidad**: Cumple con ARIA y WCAG 2.1
+- **TypeScript**: Tipado completo
+
+## Flujo de Datos
+
+```mermaid
+graph TB
+    A[Usuario] -->|Interacción| B[Client Component]
+    B -->|Event Handler| C[API Function]
+    C -->|HTTP Request| D[Fetcher]
+    D -->|Basic Auth| E[Backend API]
+    E -->|Response| D
+    D -->|Parsed JSON| C
+    C -->|Data| B
+    B -->|router.refresh| F[Server Component]
+    F -->|Fetch| E
+    E -->|Fresh Data| F
+    F -->|Renderizado| A
+
+```
+
+## Despliegue y Configuración
+
+### Variables de Entorno
 
 ```bash
-# Desarrollo
-npm run dev          # Inicia servidor de desarrollo
-
-# Producción
-npm run build        # Construye para producción
-npm run start        # Inicia servidor de producción
-
-# Testing
-npm run lint         # Ejecuta linter
-```
-
----
-
-## 📝 Convenciones de Código
-
-### Nomenclatura
-
-- **Componentes**: PascalCase (`InventoryChart.tsx`)
-- **Hooks**: camelCase con prefijo `use` (`useNotifications.ts`)
-- **Utilidades**: camelCase (`fetcher.ts`, `utils.ts`)
-- **Tipos**: PascalCase (`Material`, `DashboardStatsDTO`)
-
-### Estructura de Componentes
-
-```typescript
-// 1. Imports
-import { ... } from '...'
-
-// 2. Tipos e interfaces
-interface ComponentProps { ... }
-
-// 3. Componente principal
-export function Component({ ... }: ComponentProps) {
-  // 4. Estados
-  const [state, setState] = useState(...)
-
-  // 5. Memoización (si aplica)
-  const memoizedValue = useMemo(() => { ... }, [deps])
-
-  // 6. Callbacks
-  const handleAction = useCallback(() => { ... }, [deps])
-
-  // 7. Effects
-  useEffect(() => { ... }, [deps])
-
-  // 8. Render
-  return ( ... )
-}
-```
-
-### Estructura de Módulo (Patrón Establecido)
+# .env.local
+NEXT_PUBLIC_BACKEND_URL=https://frozen-backend-production.up.railway.app
 
 ```
-lib/[module]/
-├── api.ts        # Funciones API con JSDoc completo
-├── utils.ts      # 15-27 funciones utilitarias con JSDoc
-└── index.ts      # Barrel export (re-exporta api y utils)
 
-components/[module]/
-├── [module]-loading-state.tsx   # Skeleton loaders
-├── [module]-empty-state.tsx     # Estado vacío con acción
-└── [module]-error-state.tsx     # Error con retry
+### Configuración de Next.js
 
-types/
-├── [module].ts   # Tipos específicos del módulo
-└── index.ts      # Barrel export de todos los tipos
+```jsx
+// next.config.mjs
+const nextConfig = {
+  reactStrictMode: true,
+  images: {
+    domains: ["frozen-backend-production.up.railway.app"],
+  },
+};
 ```
 
-### Patrón de Constantes por Módulo
-
-En `lib/constants.ts`, cada módulo tiene:
-
-```typescript
-// Etiquetas y configuraciones
-export const [MODULE]_STATUS_LABELS: Record<string, string>
-export const [MODULE]_BADGE_COLORS: Record<string, BadgeConfig>
-
-// Paginación
-export const [MODULE]_PAGINATION = {
-  DEFAULT_PAGE_SIZE: 10,
-  PAGE_SIZE_OPTIONS: [10, 20, 50, 100],
-  DEFAULT_PAGE: 1,
-}
-
-// Mensajes
-export const [MODULE]_ERROR_MESSAGES: Record<string, string>
-export const [MODULE]_SUCCESS_MESSAGES: Record<string, string>
-export const [MODULE]_EMPTY_MESSAGES: Record<string, string>
-
-// Filtros y validación
-export const [MODULE]_FILTER_OPTIONS: Array<Option>
-export const [MODULE]_VALIDATION_LIMITS: Record<string, number>
-```
-
-### Funciones Utilitarias Comunes por Módulo
-
-Cada `utils.ts` típicamente incluye:
-
-1. **Formateo**:
-
-   - `formatXxxDate()` - Formatear fechas
-   - `formatXxxQuantity()` - Formatear cantidades
-   - `formatXxxStatus()` - Formatear estados
-
-2. **Configuración Visual**:
-
-   - `getXxxIcon()` - Obtener icono por tipo/estado
-   - `getXxxBadgeConfig()` - Configuración de badges
-
-3. **Validación**:
-
-   - `validateXxxData()` - Validar datos del formulario
-
-4. **Filtrado y Búsqueda**:
-
-   - `filterXxxByStatus()` - Filtrar por estado
-   - `filterXxxByType()` - Filtrar por tipo
-   - `searchXxx()` - Búsqueda por texto
-
-5. **Estadísticas**:
-
-   - `calculateXxxStats()` - Calcular estadísticas
-
-6. **Ordenamiento**:
-
-   - `sortXxxByName()` - Ordenar por nombre
-   - `sortXxxByDate()` - Ordenar por fecha
-
-7. **Resumen**:
-   - `getXxxSummary()` - Generar resumen de texto
-
----
-
-### Organización de Archivos
-
-- **Páginas**: `app/(dashboard)/[module]/page.tsx`
-- **Componentes de página**: `app/(dashboard)/[module]/_components/*`
-- **Componentes de estado**: `components/[module]/*-state.tsx`
-- **Componentes compartidos**: `components/[category]/*`
-- **APIs por módulo**: `lib/[module]/api.ts`
-- **Utils por módulo**: `lib/[module]/utils.ts`
-- **Constantes**: `lib/constants.ts` (centralizadas)
-- **Tipos por entidad**: `types/[entity].ts`
-- **Barrel exports**: `types/index.ts`, `lib/[module]/index.ts`
-
----
-
-## 🔄 Flujos de Datos
-
-### Flujo Típico de una Página (Patrón Actualizado)
-
-1. Usuario navega a /materiales
-2. Page component carga
-3. useMemo → Memoiza parámetros de búsqueda
-4. useEffect → Llama a getMaterials() desde lib/materials
-5. API hace request al backend via api.get()
-6. Backend responde con datos
-7. Estado actualizado con setState
-8. Si hay error → MaterialsErrorState con botón retry
-9. Si está cargando → MaterialsLoadingState con skeletons
-10. Si no hay datos → MaterialsEmptyState con acción
-11. Si hay datos → MaterialsClient renderiza contenido
-12. Usuario interactúa (filtros, búsqueda)
-13. useCallback → Handler memoizado ejecuta acción
-14. Nuevo request con parámetros actualizados
-15. Ciclo se repite
-
-### Flujo de Creación/Edición
-
-1. Usuario hace clic en "Crear Material"
-2. Modal/Formulario se abre
-3. Usuario completa campos
-4. Validación client-side con validateMaterialData()
-5. Submit → createMaterial() desde lib/materials/api
-6. Backend procesa y responde
-7. handleError() maneja errores si los hay
-8. showSuccess() muestra mensaje de éxito
-9. useCallback → handleRefresh() actualiza lista
-10. Modal se cierra
-
-### Flujo de Notificaciones
-
-1. Hook useNotifications se inicializa
-2. Conecta a SSE endpoint
-3. Backend envía eventos en tiempo real
-4. Hook actualiza estado local
-5. Componentes suscritos se actualizan
-6. UI refleja cambios (contador, panel)
-
-## 🎯 Mejores Prácticas (Actualizadas)
-
-### Estructura y Organización
-
-1. **Modularización por dominio** - Cada módulo en su carpeta con api/utils/index
-2. **Barrel exports** - Usar `index.ts` para re-exportar y simplificar imports
-3. **Tipos separados** - Un archivo por entidad en `types/`
-4. **Componentes de estado** - Siempre incluir loading/empty/error states
-5. **Constantes centralizadas** - Todo en `lib/constants.ts` siguiendo patrón [MODULE]\_\*
-
-### TypeScript
-
-6. **Tipos explícitos** - Evitar `any`, usar tipos específicos
-7. **JSDoc completo** - Documentar todas las funciones con ejemplos
-8. **Validación en desarrollo** - Usar prop-validation para mejor DX
-9. **Type safety** - 0 errores TypeScript en todo el proyecto
-
-### Performance
-
-10. **useMemo** - Para valores calculados y parámetros de búsqueda
-11. **useCallback** - Para handlers que se pasan como props
-12. **Lazy loading** - Cargar componentes pesados bajo demanda
-13. **Componentes puros** - Evitar re-renders innecesarios
-
-### Manejo de Estados
-
-14. **Estados de carga** - Siempre mostrar skeleton loaders
-15. **Estados vacíos** - Componentes específicos con acciones
-16. **Manejo de errores** - Sistema centralizado con retry
-17. **Validación** - Client-side antes de enviar al backend
-
-### Código Limpio
-
-18. **Funciones pequeñas** - Una responsabilidad por función
-19. **Nombres descriptivos** - Claros y específicos al dominio
-20. **Comentarios útiles** - Explicar "por qué", no "qué"
-21. **Consistencia** - Seguir patrones establecidos en el proyecto
-
-### UI/UX
-
-22. **Responsive design** - Mobile-first con breakpoints adaptativos
-23. **Accesibilidad** - ARIA labels, navegación por teclado, contraste
-24. **Feedback visual** - Toasts, estados, confirmaciones
-25. **Mensajes amigables** - Errores comprensibles para el usuario
-
-### Testing y Calidad
-
-26. **Linting** - Ejecutar antes de commits
-27. **Type checking** - Verificar errores TypeScript
-28. **Revisar imports** - No dejar imports sin usar
-29. **Verificar consola** - No dejar console.log en producción
-
----
-
-## 📚 Recursos Adicionales
-
-- **Next.js Docs**: https://nextjs.org/docs
-- **React Docs**: https://react.dev
-- **Recharts Docs**: https://recharts.org
-- **Tailwind CSS**: https://tailwindcss.com
-- **Radix UI**: https://www.radix-ui.com
-- **shadcn/ui**: https://ui.shadcn.com
-
----
-
-## 🔧 Mejoras Recientes (Noviembre 11 - 2025)
-
-### Fase 1: Eliminación de Duplicación ✅
-
-- **Utilidades compartidas**: `formatMonthLabel()` y `sortMonthlyData()` movidas a `lib/utils.ts`
-- **Componentes compartidos**: `ChartLoadingState`, `ChartEmptyState`, `ChartTooltip`
-- **Tipos TypeScript**: Tipos específicos para Recharts en `types/recharts.ts`
-- **Reducción**: ~150 líneas de código duplicado eliminadas
-
-### Fase 2: Optimización con Hooks ✅
-
-- **Hook personalizado**: `useChartData` para lógica centralizada de carga de datos
-- **Memoización**: `useMemo` y `useCallback` para mejor rendimiento
-- **Refactorización**: Los 3 componentes de gráficos usan el hook compartido
-- **Reducción**: ~95 líneas de código duplicado adicionales
-
-### Fase 3: Manejo de Errores ✅
-
-- **Error Boundary**: Componente para capturar errores de renderizado
-- **Unificación**: Todos los errores usan `handleError` del sistema centralizado
-- **Integración**: ErrorBoundary integrado en el layout del dashboard
-- **Mejora**: Mejor experiencia de usuario con manejo robusto de errores
-
-### Fase 4: Constantes y Documentación ✅
-
-- **Constantes centralizadas**: `lib/constants.ts` con valores compartidos (colores, mensajes, configuraciones)
-- **Documentación JSDoc**: Documentación completa en componentes y hooks
-- **Validación de props**: Validación en desarrollo para mejor DX (`lib/prop-validation.ts`)
-- **Mejora**: Código más mantenible y documentado
-
-### Fase 5: Reorganización de Tipos (Noviembre 2025) ✅
-
-- **Separación de tipos**: `types/index.ts` dividido en 17 archivos específicos por entidad
-- **Archivos creados**: `common.ts`, `materials.ts`, `warehouse.ts`, `movements.ts`, `packagings.ts`, `products.ts`, `phases.ts`, `recipes.ts`, `orders.ts`, `batches.ts`, `production.ts`, `quality.ts`, `users.ts`, `notifications.ts`, `sectors.ts`, `analytics.ts`, `config.ts`
-- **Barrel export**: `types/index.ts` como punto de entrada único
-- **Mejora**: Mejor organización y mantenibilidad del código
-
-### Fase 6: Reorganización de APIs en Módulos (Noviembre 2025) ✅
-
-- **Estructura modular**: APIs organizadas en carpetas por dominio
-- **Patrón establecido**: Cada módulo contiene `api.ts`, `utils.ts` e `index.ts`
-- **Módulos creados**: `materials/`, `movements/`, `orders/`, `products/`, `batches/`, `packagings/`, `users/`
-- **Barrel exports**: Imports simplificados desde `@/lib/[module]`
-- **Mejora**: Código más organizado y escalable
-
-### Fase 7: Refactorización Completa de Módulos (Noviembre 2025) ✅
-
-#### Módulos Refactorizados:
-
-**1. Materiales** ✅
-
-- Utils: 20 funciones utilitarias (~350 líneas)
-- Componentes de estado: `MaterialsLoadingState`, `MaterialsEmptyState`, `MaterialsErrorState`
-- Constantes: ~100 líneas en `lib/constants.ts` (MATERIAL\_\*)
-- Página: Refactorizada con 3 `useCallback`, 1 `useMemo`
-- API: JSDoc completo con ejemplos
-- **Resultado**: 0 errores TypeScript
-
-**2. Movimientos** ✅
-
-- Utils: 22 funciones utilitarias (~400 líneas)
-- Componentes de estado: 3 componentes (loading/empty/error)
-- Constantes: ~120 líneas (MOVEMENT\_\*)
-- Páginas: Listing + Detail refactorizadas con hooks
-- API: JSDoc completo
-- **Resultado**: 0 errores TypeScript
-
-**3. Notificaciones** ✅
-
-- Utils: 15 funciones utilitarias (~250 líneas)
-- Componentes: Panel optimizado con memoización
-- Constantes: ~80 líneas (NOTIFICATION\_\*)
-- Hook: `useNotifications` mejorado
-- **Resultado**: 0 errores TypeScript
-
-**4. Órdenes** ✅
-
-- Utils: 18 funciones utilitarias (~300 líneas)
-- Componentes de estado: 3 componentes
-- Constantes: ~110 líneas (ORDER\_\*)
-- Página: Refactorizada con 2 `useCallback`, 1 `useMemo`
-- API: JSDoc completo
-- **Resultado**: 0 errores TypeScript
-
-**5. Productos** ✅
-
-- Utils: 25 funciones utilitarias (~400 líneas)
-- Componentes de estado: 3 componentes
-- Constantes: ~180 líneas (PRODUCT\_\*)
-- Páginas: Listing + Detail con hooks
-- API: JSDoc completo
-- **Resultado**: 0 errores TypeScript
-
-**6. Seguimiento/Lotes** ✅
-
-- Utils: 27 funciones utilitarias (~450 líneas)
-- Componentes de estado: 3 componentes
-- Constantes: ~180 líneas (BATCH\_\*)
-- Páginas: Listing + Detail con hooks
-- API: JSDoc completo
-- Correcciones de tipos: `code` vs `batchCode`, eliminación de referencias no existentes
-- **Resultado**: 0 errores TypeScript
-
-**7. Packagings** ✅
-
-- Utils: 17 funciones utilitarias (~200 líneas)
-- Componentes de estado: 3 componentes
-- Constantes: ~150 líneas (PACKAGING\_\*)
-- Página: Refactorizada con 3 `useCallback`, 1 `useMemo`
-- API: JSDoc completo
-- **Resultado**: 0 errores TypeScript
-
-**8. Usuarios** ✅
-
-- Utils: 25 funciones utilitarias (~400 líneas)
-- Componentes de estado: 3 componentes
-- Constantes: ~140 líneas (USER\_\*)
-- Página: Refactorizada con 3 `useCallback`, 1 `useMemo`
-- API: JSDoc completo
-- Correcciones: Ajustes para todos los roles del sistema
-- **Resultado**: 0 errores TypeScript
-
-**9. Configuración** ✅
-
-- Página con tabs: Ya bien estructurada
-- Sin necesidad de refactorización adicional
-- **Resultado**: 0 errores TypeScript
-
-**10. Perfil** ✅
-
-- Página: Refactorizada con 2 `useCallback`
-- Optimización de handlers para perfil y contraseña
-- **Resultado**: 0 errores TypeScript
-
-### Estadísticas de la Refactorización Fase 7:
-
-- **Funciones utilitarias creadas**: 169 funciones (~2,750 líneas)
-- **Componentes de estado**: 21 componentes (7 módulos × 3 componentes)
-- **Constantes agregadas**: ~1,060 líneas organizadas
-- **Hooks de memoización**: 24 `useCallback`, 7 `useMemo`
-- **Documentación JSDoc**: Completa en 8 APIs
-- **Módulos completados**: 10/10 ✅
-- **Errores TypeScript totales**: **0** ❌
-- **Líneas de código refactorizadas**: ~4,500+ líneas
-
-### Patrones Establecidos:
-
-**Estructura de Módulo**:
-
-```
-
-lib/[module]/
-├── api.ts # API con JSDoc completo
-├── utils.ts # 15-27 funciones utilitarias
-└── index.ts # Barrel export
-
-components/[module]/
-├── [module]-loading-state.tsx
-├── [module]-empty-state.tsx
-└── [module]-error-state.tsx
-
-```
-
-**Constantes por Módulo** (en `lib/constants.ts`):
-
-- `[MODULE]_STATUS_LABELS`: Etiquetas de estados
-- `[MODULE]_BADGE_COLORS`: Colores para badges
-- `[MODULE]_PAGINATION`: Configuración de paginación
-- `[MODULE]_ERROR_MESSAGES`: Mensajes de error
-- `[MODULE]_SUCCESS_MESSAGES`: Mensajes de éxito
-- `[MODULE]_EMPTY_MESSAGES`: Mensajes de estado vacío
-- `[MODULE]_FILTER_OPTIONS`: Opciones de filtros
-- `[MODULE]_VALIDATION_LIMITS`: Límites de validación
-
-**Funciones Utilitarias Comunes**:
-
-- Formateo de datos (textos, fechas, cantidades)
-- Configuración de iconos y badges
-- Validación de datos
-- Filtrado y búsqueda
-- Ordenamiento
-- Cálculo de estadísticas
-- Generación de resúmenes
-
-**Optimización de Páginas**:
-
-- `useMemo` para parámetros de búsqueda
-- `useCallback` para handlers (refresh, retry, acciones)
-- Componentes de estado reutilizables
-- Constantes centralizadas
-- Manejo de errores robusto
-
-### Beneficios de la Refactorización:
-
-1. **Mantenibilidad**: Código más organizado y fácil de mantener
-2. **Reutilización**: Componentes y utilidades compartidas
-3. **Type Safety**: 0 errores TypeScript en todo el proyecto
-4. **Performance**: Memoización efectiva con hooks
-5. **Documentación**: JSDoc completo en todas las APIs
-6. **Consistencia**: Patrones uniformes en todos los módulos
-7. **Escalabilidad**: Estructura preparada para futuros módulos
-
----
+## Mejores Prácticas Implementadas
+
+1. **Server Components por defecto**: Reduce JavaScript del cliente
+2. **Client Components solo cuando necesario**: Para interactividad
+3. **Loading UI en cada ruta**: Feedback visual inmediato
+4. **Error boundaries**: Manejo graceful de errores
+5. **TypeScript estricto**: Prevención de errores en tiempo de desarrollo
+6. **Mobile-first**: Optimización para dispositivos móviles
+7. **Llamadas paralelas**: Optimización de rendimiento
+8. **Componentes reutilizables**: DRY (Don't Repeat Yourself)
+9. **Testing E2E**: Verificación de flujos completos
+10. **Documentación exhaustiva**: Guías técnicas en `/docs`
