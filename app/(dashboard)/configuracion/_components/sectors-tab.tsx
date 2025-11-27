@@ -1,21 +1,21 @@
 "use client"
 
+/**
+ * Tab de gestión de sectores
+ * Utiliza componentes separados para mejor organización
+ */
+
 import { useState, useEffect } from "react"
 import { updateSector, getAllSectors, createSector } from "@/lib/sectors"
 import type { SectorResponse, SectorCreateRequest, SectorUpdateRequest, SectorType, Phase } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Save, X } from "lucide-react"
 import { handleError, showSuccess } from "@/lib/error-handler"
-import { getUsers } from "@/lib/users"
-import type { UserResponse } from "@/types"
 import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
 import { DataCards, type CardLayout } from "@/components/ui/data-cards"
 import { CreateButton, useCreateModal } from "@/components/ui/create-button"
+import { SectorForm } from "./sector-form"
 import { cn } from "@/lib/utils"
 
 const SECTOR_TYPES: { value: SectorType; label: string }[] = [
@@ -24,195 +24,10 @@ const SECTOR_TYPES: { value: SectorType; label: string }[] = [
   { value: "ALMACEN", label: "Almacén" }
 ]
 
-const PHASES: Phase[] = [
-  "MOLIENDA",
-  "MACERACION",
-  "FILTRACION",
-  "COCCION",
-  "FERMENTACION",
-  "MADURACION",
-  "GASIFICACION",
-  "ENVASADO",
-  "DESALCOHOLIZACION"
-]
-
 // Función para formatear las fases a título (primera letra mayúscula, resto minúsculas)
 const formatPhase = (phase: Phase | null): string => {
   if (!phase) return "-"
   return phase.charAt(0).toUpperCase() + phase.slice(1).toLowerCase()
-}
-
-interface SectorFormProps {
-  initial?: SectorResponse | null
-  onSubmit: (data: SectorCreateRequest | SectorUpdateRequest) => Promise<void>
-  onCancel: () => void
-  isLoading: boolean
-}
-
-function SectorForm({ initial, onSubmit, onCancel, isLoading }: SectorFormProps) {
-  const [formData, setFormData] = useState({
-    name: initial?.name || "",
-    supervisorId: initial?.supervisorId?.toString() || "",
-    type: initial?.type || "PRODUCCION" as SectorType,
-    phase: initial?.phase || null as Phase | null,
-    productionCapacity: initial?.productionCapacity?.toString() || "",
-    isTimeActive: initial?.isTimeActive ?? true
-  })
-  const [supervisors, setSupervisors] = useState<UserResponse[]>([])
-  const [loadingSupervisors, setLoadingSupervisors] = useState(false)
-
-  useEffect(() => {
-    const loadSupervisors = async () => {
-      setLoadingSupervisors(true)
-      try {
-        const data = await getUsers({ page: 0, size: 100 })
-        setSupervisors(data.users)
-      } catch (error) {
-        console.error("Error loading supervisors:", error)
-      } finally {
-        setLoadingSupervisors(false)
-      }
-    }
-    loadSupervisors()
-  }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const submitData: any = {
-      name: formData.name,
-      supervisorId: parseInt(formData.supervisorId),
-      type: formData.type,
-      phase: formData.phase || null,
-      productionCapacity: formData.productionCapacity ? parseFloat(formData.productionCapacity) : null,
-      isTimeActive: formData.isTimeActive
-    }
-    await onSubmit(submitData)
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nombre *</Label>
-        <Input
-          id="name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          required
-          disabled={isLoading}
-          className="border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="supervisorId">Supervisor *</Label>
-        <Select
-          value={formData.supervisorId}
-          onValueChange={(value) => setFormData({ ...formData, supervisorId: value })}
-          disabled={isLoading || loadingSupervisors}
-        >
-          <SelectTrigger className="border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 w-full">
-            <SelectValue placeholder="Seleccionar supervisor" />
-          </SelectTrigger>
-          <SelectContent className="bg-white">
-            {supervisors.map((user) => (
-              <SelectItem key={user.id} value={user.id.toString()}>
-                {user.name || user.username}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="type">Tipo *</Label>
-        <Select
-          value={formData.type}
-          onValueChange={(value) => setFormData({ ...formData, type: value as SectorType })}
-          disabled={isLoading}
-        >
-          <SelectTrigger className="border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-white">
-            {SECTOR_TYPES.map((type) => (
-              <SelectItem key={type.value} value={type.value}>
-                {type.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="phase">Fase (opcional)</Label>
-        <Select
-          value={formData.phase || "NONE"}
-          onValueChange={(value) => setFormData({ ...formData, phase: value === "NONE" ? null : value as Phase })}
-          disabled={isLoading}
-        >
-          <SelectTrigger className="border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 w-full">
-            <SelectValue placeholder="Seleccionar fase" />
-          </SelectTrigger>
-          <SelectContent className="bg-white">
-            <SelectItem value="NONE">Ninguna</SelectItem>
-            {PHASES.map((phase) => (
-              <SelectItem key={phase} value={phase}>
-                {phase}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="productionCapacity">Capacidad de Producción (opcional)</Label>
-        <Input
-          id="productionCapacity"
-          type="number"
-          step="0.01"
-          min="0"
-          value={formData.productionCapacity}
-          onChange={(e) => setFormData({ ...formData, productionCapacity: e.target.value })}
-          disabled={isLoading}
-          className="border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
-        />
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="isTimeActive"
-          checked={formData.isTimeActive}
-          onChange={(e) => setFormData({ ...formData, isTimeActive: e.target.checked })}
-          disabled={isLoading}
-          className="w-6 h-6 text-primary-600 bg-primary-50 border-primary-300 rounded focus:ring-primary-500 focus:ring-2"
-        />
-        <Label htmlFor="isTimeActive" className="cursor-pointer">
-          Tiempo activo
-        </Label>
-      </div>
-
-      <div className="flex justify-end gap-3 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isLoading}
-          className="px-4 py-2 text-sm font-medium text-primary-700 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <X className="w-4 h-4" />
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <Save className="w-4 h-4" />
-          {isLoading ? "Guardando..." : "Guardar"}
-        </button>
-      </div>
-    </form>
-  )
 }
 
 export function SectorsTab() {
@@ -244,21 +59,22 @@ export function SectorsTab() {
     loadSectors()
   }, [])
 
-  const handleCreate = async (data: SectorCreateRequest) => {
+  const handleCreate = async (data: SectorCreateRequest | SectorUpdateRequest) => {
     await handleSubmit(async () => {
-      await createSector(data)
+      // En el modal de creación, siempre será SectorCreateRequest
+      await createSector(data as SectorCreateRequest)
       await loadSectors()
     })
   }
 
-  const handleUpdate = async (data: SectorUpdateRequest) => {
+  const handleUpdate = async (data: SectorCreateRequest | SectorUpdateRequest) => {
     if (!selected || !selected.id) {
       showSuccess("Error: No se puede identificar el sector a actualizar", "error")
       return
     }
     try {
       setSaving(true)
-      await updateSector(selected.id, data)
+      await updateSector(selected.id, data as SectorUpdateRequest)
       showSuccess("Sector actualizado exitosamente")
       setSelected(null)
       await loadSectors()

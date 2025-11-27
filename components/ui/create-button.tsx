@@ -69,8 +69,17 @@ export function CreateButton({
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)'
           }}
+          onClick={(e) => {
+            // Cerrar al hacer click fuera del modal
+            if (e.target === e.currentTarget) {
+              // No cerramos automáticamente, dejamos que el componente padre lo maneje
+            }
+          }}
         >
-          <div className={`bg-background rounded-lg ${maxWidthClasses[maxWidth]} w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 ${modalClassName}`}>
+          <div 
+            className={`bg-background rounded-lg ${maxWidthClasses[maxWidth]} w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 ${modalClassName}`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 pb-8 sm:pb-6">
               <h2 className="text-xl font-semibold mb-4">{modalTitle}</h2>
               {children}

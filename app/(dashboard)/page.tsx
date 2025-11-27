@@ -18,6 +18,7 @@ import { Package, TrendingUp, AlertTriangle, Beaker, XCircle, Box, BarChart3, La
 import { analyticsApi } from "@/lib/analytics"
 import { DashboardStatsDTO } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
+import { UnauthorizedState } from "@/components/ui/unauthorized-state"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/lib/error-handler"
@@ -28,16 +29,34 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStatsDTO | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [errorStatus, setErrorStatus] = useState<401 | 403 | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
 
   useEffect(() => {
     const loadDashboardStats = async () => {
       setLoading(true)
       setError(null)
+      setErrorStatus(null)
       try {
         const dashboardStats = await analyticsApi.getDashboardMonthly()
         setStats(dashboardStats)
       } catch (err) {
+        // Verificar si es un error 401 o 403
+        // El error viene de fetcher.ts que tiene una clase ApiError con propiedad status
+        const error = err as any
+        
+        // Verificar si tiene la propiedad status (ApiError de fetcher.ts)
+        if (error && typeof error.status === 'number') {
+          const status = error.status
+          if (status === 401 || status === 403) {
+            setErrorStatus(status as 401 | 403)
+            setError(null)
+            setLoading(false)
+            // No mostrar toast para errores de autorización
+            return
+          }
+        }
+        
         const errorInfo = handleError(err, {
           title: 'Error al cargar estadísticas',
           description: 'No se pudieron cargar las estadísticas del dashboard',
@@ -64,6 +83,18 @@ export default function DashboardPage() {
             </div>
             <p className="text-primary-600 font-medium">Cargando estadísticas...</p>
           </div>
+        </div>
+      </>
+    )
+  }
+
+  // Mostrar estado de acceso denegado para errores 401/403
+  if (errorStatus) {
+    return (
+      <>
+        <Header title="Dashboard" subtitle="Monitorea tu producción en tiempo real" />
+        <div className="p-4 md:p-6 space-y-6">
+          <UnauthorizedState statusCode={errorStatus} />
         </div>
       </>
     )

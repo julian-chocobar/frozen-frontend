@@ -25,6 +25,8 @@ La arquitectura está diseñada siguiendo un patrón **feature-based**, en el cu
 | **Notificaciones**   | Sonner          | -       | Sistema de toasts           |
 | **Testing**          | Playwright      | -       | Testing E2E                 |
 | **State Management** | React Hooks     | -       | Estado local y compartido   |
+| **Tours Guiados**    | Driver.js       | 1.4.0   | Sistema de onboarding       |
+| **Mapas**            | Leaflet.js      | 1.9.4   | Visualización de almacén    |
 
 ## Estructura de Carpetas
 
@@ -37,7 +39,7 @@ frozen-frontend/
 │   │   ├── page.tsx                       # Dashboard principal
 │   │   │
 │   │   ├── materiales/                    # Módulo de materiales
-│   │   │   ├── page.tsx                   # Lista de materiales (Server Component)
+│   │   │   ├── page.tsx                   # Lista de materiales (Client Component)
 │   │   │   ├── loading.tsx                # Loading específico
 │   │   │   └── _components/               # Componentes privados del módulo
 │   │   │       ├── materials-client.tsx   # Lógica del cliente
@@ -45,7 +47,8 @@ frozen-frontend/
 │   │   │       ├── materials-cards.tsx    # Cards mobile
 │   │   │       ├── materials-filters.tsx  # Filtros de búsqueda
 │   │   │       ├── material-form.tsx      # Formulario crear/editar
-│   │   │       └── create-button.tsx      # Botón de creación
+│   │   │       ├── create-button.tsx      # Botón de creación
+│   │   │       └── warehouse-panel.tsx     # Panel de almacén con mapa (Leaflet.js)
 │   │   │
 │   │   ├── productos/                     # Módulo de productos
 │   │   │   ├── page.tsx                   # Lista de productos
@@ -107,6 +110,10 @@ frozen-frontend/
 │       ├── batch-stats.tsx
 │       └── order-card.tsx
 │
+│   └── tour/                             # Componentes de tours guiados
+│       ├── tour-button.tsx               # Botón para iniciar tours
+│       └── tour-notification.tsx         # Notificación para nuevos usuarios
+│
 ├── lib/                                  # Utilidades y lógica de negocio
 │   ├── fetcher.ts                       # Cliente HTTP para API
 │   ├── api-error.ts                     # Manejo de errores de API
@@ -121,14 +128,22 @@ frozen-frontend/
 │   ├── movements-api.ts                 # API de movimientos
 │   ├── production-orders-api.ts         # API de órdenes
 │   ├── batches-api.ts                   # API de lotes
-│   └── packagings-api.ts                # API de empaques
+│   ├── packagings-api.ts                # API de empaques
+│   ├── tour-steps.ts                    # Definición de pasos de tours
+│   └── warehouse.ts                     # API del almacén (mapas)
 │
 ├── types/                               # Definiciones de tipos TypeScript
 │   └── index.ts                         # Tipos compartidos
 │
+├── contexts/                            # Context Providers de React
+│   ├── auth-context.tsx                 # Context de autenticación
+│   ├── notifications-context.tsx       # Context de notificaciones
+│   └── tour-context.tsx                 # Context de tours guiados
+│
 ├── hooks/                               # Custom React Hooks
 │   ├── use-mobile.ts                    # Hook para detección móvil
-│   └── use-toast.ts                     # Hook para notificaciones
+│   ├── use-toast.ts                     # Hook para notificaciones
+│   └── use-driver.ts                    # Hook para tours guiados (Driver.js)
 │
 ├── docs/                                # Documentación técnica
 │   ├── FRONTEND_ARCHITECTURE.md         # Arquitectura del frontend
@@ -161,51 +176,102 @@ frozen-frontend/
 
 ### Server Components vs Client Components
 
-Next.js 14 introduce un modelo híbrido donde los componentes son **Server Components** por defecto, lo que permite:
+El sistema utiliza un enfoque híbrido donde la mayoría de las páginas principales son **Client Components** para manejar estado, efectos y navegación del lado del cliente. Esto permite:
 
-- **Renderizado en el servidor**: Genera HTML en el servidor para mejorar SEO y tiempo de carga inicial
-- **Menor bundle JavaScript**: Solo se envía JavaScript necesario al cliente
-- **Acceso directo a datos**: Pueden hacer fetch directamente en el servidor sin exponer credenciales
+- **Gestión de estado reactiva**: Uso de hooks de React para estado local
+- **Navegación fluida**: Manejo de parámetros de URL y búsqueda sin recargas completas
+- **Feedback inmediato**: Actualizaciones de UI sin esperar round-trips al servidor
+- **Interactividad rica**: Integración con librerías del cliente (Driver.js, Leaflet.js)
 
-**Server Components (por defecto):**
+**Patrón Actual: Páginas como Client Components**
+
+La mayoría de las páginas principales (`page.tsx`) son Client Components que manejan:
+- Estado de carga y errores
+- Parámetros de búsqueda y filtros
+- Llamadas a la API del lado del cliente
+- Refresh automático al cambiar parámetros
 
 ```tsx
 // app/(dashboard)/productos/page.tsx
-export default async function ProductosPage({
-  searchParams,
-}: ProductosPageProps) {
-  const params = await searchParams;
-  const page = parseInt(params.page || "0");
+'use client';
 
-  // Fetch directo en el servidor
-  const productsData = await getProducts({ page, size: 10 });
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+
+export default function ProductosPage() {
+  const searchParams = useSearchParams()
+  const [productsData, setProductsData] = useState<ProductsPageData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Obtener parámetros de búsqueda
+  const page = parseInt(searchParams.get('page') || '0')
+  const name = searchParams.get('name') || undefined
+
+  // Cargar datos cuando cambien los parámetros
+  useEffect(() => {
+    const loadProducts = async () => {
+      setLoading(true)
+      try {
+        const data = await getProducts({ page, name, size: 10 })
+        setProductsData(data)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadProducts()
+  }, [page, name])
 
   return (
     <>
       <Header title="Productos" />
-      <ProductsClient productos={productsData.products} />
+      {loading ? <LoadingState /> : <ProductsClient productos={productsData?.products} />}
     </>
-  );
+  )
 }
 ```
 
-**Client Components (cuando se necesita interactividad):**
+**Componentes Presentacionales (Client Components):**
+
+Los componentes hijos manejan la presentación y lógica de UI:
 
 ```tsx
 // _components/products-client.tsx
 "use client";
 
 export function ProductsClient({ productos }: ProductsClientProps) {
-  const [selectedProduct, setSelectedProduct] =
-    useState<ProductResponse | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ProductResponse | null>(null);
   const router = useRouter();
 
   const handleEdit = async (id: string, data: ProductUpdateRequest) => {
     await updateProduct(id, data);
-    router.refresh(); // Refresca datos del servidor
+    router.refresh(); // Refresca datos
   };
 
   return <ProductsTable productos={productos} onEdit={handleEdit} />;
+}
+```
+
+**Server Components (casos específicos):**
+
+Algunas páginas simples sin estado complejo pueden ser Server Components:
+
+```tsx
+// app/(dashboard)/configuracion/page.tsx
+// Sin 'use client' - Server Component por defecto
+
+export default function ConfiguracionPage() {
+  return (
+    <>
+      <Header title="Configuración" />
+      <Tabs>
+        <WorkingDaysTab />
+        <SectorsTab />
+      </Tabs>
+    </>
+  )
 }
 ```
 
@@ -214,7 +280,15 @@ export function ProductsClient({ productos }: ProductsClientProps) {
 - Hooks de React (useState, useEffect, useContext)
 - Event handlers (onClick, onChange)
 - APIs del navegador (localStorage, window)
-- Hooks de Next.js (useRouter, usePathname)
+- Hooks de Next.js (useRouter, usePathname, useSearchParams)
+- Librerías del cliente (Driver.js, Leaflet.js, Chart.js)
+- Gestión de estado reactiva con parámetros de URL
+
+**Cuándo usar Server Components:**
+
+- Páginas estáticas sin interactividad
+- Componentes que solo renderizan datos sin estado
+- Cuando no se necesitan hooks o eventos del navegador
 
 ### Sistema de Navegación
 
@@ -274,6 +348,243 @@ export default function ProductosLoading() {
 - Feedback visual inmediato al cambiar de ruta
 - Streaming SSR: el servidor envía HTML progresivamente
 - Mejora la percepción de velocidad
+
+### Sistema de Tours Guiados (Driver.js)
+
+El sistema implementa un sistema completo de tours guiados usando **Driver.js** para ayudar a los usuarios a aprender a usar la aplicación de forma interactiva.
+
+**Arquitectura del Sistema de Tours:**
+
+1. **Hook Personalizado** (`hooks/use-driver.ts`):
+   - Gestiona el estado del tour usando Driver.js
+   - Maneja navegación entre rutas durante el tour
+   - Resuelve selectores CSS adaptativos (mobile/desktop)
+   - Scroll automático y posicionamiento inteligente
+
+```tsx
+// hooks/use-driver.ts
+"use client";
+
+import { driver } from 'driver.js'
+import 'driver.js/dist/driver.css'
+
+export function useDriver() {
+  const driverRef = useRef<Driver | null>(null)
+  const router = useRouter()
+
+  const startTour = useCallback((steps: DriverStep[]) => {
+    driverRef.current = driver({
+      showProgress: true,
+      showButtons: ['next', 'previous', 'close'],
+      steps: driverSteps,
+      onHighlighted: (element, step, options) => {
+        // Navegar si el paso tiene una ruta
+        if (currentStep?.route) {
+          router.push(currentStep.route)
+        }
+      },
+    })
+    driverRef.current.drive()
+  }, [router])
+
+  return { startTour, stopTour, isActive }
+}
+```
+
+2. **Context Provider** (`contexts/tour-context.tsx`):
+   - Context global para acceder al tour desde cualquier componente
+   - Funciones: `startTour(route?)`, `startFullTour()`, `stopTour()`
+
+```tsx
+// contexts/tour-context.tsx
+"use client";
+
+export function TourProvider({ children }: { children: ReactNode }) {
+  const { startTour: startDriverTour } = useDriver()
+
+  const startTour = useCallback((route?: string) => {
+    const targetRoute = route || pathname
+    const routeSteps = getStepsForRoute(targetRoute)
+    startDriverTour(routeSteps)
+  }, [pathname, startDriverTour])
+
+  return (
+    <TourContext.Provider value={{ startTour, startFullTour, stopTour }}>
+      {children}
+    </TourContext.Provider>
+  )
+}
+```
+
+3. **Pasos de Tour** (`lib/tour-steps.ts`):
+   - Tours definidos para cada sección principal
+   - Pasos con selectores CSS y descripciones
+   - Soporte para navegación entre rutas
+
+```tsx
+// lib/tour-steps.ts
+export const materialsSteps: DriverStep[] = [
+  {
+    element: '[data-tour="materials-header"]',
+    popover: {
+      title: 'Inventario de Materiales',
+      description: 'En esta sección gestionas el inventario de materias primas.',
+      side: 'bottom',
+    },
+  },
+  {
+    element: '[data-tour="materials-filters"]',
+    popover: {
+      title: 'Filtros',
+      description: 'Usa los filtros para buscar materiales por tipo, estado, nombre o proveedor.',
+      side: 'bottom',
+    },
+  },
+]
+```
+
+4. **Componente de Notificación** (`components/tour/tour-notification.tsx`):
+   - Diálogo que aparece automáticamente para nuevos usuarios
+   - Persistencia en localStorage por usuario
+   - Opciones: "Iniciar Tour", "Ahora no", "No volver a mostrar"
+
+**Uso de Atributos `data-tour`:**
+
+Los elementos deben tener el atributo `data-tour` para ser identificados por el tour:
+
+```tsx
+<div data-tour="materials-header">
+  <h1>Materiales</h1>
+</div>
+
+<div data-tour="materials-filters">
+  <MaterialsFilters />
+</div>
+```
+
+**Integración en el Layout:**
+
+```tsx
+// app/(dashboard)/layout.tsx
+export default function DashboardLayout({ children }) {
+  return (
+    <TourProvider>
+      <div className="flex h-screen">
+        <Sidebar />
+        <main>{children}</main>
+        <BottomBar />
+      </div>
+      <TourNotification />
+    </TourProvider>
+  )
+}
+```
+
+### Visualización de Mapas (Leaflet.js)
+
+El sistema utiliza **Leaflet.js** para visualizar el almacén de materiales en un mapa plano interactivo.
+
+**Implementación del Mapa del Almacén:**
+
+El componente `MaterialsWarehousePanel` renderiza un mapa usando Leaflet con coordenadas personalizadas:
+
+```tsx
+// app/(dashboard)/materiales/_components/warehouse-panel.tsx
+'use client'
+
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+const WAREHOUSE_WIDTH = 1000
+const WAREHOUSE_HEIGHT = 600
+const INITIAL_ZOOM = -2
+
+const warehouseBounds: L.LatLngBoundsExpression = [
+  [0, 0],
+  [WAREHOUSE_HEIGHT, WAREHOUSE_WIDTH],
+]
+
+export function MaterialsWarehousePanel() {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const mapRef = useRef<LeafletMap | null>(null)
+
+  // Inicializar mapa con CRS.Simple para coordenadas personalizadas
+  const initializeMap = useCallback(() => {
+    if (mapRef.current || !mapContainerRef.current) return
+
+    const map = L.map(mapContainerRef.current, {
+      crs: L.CRS.Simple, // Sistema de coordenadas simple (no geográfico)
+      zoomControl: false,
+      minZoom: -1.5,
+      maxZoom: 2.5,
+      maxBounds: warehouseBounds,
+      preferCanvas: true,
+    })
+
+    map.fitBounds(warehouseBounds)
+    map.setZoom(INITIAL_ZOOM)
+    mapRef.current = map
+  }, [])
+
+  // Cargar layout SVG como overlay
+  useEffect(() => {
+    const loadLayout = async () => {
+      const svg = await getWarehouseLayout()
+      const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
+      const overlay = L.imageOverlay(url, warehouseBounds, { interactive: false })
+      overlay.addTo(mapRef.current!)
+    }
+    loadLayout()
+  }, [])
+
+  // Agregar marcadores para cada material
+  useEffect(() => {
+    materials.forEach(material => {
+      const marker = L.marker([material.y, material.x], {
+        icon: createCustomIcon(material),
+      })
+      marker.bindTooltip(material.name)
+      marker.addTo(mapRef.current!)
+    })
+  }, [materials])
+
+  return (
+    <div 
+      ref={mapContainerRef} 
+      className="warehouse-map-container h-[600px] rounded-lg"
+    />
+  )
+}
+```
+
+**Características del Mapa:**
+
+- **Sistema de coordenadas personalizado**: Usa `CRS.Simple` para coordenadas no geográficas
+- **Overlay SVG**: El layout del almacén se carga como imagen SVG desde el backend
+- **Marcadores personalizados**: Cada material tiene un marcador con color según su zona
+- **Tooltips interactivos**: Información del material al hacer hover
+- **Zoom y pan**: Navegación fluida por el mapa
+- **Filtros**: Filtrado por zona y búsqueda de materiales
+
+**Estilos Personalizados:**
+
+Los estilos del mapa se personalizan en `globals.css`:
+
+```css
+/* globals.css */
+.warehouse-map-container .leaflet-container {
+  font-family: var(--font-sans);
+  background: transparent;
+  border-radius: var(--radius-lg);
+}
+
+.warehouse-marker {
+  --marker-color: var(--color-primary-600);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+```
 
 ## Sistema de Tipos TypeScript
 
@@ -848,13 +1159,15 @@ const nextConfig = {
 
 ## Mejores Prácticas Implementadas
 
-1. **Server Components por defecto**: Reduce JavaScript del cliente
-2. **Client Components solo cuando necesario**: Para interactividad
+1. **Client Components para páginas interactivas**: Manejo de estado y efectos del lado del cliente
+2. **Server Components para páginas estáticas**: Cuando no se necesita interactividad
 3. **Loading UI en cada ruta**: Feedback visual inmediato
 4. **Error boundaries**: Manejo graceful de errores
 5. **TypeScript estricto**: Prevención de errores en tiempo de desarrollo
 6. **Mobile-first**: Optimización para dispositivos móviles
-7. **Llamadas paralelas**: Optimización de rendimiento
+7. **Llamadas paralelas**: Optimización de rendimiento con `Promise.all()`
 8. **Componentes reutilizables**: DRY (Don't Repeat Yourself)
-9. **Testing E2E**: Verificación de flujos completos
-10. **Documentación exhaustiva**: Guías técnicas en `/docs`
+9. **Testing E2E**: Verificación de flujos completos con Playwright
+10. **Tours guiados**: Sistema de onboarding con Driver.js
+11. **Visualización de datos**: Mapas interactivos con Leaflet.js
+12. **Documentación exhaustiva**: Guías técnicas en `/docs`

@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * Tab de gestión de parámetros de calidad
+ * Utiliza componentes separados para mejor organización
+ */
+
 import { useState, useEffect } from "react"
 import { 
   getQualityParameters, 
@@ -10,193 +15,18 @@ import {
 import type { 
   QualityParameterResponse, 
   QualityParameterCreateRequest, 
-  QualityParameterUpdateRequest,
-  Phase 
+  QualityParameterUpdateRequest
 } from "@/types"
 import { ErrorState } from "@/components/ui/error-state"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Save, X, Power, PowerOff } from "lucide-react"
+import { Power, PowerOff } from "lucide-react"
 import { handleError, showSuccess } from "@/lib/error-handler"
 import { cn } from "@/lib/utils"
 import { DataTable, type ColumnDef, type TableActions } from "@/components/ui/data-table"
 import { DataCards, type CardLayout } from "@/components/ui/data-cards"
 import { CreateButton, useCreateModal } from "@/components/ui/create-button"
-
-const PHASES: Phase[] = [
-  "MOLIENDA",
-  "MACERACION",
-  "FILTRACION",
-  "COCCION",
-  "FERMENTACION",
-  "MADURACION",
-  "GASIFICACION",
-  "ENVASADO",
-  "DESALCOHOLIZACION"
-]
-
-interface QualityParameterFormProps {
-  initial?: QualityParameterResponse | null
-  onSubmit: (data: QualityParameterCreateRequest | QualityParameterUpdateRequest) => Promise<void>
-  onCancel: () => void
-  isLoading: boolean
-}
-
-function QualityParameterForm({ initial, onSubmit, onCancel, isLoading }: QualityParameterFormProps) {
-  const [formData, setFormData] = useState({
-    phase: initial?.phase || "MOLIENDA" as Phase,
-    isCritical: initial?.isCritical ?? false,
-    name: initial?.name || "",
-    description: initial?.description || "",
-    unit: initial?.unit || "",
-    information: initial?.information || ""
-  })
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (initial) {
-      // Update
-      const updateData: QualityParameterUpdateRequest = {
-        description: formData.description || null,
-        unit: formData.unit || null,
-        information: formData.information || null
-      }
-      await onSubmit(updateData)
-    } else {
-      // Create
-      const createData: QualityParameterCreateRequest = {
-        phase: formData.phase,
-        isCritical: formData.isCritical,
-        name: formData.name,
-        description: formData.description || null,
-        unit: formData.unit || null,
-        information: formData.information || null
-      }
-      await onSubmit(createData)
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {!initial && (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="phase">Fase *</Label>
-            <Select
-              value={formData.phase}
-              onValueChange={(value) => setFormData({ ...formData, phase: value as Phase })}
-              disabled={isLoading}
-            >
-              <SelectTrigger className="border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {PHASES.map((phase) => (
-                  <SelectItem key={phase} value={phase}>
-                    {phase}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="isCritical"
-              checked={formData.isCritical}
-              onChange={(e) => setFormData({ ...formData, isCritical: e.target.checked })}
-              disabled={isLoading}
-              className="w-6 h-6 text-primary-600 bg-primary-50 border-primary-300 rounded focus:ring-primary-500 focus:ring-2"
-            />
-            <Label htmlFor="isCritical" className="cursor-pointer">
-              Es crítico *
-            </Label>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              maxLength={20}
-              required
-              disabled={isLoading}
-              className="border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
-            />
-            <p className="text-xs text-primary-600">Máximo 20 caracteres</p>
-          </div>
-        </>
-      )}
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Descripción (opcional)</Label>
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          maxLength={255}
-          rows={3}
-          disabled={isLoading}
-          className="border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
-        />
-        <p className="text-xs text-primary-600">Máximo 255 caracteres</p>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="unit">Unidad (opcional)</Label>
-        <Input
-          id="unit"
-          value={formData.unit}
-          onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-          maxLength={50}
-          disabled={isLoading}
-          className="border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
-        />
-        <p className="text-xs text-primary-600">Máximo 50 caracteres</p>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="information">Información (opcional)</Label>
-        <Textarea
-          id="information"
-          value={formData.information}
-          onChange={(e) => setFormData({ ...formData, information: e.target.value })}
-          maxLength={500}
-          rows={4}
-          disabled={isLoading}
-          className="border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
-        />
-        <p className="text-xs text-primary-600">Máximo 500 caracteres</p>
-      </div>
-
-      <div className="flex justify-end gap-3 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isLoading}
-          className="px-4 py-2 text-sm font-medium text-primary-700 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <X className="w-4 h-4" />
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <Save className="w-4 h-4" />
-          {isLoading ? "Guardando..." : "Guardar"}
-        </button>
-      </div>
-    </form>
-  )
-}
+import { QualityParameterForm } from "./quality-parameter-form"
 
 export function QualityParametersTab() {
   const [parameters, setParameters] = useState<QualityParameterResponse[]>([])
@@ -430,7 +260,7 @@ export function QualityParametersTab() {
                 onOpen={openModal}
               >
                 <QualityParameterForm
-                  onSubmit={handleCreate as (data: QualityParameterCreateRequest | QualityParameterUpdateRequest) => Promise<void>}
+                  onSubmit={handleCreate}
                   onCancel={closeModal}
                   isLoading={isCreatingLoading}
                 />
