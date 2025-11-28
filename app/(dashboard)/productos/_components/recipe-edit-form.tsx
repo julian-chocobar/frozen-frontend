@@ -56,9 +56,11 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
     }
 
     const handleChange = (field: string, value: string | number) => {
-        setFormData(prev => ({ ...prev, [field]: value }))
+        // Convert empty string to undefined to avoid 0 being set when clearing the field
+        const newValue = value === '' ? undefined : value;
+        setFormData(prev => ({ ...prev, [field]: newValue }));
         if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: "" }))
+            setErrors(prev => ({ ...prev, [field]: "" }));
         }
     }
 
@@ -86,9 +88,9 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
                 WebkitBackdropFilter: 'blur(8px)'
             }}
         >
-            <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-primary-600">
-                <div className="p-6">
-                    <div className="mb-6">
+            <div className="bg-background rounded-lg max-w-2xl w-full max-h-[95vh] overflow-y-auto shadow-2xl border-2 border-primary-600">
+                <div className="p-8">
+                    <div className="mb-8">
                         <h2 className="text-xl font-semibold text-primary-900 mb-2">
                             Editar Ingrediente en: {getPhaseLabel(phase)}
                         </h2>
@@ -98,12 +100,12 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-primary-900 mb-2">
                                     Material
                                 </label>
-                                <div className="w-full px-3 py-2 border border-stroke rounded-lg bg-primary-50 text-primary-700">
+                                <div className="w-full px-4 py-3 border border-stroke rounded-lg bg-primary-50 text-primary-700 text-base">
                                     {recipe.materialName} ({recipe.materialCode})
                                 </div>
                                 <p className="text-xs text-primary-500 mt-1">
@@ -120,8 +122,14 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
                                     step="0.01"
                                     min="0"
                                     value={formData.quantity}
-                                    onChange={(e) => handleChange("quantity", parseFloat(e.target.value) || 0)}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        // Allow empty string or valid number
+                                        if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                            handleChange("quantity", value === '' ? '' : parseFloat(value));
+                                        }
+                                    }}
+                                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 text-base ${
                                         errors.quantity ? "border-red-500" : "border-stroke"
                                     }`}
                                     placeholder="Ej: 2.5"
@@ -130,7 +138,7 @@ export function RecipeEditForm({ recipe, phase, onSave, onCancel }: RecipeEditFo
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-6 border-t border-stroke">
+                        <div className="flex justify-end gap-4 pt-8 border-t border-stroke mt-8">
                             <Button
                                 type="button"
                                 variant="outline"

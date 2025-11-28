@@ -15,20 +15,21 @@ interface PhaseFormProps {
 
 export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
     const [formData, setFormData] = useState({
-        input: phase.input || "",
+        input: phase.phase === 'MOLIENDA' ? "0" : (phase.input || ""),
         output: phase.output || "",
         outputUnit: phase.outputUnit || "KG" as UnitMeasurement,
         estimatedHours: phase.estimatedHours || "",
     })
     const [loading, setLoading] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [apiError, setApiError] = useState<string | null>(null)
 
     const unitMeasurements = getUnitMeasurements()
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {}
         
-        if (formData.input && Number(formData.input) <= 0) {
+        if (formData.input && Number(formData.input) <= 0 && phase.phase !== 'MOLIENDA') {
             newErrors.input = "La entrada debe ser mayor a 0"
         }
         if (formData.output && Number(formData.output) <= 0) {
@@ -47,6 +48,7 @@ export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        setApiError(null) // Clear previous API errors
 
         if (!validateForm()) return
 
@@ -54,7 +56,7 @@ export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
             setLoading(true)
             
             const updateData: ProductPhaseUpdateRequest = {}
-            if (formData.input !== phase.input) updateData.input = Number(formData.input)
+            // Only include output, outputUnit, and estimatedHours in the update
             if (formData.output !== phase.output) updateData.output = Number(formData.output)
             if (formData.outputUnit !== phase.outputUnit) updateData.outputUnit = formData.outputUnit
             if (formData.estimatedHours !== phase.estimatedHours) updateData.estimatedHours = Number(formData.estimatedHours)
@@ -62,18 +64,56 @@ export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
             await updateProductPhase(phase.id, updateData)
             toast.success("Fase actualizada correctamente")
             onSave()
-        } catch (err) {
-            console.error('Error al actualizar fase:', err)
-            toast.error(err instanceof Error ? err.message : 'Error al actualizar fase')
+        } catch (error: unknown) {
+            console.error('Error al actualizar fase:', error)
+            
+            // Handle API validation errors
+            if (error && typeof error === 'object' && 'isApiError' in error) {
+                const apiError = error as {
+                    isApiError: boolean
+                    status: number
+                    message: string
+                    details?: Record<string, string>
+                }
+                
+                // If there are validation errors in details, add them to the form errors
+                if (apiError.details) {
+                    const fieldErrors: Record<string, string> = {}
+                    Object.entries(apiError.details).forEach(([field, message]) => {
+                        const fieldName = field.toLowerCase()
+                        fieldErrors[fieldName] = message
+                    })
+                    setErrors(fieldErrors)
+                } else {
+                    // If it's a general API error, show it at the top of the form
+                    setApiError(apiError.message)
+                }
+                
+                // Also show a toast with the error
+                toast.error(apiError.message || 'Error al actualizar la fase')
+            } else {
+                // For non-API errors, show a generic error message
+                const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+                setApiError(errorMessage)
+                toast.error('Error al actualizar la fase')
+            }
         } finally {
             setLoading(false)
         }
     }
 
     const handleChange = (field: string, value: string | number) => {
-        setFormData(prev => ({ ...prev, [field]: value }))
+        // Don't update input field if phase is MOLIENDA
+        if (field === 'input' && phase.phase === 'MOLIENDA') {
+            return;
+        }
+        
+        // Convert value to string to handle empty strings properly
+        const stringValue = value === '' ? '' : String(value);
+        
+        setFormData(prev => ({ ...prev, [field]: stringValue }));
         if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: "" }))
+            setErrors(prev => ({ ...prev, [field]: "" }));
         }
     }
 
@@ -113,23 +153,27 @@ export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* API Error Message */}
+                        {apiError && (
+                            <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+                                <p className="font-medium">Error del servidor</p>
+                                <p>{apiError}</p>
+                            </div>
+                        )}
+                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-primary-900 mb-2">
-                                    Entrada *
+                                    Entrada
                                 </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={formData.input}
-                                    onChange={(e) => handleChange("input", parseFloat(e.target.value) || 0)}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                                        errors.input ? "border-red-500" : "border-stroke"
-                                    }`}
-                                    placeholder="Ej: 100"
-                                />
-                                {errors.input && <p className="text-red-500 text-sm mt-1">{errors.input}</p>}
+                                <div className="w-full px-3 py-2 border border-stroke rounded-lg bg-gray-50 text-gray-700">
+                                    {phase.phase === 'MOLIENDA' ? '0' : (phase.input || 'N/A')}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {phase.phase === 'MOLIENDA' 
+                                        ? 'La entrada para molienda siempre es 0' 
+                                        : 'La entrada se calcula automáticamente de la fase anterior'}
+                                </p>
                             </div>
 
                             <div>
@@ -141,7 +185,13 @@ export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
                                     step="0.01"
                                     min="0"
                                     value={formData.output}
-                                    onChange={(e) => handleChange("output", parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        // Allow empty string or valid number
+                                        if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                            handleChange("output", value);
+                                        }
+                                    }}
                                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
                                         errors.output ? "border-red-500" : "border-stroke"
                                     }`}
@@ -173,10 +223,16 @@ export function PhaseForm({ phase, onSave, onCancel }: PhaseFormProps) {
                                 </label>
                                 <input
                                     type="number"
-                                    step="0.5"
+                                    step="0.1"
                                     min="0"
                                     value={formData.estimatedHours}
-                                    onChange={(e) => handleChange("estimatedHours", parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        // Allow empty string or valid decimal with one decimal place
+                                        if (value === '' || /^\d*\.?\d{0,1}$/.test(value)) {
+                                            handleChange("estimatedHours", value);
+                                        }
+                                    }}
                                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300 ${
                                         errors.estimatedHours ? "border-red-500" : "border-stroke"
                                     }`}
