@@ -13,9 +13,14 @@ import type { MaterialCreateRequest } from "@/types"
 
 interface MaterialCreateButtonProps {
   onCreateCallback?: () => void
+  /** Si true, permite editar el stock inicial (solo para casos especiales) */
+  allowStockEdit?: boolean
 }
 
-export function MaterialCreateButton({ onCreateCallback }: MaterialCreateButtonProps) {
+export function MaterialCreateButton({ 
+  onCreateCallback, 
+  allowStockEdit = true 
+}: MaterialCreateButtonProps) {
   const router = useRouter()
   const { isOpen, isLoading, openModal, closeModal, handleSubmit } = useCreateModal({
     successMessage: 'Material creado exitosamente',
@@ -48,6 +53,7 @@ export function MaterialCreateButton({ onCreateCallback }: MaterialCreateButtonP
       <MaterialForm
         onSubmit={(data) => handleCreate(data as MaterialCreateRequest)}
         onCancel={closeModal}
+        allowStockEdit={allowStockEdit}
         isLoading={isLoading}
       />
     </CreateButton>
