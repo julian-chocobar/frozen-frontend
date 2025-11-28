@@ -103,11 +103,13 @@ export function PhasesList({
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => onEditPhase(phase.id)}
-                                                disabled={phaseRecipes.length === 0}
+                                                disabled={phaseRecipes.length === 0 && phase.phase !== 'ENVASADO'}
                                                 className={`border-primary-300 text-primary-600 hover:bg-primary-50 h-8 px-2 lg:px-3 ${
-                                                    phaseRecipes.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                                                    phaseRecipes.length === 0 && phase.phase !== 'ENVASADO' ? 'opacity-50 cursor-not-allowed' : ''
                                                 }`}
-                                                title={phaseRecipes.length === 0 ? 'Agrega al menos un ingrediente para editar la fase' : 'Editar fase'}
+                                                title={phaseRecipes.length === 0 && phase.phase !== 'ENVASADO' 
+                                                    ? 'Agrega al menos un ingrediente para editar la fase' 
+                                                    : 'Editar fase'}
                                                 data-tour="phase-edit-button"
                                             >
                                                 <Edit className="w-4 h-4 lg:mr-1" />
