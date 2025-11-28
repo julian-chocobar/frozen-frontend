@@ -16,13 +16,15 @@ interface ProductSearchFilterProps {
   onChange: (productId: string) => void
   placeholder?: string
   className?: string
+  autoRestore?: boolean // Si es true, restaura automáticamente desde sessionStorage cuando value está vacío
 }
 
 export function ProductSearchFilter({ 
   value, 
   onChange, 
   placeholder = "Buscar producto por nombre...",
-  className
+  className,
+  autoRestore = false
 }: ProductSearchFilterProps) {
   // Función para obtener el estado persistido desde sessionStorage
   const getPersistedState = () => {
@@ -117,17 +119,25 @@ export function ProductSearchFilter({
       return
     }
     
-    // Si el value está vacío pero hay un producto persistido, restaurarlo y notificar al padre
+    // Si el value está vacío, restaurar desde sessionStorage solo si autoRestore está habilitado
+    // Por defecto no restauramos para evitar aplicar filtros automáticamente cuando se abre una página sin filtros
     if (!value) {
-      const persisted = getPersistedState()
-      if (persisted) {
-        // Restaurar el producto persistido y notificar al padre
-        setSelectedProduct(persisted)
-        setSearchTerm(persisted.name)
-        onChange(persisted.id)
-        lastValueRef.current = persisted.id
-        return
+      if (autoRestore) {
+        const persisted = getPersistedState()
+        if (persisted) {
+          // Restaurar el producto persistido y notificar al padre
+          setSelectedProduct(persisted)
+          setSearchTerm(persisted.name)
+          onChange(persisted.id)
+          lastValueRef.current = persisted.id
+          return
+        }
       }
+      // Limpiar el estado visual pero NO llamar a onChange para no aplicar el filtro
+      setSelectedProduct(null)
+      setSearchTerm("")
+      lastValueRef.current = ""
+      return
     }
     
     // Si hay un producto persistido y el value coincide, restaurarlo

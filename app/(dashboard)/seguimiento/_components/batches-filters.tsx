@@ -4,7 +4,7 @@
  * Filtros para lotes de producción
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { CompactFilterField, CompactFilters } from "@/components/ui/compact-filters"
 import { ProductSearchFilter } from "@/app/(dashboard)/ordenes/_components/product-search-filter"
@@ -37,6 +37,21 @@ export function BatchesFilters({ onFilterChange }: BatchesFiltersProps) {
     status: searchParams.get('status') || "",
     productId: searchParams.get('productId') || ""
   })
+
+  // Limpiar sessionStorage del filtro de producto si no hay productId en la URL
+  // Esto evita que se restaure automáticamente un filtro cuando se abre la página sin filtros
+  useEffect(() => {
+    const productIdFromURL = searchParams.get('productId')
+    if (!productIdFromURL && typeof window !== 'undefined') {
+      // Limpiar el sessionStorage relacionado con el filtro de producto
+      try {
+        sessionStorage.removeItem('product-search-filter-selected')
+        sessionStorage.removeItem('inventory-chart-productId')
+      } catch (e) {
+        console.warn('Error al limpiar sessionStorage:', e)
+      }
+    }
+  }, [searchParams])
 
   const updateURL = (newFilters: FilterState) => {
     const params = new URLSearchParams(searchParams.toString())
