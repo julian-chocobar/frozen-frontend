@@ -166,25 +166,29 @@ export function BatchDetailClient({ batchId, productId, onBatchUpdate }: BatchDe
     event.preventDefault()
     if (!phaseUnderReview) return
 
-    const inputRaw = underReviewForm.input.trim()
+    const isMoliendaPhase = phaseUnderReview.phase === 'MOLIENDA'
     const outputRaw = underReviewForm.output.trim()
 
-    if (!inputRaw || !outputRaw) {
+    if (!outputRaw) {
       toast({
         title: "Datos incompletos",
-        description: "Debes ingresar los valores de input y output antes de enviar a revisión.",
+        description: "Debes ingresar el valor de output antes de enviar a revisión.",
         variant: "destructive",
       })
       return
     }
 
-    const inputValue = Number(inputRaw)
+    // For MOLIENDA phase, set input to 0 automatically
+    const inputValue = isMoliendaPhase ? 0 : Number(underReviewForm.input.trim())
     const outputValue = Number(outputRaw)
 
-    if (Number.isNaN(inputValue) || Number.isNaN(outputValue) || !Number.isFinite(inputValue) || !Number.isFinite(outputValue)) {
+    if (Number.isNaN(outputValue) || !Number.isFinite(outputValue) || 
+        (!isMoliendaPhase && (Number.isNaN(inputValue) || !Number.isFinite(inputValue)))) {
       toast({
         title: "Datos inválidos",
-        description: "Debes ingresar valores numéricos válidos para input y output.",
+        description: isMoliendaPhase 
+          ? "Debes ingresar un valor numérico válido para el output."
+          : "Debes ingresar valores numéricos válidos para input y output.",
         variant: "destructive",
       })
       return
