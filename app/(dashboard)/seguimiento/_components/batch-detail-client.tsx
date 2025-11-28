@@ -309,7 +309,11 @@ export function BatchDetailClient({ batchId, productId, onBatchUpdate }: BatchDe
                     <div>
                       <p className="text-primary-600 font-medium uppercase text-xs">Input</p>
                       <p className="text-primary-900 font-semibold">
-                        {phase.input ? `${phase.input} ${phase.outputUnit}` : "Pendiente"}
+                        {phase.input !== null && phase.input !== undefined 
+                          ? `${phase.input} ${phase.outputUnit}` 
+                          : phase.phase === 'MOLIENDA' 
+                            ? "0" 
+                            : "Pendiente"}
                       </p>
                     </div>
                     <div>
